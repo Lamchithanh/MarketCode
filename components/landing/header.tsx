@@ -5,6 +5,8 @@ import Link from "next/link";
 import { Button } from "@/components/ui/button";
 import { Menu, X, Code, ShoppingCart, User } from "lucide-react";
 import { NavItem } from "@/types";
+import { useSession } from "next-auth/react";
+import { UserNav } from "@/components/ui/user-nav";
 
 const navItems: NavItem[] = [
   { label: "Trang chủ", href: "/" },
@@ -16,6 +18,7 @@ const navItems: NavItem[] = [
 
 export function Header() {
   const [isOpen, setIsOpen] = useState(false);
+  const { data: session, status } = useSession();
 
   return (
     <header className="sticky top-0 z-50 w-full border-b bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
@@ -47,11 +50,23 @@ export function Header() {
             <ShoppingCart className="h-4 w-4 mr-2" />
             Giỏ hàng
           </Button>
-          <Button variant="ghost" size="sm">
-            <User className="h-4 w-4 mr-2" />
-            Đăng nhập
-          </Button>
-          <Button size="sm">Đăng ký</Button>
+          {status === "loading" ? (
+            <div className="h-8 w-8 animate-pulse bg-gray-200 rounded-full"></div>
+          ) : session ? (
+            <UserNav />
+          ) : (
+            <>
+              <Button variant="ghost" size="sm" asChild>
+                <Link href="/login">
+                  <User className="h-4 w-4 mr-2" />
+                  Đăng nhập
+                </Link>
+              </Button>
+              <Button size="sm" asChild>
+                <Link href="/register">Đăng ký</Link>
+              </Button>
+            </>
+          )}
         </div>
 
         {/* Mobile Menu Button */}
@@ -88,11 +103,36 @@ export function Header() {
                 <ShoppingCart className="h-4 w-4 mr-2" />
                 Giỏ hàng
               </Button>
-              <Button variant="ghost" className="justify-start">
-                <User className="h-4 w-4 mr-2" />
-                Đăng nhập
-              </Button>
-              <Button className="justify-start">Đăng ký</Button>
+              {status === "loading" ? (
+                <div className="flex items-center space-x-2 px-4 py-2">
+                  <div className="h-6 w-6 animate-pulse bg-gray-200 rounded-full"></div>
+                  <div className="h-4 w-20 animate-pulse bg-gray-200 rounded"></div>
+                </div>
+              ) : session ? (
+                <div className="flex items-center space-x-2 px-4 py-2">
+                  <UserNav />
+                  <div className="flex flex-col">
+                    <span className="text-sm font-medium">
+                      {session.user.name}
+                    </span>
+                    <span className="text-xs text-muted-foreground">
+                      {session.user.email}
+                    </span>
+                  </div>
+                </div>
+              ) : (
+                <>
+                  <Button variant="ghost" className="justify-start" asChild>
+                    <Link href="/login">
+                      <User className="h-4 w-4 mr-2" />
+                      Đăng nhập
+                    </Link>
+                  </Button>
+                  <Button className="justify-start" asChild>
+                    <Link href="/register">Đăng ký</Link>
+                  </Button>
+                </>
+              )}
             </div>
           </div>
         </div>

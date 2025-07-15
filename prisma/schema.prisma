@@ -6,3 +6,273 @@ datasource db {
   provider = "postgresql"
   url      = env("DATABASE_URL")
 }
+
+enum Role {
+  USER
+  ADMIN
+}
+
+enum PaymentStatus {
+  PENDING
+  PAID
+  FAILED
+  REFUNDED
+}
+
+enum OrderStatus {
+  PENDING
+  PROCESSING
+  COMPLETED
+  CANCELLED
+}
+
+enum VerificationCodeType {
+  EMAIL_VERIFICATION
+  PASSWORD_RESET
+}
+
+model User {
+  id               String             @id @default(uuid())
+  name             String
+  email            String             @unique
+  password         String
+  role             Role               @default(USER)
+  avatar           String?
+  isActive         Boolean            @default(true)
+  lastLoginAt      DateTime?
+  refreshTokens    RefreshToken[]
+  products         Product[]
+  reviews          Review[]
+  orders           Order[]            @relation("BuyerOrders")
+  cart             Cart[]
+  wishlist         Wishlist[]
+  downloads        Download[]
+  emailVerified    DateTime?
+  createdAt        DateTime           @default(now())
+  updatedAt        DateTime           @updatedAt
+  deletedAt        DateTime?
+  VerificationCode VerificationCode[]
+}
+
+model VerificationCode {
+  id        String               @id @default(uuid())
+  userId    String
+  code      String
+  type      VerificationCodeType
+  expiresAt DateTime
+  createdAt DateTime             @default(now())
+  updatedAt DateTime             @updatedAt
+
+  user User @relation(fields: [userId], references: [id])
+}
+
+model Category {
+  id          String    @id @default(uuid())
+  name        String    @unique
+  slug        String    @unique
+  description String?
+  icon        String?
+  products    Product[]
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+  deletedAt   DateTime?
+}
+
+model Tag {
+  id        String       @id @default(uuid())
+  name      String       @unique
+  slug      String       @unique
+  color     String?
+  products  ProductTag[]
+  createdAt DateTime     @default(now())
+  updatedAt DateTime     @updatedAt
+  deletedAt DateTime?
+}
+
+model Product {
+  id            String    @id @default(uuid())
+  userId        String
+  categoryId    String
+  title         String
+  slug          String    @unique
+  description   String?
+  price         Decimal
+  thumbnailUrl  String?
+  fileUrl       String?
+  demoUrl       String?
+  githubUrl     String?
+  downloadCount Int       @default(0)
+  viewCount     Int       @default(0)
+  isActive      Boolean   @default(true)
+  technologies  String[]
+  fileSize      Int?
+  createdAt     DateTime  @default(now())
+  updatedAt     DateTime  @updatedAt
+  deletedAt     DateTime?
+
+  user       User         @relation(fields: [userId], references: [id])
+  category   Category     @relation(fields: [categoryId], references: [id])
+  tags       ProductTag[]
+  reviews    Review[]
+  orderItems OrderItem[]
+  cart       Cart[]
+  wishlist   Wishlist[]
+  downloads  Download[]
+}
+
+model ProductTag {
+  productId String
+  tagId     String
+  createdAt DateTime @default(now())
+
+  product Product @relation(fields: [productId], references: [id])
+  tag     Tag     @relation(fields: [tagId], references: [id])
+
+  @@id([productId, tagId])
+}
+
+model Order {
+  id             String        @id @default(uuid())
+  orderNumber    String        @unique
+  buyerId        String
+  totalAmount    Decimal
+  discountAmount Decimal?      @default(0)
+  taxAmount      Decimal?      @default(0)
+  status         OrderStatus   @default(PENDING)
+  paymentMethod  String
+  paymentStatus  PaymentStatus @default(PENDING)
+  paymentId      String?
+  notes          String?
+  createdAt      DateTime      @default(now())
+  updatedAt      DateTime      @updatedAt
+  deletedAt      DateTime?
+
+  buyer User        @relation("BuyerOrders", fields: [buyerId], references: [id])
+  items OrderItem[]
+}
+
+model OrderItem {
+  id           String   @id @default(uuid())
+  orderId      String
+  productId    String
+  productTitle String
+  productPrice Decimal
+  snapshotUrl  String?
+  createdAt    DateTime @default(now())
+
+  order   Order   @relation(fields: [orderId], references: [id])
+  product Product @relation(fields: [productId], references: [id])
+}
+
+model Review {
+  id        String    @id @default(uuid())
+  userId    String
+  productId String
+  rating    Int       @db.SmallInt
+  comment   String?
+  isHelpful Int       @default(0)
+  createdAt DateTime  @default(now())
+  updatedAt DateTime  @updatedAt
+  deletedAt DateTime?
+
+  user    User    @relation(fields: [userId], references: [id])
+  product Product @relation(fields: [productId], references: [id])
+
+  @@unique([userId, productId]) // Prevent duplicate reviews
+}
+
+model Cart {
+  id        String   @id @default(uuid())
+  userId    String
+  productId String
+  createdAt DateTime @default(now())
+
+  user    User    @relation(fields: [userId], references: [id])
+  product Product @relation(fields: [productId], references: [id])
+
+  @@unique([userId, productId])
+}
+
+model Wishlist {
+  id        String   @id @default(uuid())
+  userId    String
+  productId String
+  createdAt DateTime @default(now())
+
+  user    User    @relation(fields: [userId], references: [id])
+  product Product @relation(fields: [productId], references: [id])
+
+  @@unique([userId, productId])
+}
+
+model Download {
+  id        String   @id @default(uuid())
+  userId    String
+  productId String
+  ipAddress String?
+  userAgent String?
+  createdAt DateTime @default(now())
+
+  user    User    @relation(fields: [userId], references: [id])
+  product Product @relation(fields: [productId], references: [id])
+}
+
+model RefreshToken {
+  id        String   @id @default(uuid())
+  userId    String
+  token     String   @unique
+  userAgent String?
+  ipAddress String?
+  isRevoked Boolean  @default(false)
+  expiredAt DateTime
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  user User @relation(fields: [userId], references: [id])
+}
+
+model Coupon {
+  id          String    @id @default(uuid())
+  code        String    @unique
+  name        String
+  description String?
+  type        String
+  value       Decimal
+  minAmount   Decimal?
+  maxAmount   Decimal?
+  usageLimit  Int?
+  usageCount  Int       @default(0)
+  isActive    Boolean   @default(true)
+  validFrom   DateTime
+  validUntil  DateTime
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+  deletedAt   DateTime?
+}
+
+model Newsletter {
+  id             String    @id @default(uuid())
+  email          String    @unique
+  isActive       Boolean   @default(true)
+  subscribedAt   DateTime  @default(now())
+  unsubscribedAt DateTime?
+}
+
+model ContactMessage {
+  id        String   @id @default(uuid())
+  name      String
+  email     String
+  subject   String
+  message   String
+  isRead    Boolean  @default(false)
+  createdAt DateTime @default(now())
+}
+
+model SystemSetting {
+  id        String   @id @default(uuid())
+  key       String   @unique
+  value     String
+  type      String   @default("string")
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
