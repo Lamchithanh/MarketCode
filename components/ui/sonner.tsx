@@ -2,9 +2,13 @@
 
 import { useTheme } from "next-themes"
 import { Toaster as Sonner, ToasterProps } from "sonner"
+import { useIsClient } from "@/hooks/use-hydration"
 
 const Toaster = ({ ...props }: ToasterProps) => {
   const { theme = "system" } = useTheme()
+  const isClient = useIsClient()
+
+  if (!isClient) return null
 
   return (
     <Sonner

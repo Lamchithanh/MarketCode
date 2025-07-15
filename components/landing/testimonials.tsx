@@ -12,7 +12,7 @@ const testimonials: Testimonial[] = [
     company: "ĐH Bách Khoa",
     content:
       "Source code từ CodeMarket giúp tôi hoàn thành đồ án tốt nghiệp xuất sắc. Code clean, documentation chi tiết và hỗ trợ tận tình.",
-    avatar: "/avatars/avatar-1.jpg",
+    avatar: "",
     rating: 5,
   },
   {
@@ -22,7 +22,7 @@ const testimonials: Testimonial[] = [
     company: "FPT Software",
     content:
       "Chất lượng code rất tốt, tuân thủ best practices. Đội ngũ support phản hồi nhanh và chuyên nghiệp. Tôi sẽ tiếp tục sử dụng dịch vụ.",
-    avatar: "/avatars/avatar-2.jpg",
+    avatar: "",
     rating: 5,
   },
   {
@@ -32,7 +32,7 @@ const testimonials: Testimonial[] = [
     company: "Viettel Digital",
     content:
       "Dịch vụ tuyệt vời! Source code NextJS họ cung cấp giúp team tôi tiết kiệm được rất nhiều thời gian phát triển. Highly recommended!",
-    avatar: "/avatars/avatar-3.jpg",
+    avatar: "",
     rating: 5,
   },
   {
@@ -42,7 +42,7 @@ const testimonials: Testimonial[] = [
     company: "Shopee",
     content:
       "Tôi đã mua nhiều source code từ CodeMarket. Mỗi lần đều hài lòng về chất lượng và dịch vụ hỗ trợ. Giá cả hợp lý, chất lượng cao.",
-    avatar: "/avatars/avatar-4.jpg",
+    avatar: "",
     rating: 5,
   },
   {
@@ -52,7 +52,7 @@ const testimonials: Testimonial[] = [
     company: "TechViet",
     content:
       "CodeMarket đã giúp startup của tôi launch sản phẩm nhanh chóng. Source code chất lượng, documentation đầy đủ, support tốt.",
-    avatar: "/avatars/avatar-5.jpg",
+    avatar: "",
     rating: 5,
   },
   {
@@ -62,7 +62,7 @@ const testimonials: Testimonial[] = [
     company: "Zalo",
     content:
       "Rất ấn tượng với chất lượng code và cách tổ chức project. Đây là nơi tôi tin tưởng để tìm kiếm source code cho các dự án cá nhân.",
-    avatar: "/avatars/avatar-6.jpg",
+    avatar: "",
     rating: 5,
   },
 ];

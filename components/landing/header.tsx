@@ -7,6 +7,7 @@ import { Menu, X, Code, ShoppingCart, User } from "lucide-react";
 import { NavItem } from "@/types";
 import { useSession } from "next-auth/react";
 import { UserNav } from "@/components/ui/user-nav";
+import { useIsClient } from "@/hooks/use-hydration";
 
 const navItems: NavItem[] = [
   { label: "Trang chủ", href: "/" },
@@ -18,6 +19,7 @@ const navItems: NavItem[] = [
 
 export function Header() {
   const [isOpen, setIsOpen] = useState(false);
+  const isClient = useIsClient();
   const { data: session, status } = useSession();
 
   return (
@@ -50,7 +52,7 @@ export function Header() {
             <ShoppingCart className="h-4 w-4 mr-2" />
             Giỏ hàng
           </Button>
-          {status === "loading" ? (
+          {!isClient ? (
             <div className="h-8 w-8 animate-pulse bg-gray-200 rounded-full"></div>
           ) : session ? (
             <UserNav />
@@ -103,7 +105,7 @@ export function Header() {
                 <ShoppingCart className="h-4 w-4 mr-2" />
                 Giỏ hàng
               </Button>
-              {status === "loading" ? (
+              {!isClient ? (
                 <div className="flex items-center space-x-2 px-4 py-2">
                   <div className="h-6 w-6 animate-pulse bg-gray-200 rounded-full"></div>
                   <div className="h-4 w-20 animate-pulse bg-gray-200 rounded"></div>
