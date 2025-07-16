@@ -6,3 +6,4 @@ export { Services } from "./services";
 export { Products } from "./products";
 export { Testimonials } from "./testimonials";
 export { CTA } from "./cta";
+export { FloatingMenu } from "./floating-menu";
