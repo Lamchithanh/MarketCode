@@ -1,5 +1,6 @@
 import { Button } from "@/components/ui/button";
 import { ArrowRight, Code, MessageCircle } from "lucide-react";
+import Link from "next/link";
 
 export function CTA() {
   return (
@@ -25,18 +26,24 @@ export function CTA() {
               size="lg"
               variant="secondary"
               className="text-lg px-8 py-6 bg-primary-foreground text-primary hover:bg-primary-foreground/90"
+              asChild
             >
-              <Code className="mr-2 h-5 w-5" />
-              Khám phá source code
-              <ArrowRight className="ml-2 h-5 w-5" />
+              <Link href="/products">
+                <Code className="mr-2 h-5 w-5" />
+                Khám phá source code
+                <ArrowRight className="ml-2 h-5 w-5" />
+              </Link>
             </Button>
             <Button
               size="lg"
               variant="default"
               className="text-lg px-8 py-6 border-primary-foreground/30"
+              asChild
             >
-              <MessageCircle className="mr-2 h-5 w-5" />
-              Tư vấn miễn phí
+              <Link href="/contact">
+                <MessageCircle className="mr-2 h-5 w-5" />
+                Tư vấn miễn phí
+              </Link>
             </Button>
           </div>
 

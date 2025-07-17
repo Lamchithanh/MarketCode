@@ -3,6 +3,7 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Star, Download, Eye, ShoppingCart } from "lucide-react";
 import { Project } from "@/types";
+import Link from "next/link";
 
 const products: Project[] = [
   {
@@ -178,9 +179,11 @@ export function Products() {
                     <Button variant="outline" size="sm">
                       <Eye className="h-4 w-4" />
                     </Button>
-                    <Button size="sm">
-                      <ShoppingCart className="h-4 w-4 mr-2" />
-                      Mua ngay
+                    <Button size="sm" asChild>
+                      <Link href={`/products/${product.id}`}>
+                        <ShoppingCart className="h-4 w-4 mr-2" />
+                        Mua ngay
+                      </Link>
                     </Button>
                   </div>
                 </div>
@@ -191,9 +194,11 @@ export function Products() {
 
         {/* View More Button */}
         <div className="text-center mt-12">
-          <Button variant="outline" size="lg">
-            <Download className="mr-2 h-4 w-4" />
-            Xem thêm sản phẩm
+          <Button variant="outline" size="lg" asChild>
+            <Link href="/products">
+              <Download className="mr-2 h-4 w-4" />
+              Xem thêm sản phẩm
+            </Link>
           </Button>
         </div>
 

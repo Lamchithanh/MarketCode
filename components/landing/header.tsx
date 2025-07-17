@@ -72,9 +72,12 @@ export function Header() {
           <Button 
             variant="ghost" 
             size="default"
+            asChild
           >
-            <ShoppingCart className="h-4 w-4 mr-2" />
-            Giỏ hàng
+            <Link href="/cart">
+              <ShoppingCart className="h-4 w-4 mr-2" />
+              Giỏ hàng
+            </Link>
           </Button>
           
           {!isClient ? (
@@ -107,8 +110,10 @@ export function Header() {
 
         {/* Mobile Menu Button */}
         <div className="md:hidden flex items-center space-x-2">
-          <Button variant="ghost" size="sm">
-            <ShoppingCart className="h-4 w-4" />
+          <Button variant="ghost" size="sm" asChild>
+            <Link href="/cart">
+              <ShoppingCart className="h-4 w-4" />
+            </Link>
           </Button>
           
           <Button

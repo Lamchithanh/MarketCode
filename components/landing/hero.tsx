@@ -32,14 +32,18 @@ export function Hero() {
 
           {/* CTA Buttons */}
           <div className="flex flex-col sm:flex-row gap-4 justify-center items-center mb-12">
-            <Button size="lg" className="text-lg px-8 py-6">
-              <Code className="mr-2 h-5 w-5" />
-              Khám phá ngay
-              <ArrowRight className="ml-2 h-5 w-5" />
+            <Button size="lg" className="text-lg px-8 py-6" asChild>
+              <Link href="/products">
+                <Code className="mr-2 h-5 w-5" />
+                Khám phá ngay
+                <ArrowRight className="ml-2 h-5 w-5" />
+              </Link>
             </Button>
-            <Button variant="outline" size="lg" className="text-lg px-8 py-6">
-              <Users className="mr-2 h-5 w-5" />
-              Tư vấn miễn phí
+            <Button variant="outline" size="lg" className="text-lg px-8 py-6" asChild>
+              <Link href="/contact">
+                <Users className="mr-2 h-5 w-5" />
+                Tư vấn miễn phí
+              </Link>
             </Button>
           </div>
 

@@ -3,11 +3,11 @@
 import { useState, useEffect } from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { Home, ShoppingCart, User, Package, FileText, Mail, ChevronUp, Code } from "lucide-react";
+import { Home, ShoppingCart, User, Package, FileText, Mail, ChevronUp, Code, Settings, Heart, LogOut } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { cn } from "@/lib/utils";
-import { useSession } from "next-auth/react";
+import { useSession, signOut } from "next-auth/react";
 
 /**
  * FLOATING MENU COMPONENT
@@ -21,6 +21,7 @@ import { useSession } from "next-auth/react";
  * - Floating position fixed bên trái
  * - Icon navigation với tooltips
  * - Cart badge indicator
+ * - User dropdown menu
  * - Scroll to top button
  * - Glassmorphism design
  * - Responsive: ẩn trên mobile nhỏ
@@ -34,6 +35,7 @@ interface FloatingMenuProps {
 export const FloatingMenu = ({ className }: FloatingMenuProps) => {
   const [isVisible, setIsVisible] = useState(false);
   const [showTooltip, setShowTooltip] = useState<string | null>(null);
+  const [showUserDropdown, setShowUserDropdown] = useState(false);
   const [isScrollingUp, setIsScrollingUp] = useState(false);
   const pathname = usePathname();
   const { data: session } = useSession();
@@ -70,9 +72,17 @@ export const FloatingMenu = ({ className }: FloatingMenuProps) => {
   const navigationItems = [
     { name: "Home", path: "/", icon: Home, label: "Trang chủ" },
     { name: "Products", path: "/products", icon: Package, label: "Sản phẩm" },
+    { name: "Services", path: "/services", icon: Code, label: "Dịch vụ" },
     { name: "About", path: "/about", icon: FileText, label: "Về chúng tôi" },
     { name: "Contact", path: "/contact", icon: Mail, label: "Liên hệ" },
-    { name: "Profile", path: "/profile", icon: User, label: "Tài khoản" },
+  ];
+
+  // User dropdown menu items
+  const userMenuItems = [
+    { name: "Tổng quan", path: "/profile?tab=overview", icon: User },
+    { name: "Đơn hàng", path: "/profile?tab=orders", icon: ShoppingCart },
+    { name: "Yêu thích", path: "/profile?tab=wishlist", icon: Heart },
+    { name: "Cài đặt", path: "/profile?tab=settings", icon: Settings },
   ];
 
   const isActive = (path: string) => pathname === path;
@@ -81,6 +91,7 @@ export const FloatingMenu = ({ className }: FloatingMenuProps) => {
   const handleNavigation = (path: string) => {
     // Close tooltip when navigating
     setShowTooltip(null);
+    setShowUserDropdown(false);
   };
 
   // Scroll to top với smooth animation
@@ -95,6 +106,19 @@ export const FloatingMenu = ({ className }: FloatingMenuProps) => {
   // Hide tooltip when mouse leaves the entire menu
   const handleMenuLeave = () => {
     setShowTooltip(null);
+    setShowUserDropdown(false);
+  };
+
+  // Handle user dropdown
+  const handleUserDropdown = () => {
+    setShowUserDropdown(!showUserDropdown);
+    setShowTooltip(null);
+  };
+
+  // Handle logout
+  const handleLogout = async () => {
+    await signOut({ callbackUrl: "/" });
+    setShowUserDropdown(false);
   };
 
   if (!isVisible) return null;
@@ -183,15 +207,96 @@ export const FloatingMenu = ({ className }: FloatingMenuProps) => {
           );
         })}
 
-        {/* Cart with Badge */}
-        <div className="relative group">
-          <Link href="/orders" onClick={() => handleNavigation("/orders")} className="block">
+        {/* User Account with Dropdown */}
+        {session && (
+          <div className="relative group">
             <button
-              onMouseEnter={() => setShowTooltip("/orders")}
+              onClick={handleUserDropdown}
+              onMouseEnter={() => setShowTooltip("/profile")}
               className={cn(
                 "w-9 h-9 rounded-xl flex items-center justify-center transition-all duration-200 relative",
                 "hover:scale-110 active:scale-95",
-                isActive("/orders")
+                isActive("/profile") || showUserDropdown
+                  ? "bg-primary text-primary-foreground shadow-lg shadow-primary/20" 
+                  : "bg-muted/60 text-muted-foreground hover:bg-accent hover:text-accent-foreground"
+              )}
+            >
+              <User className="h-4 w-4" />
+              
+              {/* Active indicator */}
+              {isActive("/profile") && (
+                <div className="absolute -right-0.5 top-1/2 -translate-y-1/2 w-0.5 h-5 bg-primary rounded-full animate-pulse" />
+              )}
+            </button>
+
+            {/* User Dropdown Menu */}
+            {showUserDropdown && (
+              <div className={cn(
+                "absolute left-12 top-0 z-20 min-w-[200px]",
+                "bg-popover text-popover-foreground rounded-lg backdrop-blur-sm border border-border shadow-lg",
+                "animate-in fade-in-0 slide-in-from-left-2 duration-200"
+              )}>
+                <div className="p-3 border-b border-border">
+                  <p className="font-medium text-sm">{session.user.name}</p>
+                  <p className="text-xs text-muted-foreground">{session.user.email}</p>
+                </div>
+                <div className="p-1">
+                  {userMenuItems.map((item) => {
+                    const IconComponent = item.icon;
+                    return (
+                      <Link
+                        key={item.path}
+                        href={item.path}
+                        onClick={() => handleNavigation(item.path)}
+                        className={cn(
+                          "flex items-center gap-3 px-3 py-2 text-sm rounded-md transition-colors",
+                          "hover:bg-accent hover:text-accent-foreground"
+                        )}
+                      >
+                        <IconComponent className="h-4 w-4" />
+                        {item.name}
+                      </Link>
+                    );
+                  })}
+                  <button
+                    onClick={handleLogout}
+                    className={cn(
+                      "w-full flex items-center gap-3 px-3 py-2 text-sm rounded-md transition-colors",
+                      "hover:bg-destructive hover:text-destructive-foreground text-left"
+                    )}
+                  >
+                    <LogOut className="h-4 w-4" />
+                    Đăng xuất
+                  </button>
+                </div>
+                <div className="absolute right-full top-4 border-4 border-transparent border-r-popover" />
+              </div>
+            )}
+
+            {/* Tooltip */}
+            {showTooltip === "/profile" && !showUserDropdown && (
+              <div className={cn(
+                "absolute left-12 top-1/2 -translate-y-1/2 px-2.5 py-1.5 z-10",
+                "bg-popover text-popover-foreground text-sm rounded-lg backdrop-blur-sm border border-border shadow-lg",
+                "whitespace-nowrap font-medium",
+                "animate-in fade-in-0 slide-in-from-left-2 duration-200"
+              )}>
+                Tài khoản
+                <div className="absolute right-full top-1/2 -translate-y-1/2 border-4 border-transparent border-r-popover" />
+              </div>
+            )}
+          </div>
+        )}
+
+        {/* Cart with Badge */}
+        <div className="relative group">
+          <Link href="/cart" onClick={() => handleNavigation("/cart")} className="block">
+            <button
+              onMouseEnter={() => setShowTooltip("/cart")}
+              className={cn(
+                "w-9 h-9 rounded-xl flex items-center justify-center transition-all duration-200 relative",
+                "hover:scale-110 active:scale-95",
+                isActive("/cart")
                   ? "bg-primary text-primary-foreground shadow-lg shadow-primary/20" 
                   : "bg-muted/60 text-muted-foreground hover:bg-accent hover:text-accent-foreground"
               )}
@@ -208,21 +313,21 @@ export const FloatingMenu = ({ className }: FloatingMenuProps) => {
               </Badge>
 
               {/* Active indicator */}
-              {isActive("/orders") && (
+              {isActive("/cart") && (
                 <div className="absolute -right-0.5 top-1/2 -translate-y-1/2 w-0.5 h-5 bg-primary rounded-full animate-pulse" />
               )}
             </button>
           </Link>
 
           {/* Tooltip */}
-          {showTooltip === "/orders" && (
+          {showTooltip === "/cart" && (
             <div className={cn(
               "absolute left-12 top-1/2 -translate-y-1/2 px-2.5 py-1.5 z-10",
               "bg-popover text-popover-foreground text-sm rounded-lg backdrop-blur-sm border border-border shadow-lg",
               "whitespace-nowrap font-medium",
               "animate-in fade-in-0 slide-in-from-left-2 duration-200"
             )}>
-              Đơn hàng (3)
+              Giỏ hàng (3)
               <div className="absolute right-full top-1/2 -translate-y-1/2 border-4 border-transparent border-r-popover" />
             </div>
           )}
