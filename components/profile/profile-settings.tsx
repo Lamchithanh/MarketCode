@@ -1,22 +1,109 @@
+"use client";
+
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { Button } from "@/components/ui/button";
 import { Separator } from "@/components/ui/separator";
-import { User, Mail, Shield, ShoppingCart, Download, Heart } from "lucide-react";
+import { ChangePasswordModal } from "./change-password-modal";
+import { UpdateProfileModal } from "./update-profile-modal";
+import { NotificationSettingsModal } from "./notification-settings-modal";
+import { ProfileInfoCard } from "./profile-info-card";
+import { ProfileStatsCard } from "./profile-stats-card";
+import { 
+  type ChangePasswordForm, 
+  type UpdateProfileForm,
+  type NotificationSettingsForm
+} from "@/lib/validations/profile";
 
 interface ProfileSettingsProps {
   user: {
     name?: string | null;
     email?: string | null;
     role?: string;
+    avatar?: string | null;
+    phone?: string | null;
   };
   stats: {
     totalOrders: number;
     downloads: number;
     wishlist: number;
   };
+  initialNotificationSettings?: NotificationSettingsForm;
+  onPasswordChange?: (data: ChangePasswordForm) => Promise<void>;
+  onProfileUpdate?: (data: UpdateProfileForm) => Promise<void>;
+  onAvatarChange?: (file: File | null) => Promise<void>;
+  onNotificationSettingsUpdate?: (settings: NotificationSettingsForm) => Promise<void>;
 }
 
-export function ProfileSettings({ user, stats }: ProfileSettingsProps) {
+export function ProfileSettings({ 
+  user, 
+  stats, 
+  initialNotificationSettings,
+  onPasswordChange,
+  onProfileUpdate,
+  onAvatarChange,
+  onNotificationSettingsUpdate
+}: ProfileSettingsProps) {
+
+  // Default handlers for demo purposes
+  const handlePasswordChange = async (data: ChangePasswordForm) => {
+    try {
+      if (onPasswordChange) {
+        await onPasswordChange(data);
+      } else {
+        // Default implementation
+        console.log("Changing password:", data);
+        // TODO: Implement API call
+      }
+    } catch (error) {
+      console.error("Error changing password:", error);
+      throw error;
+    }
+  };
+
+  const handleProfileUpdate = async (data: UpdateProfileForm) => {
+    try {
+      if (onProfileUpdate) {
+        await onProfileUpdate(data);
+      } else {
+        // Default implementation
+        console.log("Updating profile:", data);
+        // TODO: Implement API call
+      }
+    } catch (error) {
+      console.error("Error updating profile:", error);
+      throw error;
+    }
+  };
+
+  const handleAvatarChange = async (file: File | null) => {
+    try {
+      if (onAvatarChange) {
+        await onAvatarChange(file);
+      } else {
+        // Default implementation
+        console.log("Uploading avatar:", file);
+        // TODO: Implement API call
+      }
+    } catch (error) {
+      console.error("Error uploading avatar:", error);
+      throw error;
+    }
+  };
+
+  const handleNotificationSettingsUpdate = async (settings: NotificationSettingsForm) => {
+    try {
+      if (onNotificationSettingsUpdate) {
+        await onNotificationSettingsUpdate(settings);
+      } else {
+        // Default implementation
+        console.log("Updating notification settings:", settings);
+        // TODO: Implement API call
+      }
+    } catch (error) {
+      console.error("Error updating notification settings:", error);
+      throw error;
+    }
+  };
+
   return (
     <Card className="border-0 shadow-lg">
       <CardHeader>
@@ -27,50 +114,28 @@ export function ProfileSettings({ user, stats }: ProfileSettingsProps) {
       </CardHeader>
       <CardContent>
         <div className="space-y-6">
+          {/* Profile Information Grid */}
           <div className="grid md:grid-cols-2 gap-6">
-            <div>
-              <h4 className="font-medium mb-4">Thông tin cá nhân</h4>
-              <div className="space-y-3">
-                <div className="flex items-center gap-3">
-                  <User className="h-4 w-4 text-muted-foreground" />
-                  <span className="text-sm">Họ tên: {user.name}</span>
-                </div>
-                <div className="flex items-center gap-3">
-                  <Mail className="h-4 w-4 text-muted-foreground" />
-                  <span className="text-sm">Email: {user.email}</span>
-                </div>
-                <div className="flex items-center gap-3">
-                  <Shield className="h-4 w-4 text-muted-foreground" />
-                  <span className="text-sm">Vai trò: {user.role}</span>
-                </div>
-              </div>
-            </div>
-            
-            <div>
-              <h4 className="font-medium mb-4">Thống kê</h4>
-              <div className="space-y-3">
-                <div className="flex items-center gap-3">
-                  <ShoppingCart className="h-4 w-4 text-muted-foreground" />
-                  <span className="text-sm">Đơn hàng: {stats.totalOrders}</span>
-                </div>
-                <div className="flex items-center gap-3">
-                  <Download className="h-4 w-4 text-muted-foreground" />
-                  <span className="text-sm">Tải xuống: {stats.downloads}</span>
-                </div>
-                <div className="flex items-center gap-3">
-                  <Heart className="h-4 w-4 text-muted-foreground" />
-                  <span className="text-sm">Yêu thích: {stats.wishlist}</span>
-                </div>
-              </div>
-            </div>
+            <ProfileInfoCard user={user} />
+            <ProfileStatsCard stats={stats} />
           </div>
           
           <Separator />
           
-          <div className="flex gap-4">
-            <Button variant="outline">Đổi mật khẩu</Button>
-            <Button variant="outline">Cập nhật thông tin</Button>
-            <Button variant="outline">Cài đặt thông báo</Button>
+          {/* Action Buttons */}
+          <div className="flex gap-4 flex-wrap">
+            <ChangePasswordModal 
+              onPasswordChange={handlePasswordChange}
+            />
+            <UpdateProfileModal 
+              user={user}
+              onProfileUpdate={handleProfileUpdate}
+              onAvatarChange={handleAvatarChange}
+            />
+            <NotificationSettingsModal 
+              initialSettings={initialNotificationSettings}
+              onSettingsUpdate={handleNotificationSettingsUpdate}
+            />
           </div>
         </div>
       </CardContent>
