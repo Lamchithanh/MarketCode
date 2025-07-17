@@ -15,6 +15,7 @@ import {
   MessageSquare,
   Clock
 } from "lucide-react";
+import Link from "next/link";
 
 interface ServicePackage {
   id: string;
@@ -202,12 +203,16 @@ export function ServicePackages() {
                 </ul>
 
                                   <div className="pt-4 space-y-2">
-                    <Button className="w-full">
-                      Đặt dịch vụ ngay
+                    <Button className="w-full" asChild>
+                      <Link href={`/services/${pkg.id}`}>
+                        Xem chi tiết
+                      </Link>
                     </Button>
-                    <Button variant="outline" className="w-full">
-                      <MessageSquare className="h-4 w-4 mr-2" />
-                      Tư vấn chi tiết
+                    <Button variant="outline" className="w-full" asChild>
+                      <Link href={`/contact?subject=service&type=consultation&package=${pkg.id}`}>
+                        <MessageSquare className="h-4 w-4 mr-2" />
+                        Tư vấn ngay
+                      </Link>
                     </Button>
                   </div>
               </CardContent>
@@ -223,8 +228,10 @@ export function ServicePackages() {
             <p className="text-muted-foreground mb-6">
               Chúng tôi có thể tạo gói dịch vụ tùy chỉnh phù hợp với nhu cầu cụ thể của bạn
             </p>
-            <Button size="lg">
-              Liên hệ tư vấn miễn phí
+            <Button size="lg" asChild>
+              <Link href="/contact?subject=service&type=custom">
+                Liên hệ tư vấn miễn phí
+              </Link>
             </Button>
           </div>
         </div>

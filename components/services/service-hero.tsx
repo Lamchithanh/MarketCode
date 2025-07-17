@@ -2,6 +2,7 @@
 
 import { Button } from "@/components/ui/button";
 import { ArrowRight, Code, Wrench, Users } from "lucide-react";
+import Link from "next/link";
 
 export function ServiceHero() {
   const scrollToPackages = () => {
@@ -34,8 +35,11 @@ export function ServiceHero() {
               size="lg" 
               variant="outline" 
               className="px-8 py-3"
+              asChild
             >
-              Tư vấn miễn phí
+              <Link href="/contact?subject=service&type=consultation">
+                Tư vấn miễn phí
+              </Link>
             </Button>
           </div>
         </div>

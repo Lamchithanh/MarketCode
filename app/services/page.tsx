@@ -5,8 +5,8 @@ import { ServiceHero } from "@/components/services/service-hero";
 import { ServicePackages } from "@/components/services/service-packages";
 import { ServiceProcess } from "@/components/services/service-process";
 import { ServiceFAQ } from "@/components/services/service-faq";
-import { ServiceContact } from "@/components/services/service-contact";
 import { ServiceTestimonials } from "@/components/services/service-testimonials";
+import { ServiceCTA } from "@/components/services/service-cta";
 
 export const metadata: Metadata = {
   title: "Dịch vụ phát triển web chuyên nghiệp | CodeMarket",
@@ -24,7 +24,7 @@ export default function ServicesPage() {
         <ServiceProcess />
         <ServiceTestimonials />
         <ServiceFAQ />
-        <ServiceContact />
+        <ServiceCTA />
       </main>
       <Footer />
     </div>
