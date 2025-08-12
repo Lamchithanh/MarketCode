@@ -121,7 +121,10 @@ export const FloatingMenu = ({ className }: FloatingMenuProps) => {
     setShowUserDropdown(false);
   };
 
-  if (!isVisible) return null;
+  // Hide FloatingMenu on auth pages
+  const isAuthPage = pathname === "/login" || pathname === "/register";
+  
+  if (!isVisible || isAuthPage) return null;
 
   return (
     <div className={cn(
