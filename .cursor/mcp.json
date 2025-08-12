@@ -1,0 +1,14 @@
+{
+    "mcpServers": {
+      "MarketCode": {
+        "command": "npx",
+        "args": [
+          "-y",
+          "@supabase/mcp-server-supabase@latest"
+        ],
+        "env": {
+          "SUPABASE_ACCESS_TOKEN": "postgresql://postgres.tpatqvqlfklagdkxeqpt:Thanh050903@@aws-1-ap-southeast-1.pooler.supabase.com:5432/postgres"
+        }
+      }
+    }
+  }

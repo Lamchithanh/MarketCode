@@ -1,22 +1,34 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { ReactNode } from "react";
+import { useIsClient } from "@/hooks/use-hydration";
 
 interface NoSSRProps {
-  children: React.ReactNode;
-  fallback?: React.ReactNode;
+  children: ReactNode;
+  fallback?: ReactNode;
 }
 
 export function NoSSR({ children, fallback = null }: NoSSRProps) {
-  const [mounted, setMounted] = useState(false);
+  const isClient = useIsClient();
 
-  useEffect(() => {
-    setMounted(true);
-  }, []);
-
-  if (!mounted) {
+  if (!isClient) {
     return <>{fallback}</>;
   }
 
   return <>{children}</>;
-} 
+}
+
+// Auth-specific NoSSR wrapper with consistent fallback
+interface AuthNoSSRProps {
+  children: ReactNode;
+}
+
+export function AuthNoSSR({ children }: AuthNoSSRProps) {
+  return (
+    <NoSSR fallback={
+      <div className="h-8 w-8 rounded-full bg-muted animate-pulse" />
+    }>
+      {children}
+    </NoSSR>
+  );
+}

@@ -4,6 +4,7 @@ import "./globals.css";
 import { AuthProvider } from "@/components/providers/session-provider";
 import { BackToTop } from "@/components/ui/back-to-top";
 import { FloatingMenu } from "@/components/landing";
+import { NoSSR } from "@/components/ui/no-ssr";
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -26,15 +27,17 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <html lang="en">
+    <html lang="en" suppressHydrationWarning>
       <body
         className={`${geistSans.variable} ${geistMono.variable} antialiased`}
-        suppressHydrationWarning={true}
+        suppressHydrationWarning
       >
         <AuthProvider>
           {children}
-          <BackToTop />
-          <FloatingMenu />
+          <NoSSR>
+            <BackToTop />
+            <FloatingMenu />
+          </NoSSR>
         </AuthProvider>
       </body>
     </html>

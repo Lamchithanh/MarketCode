@@ -10,13 +10,11 @@ interface HydrationBoundaryProps {
 
 export function HydrationBoundary({ 
   children, 
-  fallback = <div className="animate-pulse bg-gray-100 min-h-screen" /> 
+  fallback 
 }: HydrationBoundaryProps) {
   const isClient = useIsClient();
 
-  if (!isClient) {
-    return <>{fallback}</>;
-  }
-
+  // Return children immediately to avoid hydration mismatch
+  // Let individual components handle their own loading states
   return <>{children}</>;
 } 

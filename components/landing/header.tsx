@@ -10,6 +10,7 @@ import { UserNav } from "@/components/ui/user-nav";
 import { useIsClient } from "@/hooks/use-hydration";
 import { useScrollProgress } from "@/hooks/use-scroll-progress";
 import { cn } from "@/lib/utils";
+import { AuthNoSSR } from "@/components/ui/no-ssr";
 
 const navItems: NavItem[] = [
   { label: "Trang chủ", href: "/" },
@@ -80,32 +81,32 @@ export function Header() {
             </Link>
           </Button>
           
-          {!isClient ? (
-            <div className="animate-pulse bg-gray-200 rounded-full h-8 w-8"></div>
-          ) : session ? (
-            <UserNav />
-          ) : (
-            <>
-              <Button 
-                variant="ghost" 
-                size="default"
-                asChild
-              >
-                <Link href="/login">
-                  <User className="h-4 w-4 mr-2" />
-                  Đăng nhập
-                </Link>
-              </Button>
-              <Button 
-                size="default"
-                asChild
-              >
-                <Link href="/register">
-                  Đăng ký
-                </Link>
-              </Button>
-            </>
-          )}
+          <AuthNoSSR>
+            {session ? (
+              <UserNav />
+            ) : (
+              <>
+                <Button 
+                  variant="ghost" 
+                  size="default"
+                  asChild
+                >
+                  <Link href="/login">
+                    <User className="h-4 w-4 mr-2" />
+                    Đăng nhập
+                  </Link>
+                </Button>
+                <Button 
+                  size="default"
+                  asChild
+                >
+                  <Link href="/register">
+                    Đăng ký
+                  </Link>
+                </Button>
+              </>
+            )}
+          </AuthNoSSR>
         </div>
 
         {/* Mobile Menu Button */}
@@ -143,33 +144,33 @@ export function Header() {
             ))}
             
             <div className="border-t pt-4 space-y-2">
-              {!isClient ? (
-                <div className="animate-pulse bg-gray-200 rounded-lg h-10 w-full"></div>
-              ) : session ? (
-                <div className="flex items-center space-x-3 px-4 py-3">
-                  <UserNav />
-                  <span className="font-medium">{session.user?.name}</span>
-                </div>
-              ) : (
-                <>
-                  <Link
-                    href="/login"
-                    className="flex items-center space-x-3 px-4 py-3 rounded-lg transition-colors hover:bg-accent hover:text-accent-foreground"
-                    onClick={() => setIsOpen(false)}
-                  >
-                    <User className="h-5 w-5" />
-                    <span className="font-medium">Đăng nhập</span>
-                  </Link>
-                  <Link
-                    href="/register"
-                    className="flex items-center space-x-3 px-4 py-3 rounded-lg transition-colors hover:bg-accent hover:text-accent-foreground"
-                    onClick={() => setIsOpen(false)}
-                  >
-                    <User className="h-5 w-5" />
-                    <span className="font-medium">Đăng ký</span>
-                  </Link>
-                </>
-              )}
+              <AuthNoSSR>
+                {session ? (
+                  <div className="flex items-center space-x-3 px-4 py-3">
+                    <UserNav />
+                    <span className="font-medium">{session.user?.name}</span>
+                  </div>
+                ) : (
+                  <>
+                    <Link
+                      href="/login"
+                      className="flex items-center space-x-3 px-4 py-3 rounded-lg transition-colors hover:bg-accent hover:text-accent-foreground"
+                      onClick={() => setIsOpen(false)}
+                    >
+                      <User className="h-5 w-5" />
+                      <span className="font-medium">Đăng nhập</span>
+                    </Link>
+                    <Link
+                      href="/register"
+                      className="flex items-center space-x-3 px-4 py-3 rounded-lg transition-colors hover:bg-accent hover:text-accent-foreground"
+                      onClick={() => setIsOpen(false)}
+                    >
+                      <User className="h-5 w-5" />
+                      <span className="font-medium">Đăng ký</span>
+                    </Link>
+                  </>
+                )}
+              </AuthNoSSR>
             </div>
           </nav>
         </div>
