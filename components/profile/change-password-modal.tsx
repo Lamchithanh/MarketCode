@@ -8,6 +8,7 @@ import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Key, Save, X } from "lucide-react";
+import { toast, toastMessages } from "@/components/ui/toast";
 import { 
   changePasswordSchema, 
   type ChangePasswordForm 
@@ -37,7 +38,7 @@ export function ChangePasswordModal({ onPasswordChange, disabled = false }: Chan
       form.reset();
     } catch (error) {
       console.error("Error changing password:", error);
-      // TODO: Show error toast
+      toast.error(toastMessages.auth.passwordChanged + " - Có lỗi xảy ra!");
     }
   };
 

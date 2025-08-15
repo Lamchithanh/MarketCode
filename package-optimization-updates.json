@@ -1,0 +1,37 @@
+{
+  "name": "marketcode-optimization-dependencies",
+  "version": "1.0.0",
+  "description": "Additional dependencies for MarketCode database optimization",
+  "dependencies": {
+    "lru-cache": "^10.2.0",
+    "ioredis": "^5.3.2",
+    "pg": "^8.11.3"
+  },
+  "devDependencies": {
+    "@types/pg": "^8.10.9"
+  },
+  "scripts": {
+    "install-optimization": "npm install lru-cache ioredis pg && npm install --save-dev @types/pg",
+    "db-optimize": "echo 'Run database-optimizations.sql in your PostgreSQL database'",
+    "cache-test": "node -e \"const { CacheService } = require('./lib/cache'); console.log('Cache service loaded successfully');\"",
+    "performance-test": "node -e \"const { PerformanceMonitor } = require('./lib/performance-monitor'); console.log('Performance monitor loaded successfully');\""
+  },
+  "keywords": [
+    "database",
+    "optimization",
+    "caching",
+    "performance",
+    "postgresql",
+    "supabase"
+  ],
+  "author": "MarketCode Database Administrator Team",
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/marketcode/optimization"
+  },
+  "engines": {
+    "node": ">=18.0.0",
+    "npm": ">=8.0.0"
+  }
+}

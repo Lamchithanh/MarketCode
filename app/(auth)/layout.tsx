@@ -8,16 +8,15 @@ const AuthLayout = ({ children }: { children: React.ReactNode }) => {
     <div className="h-screen flex overflow-hidden" style={{ backgroundColor: '#f5f2f3' }}>
       {/* Left Side - Image Only */}
       <div className="hidden lg:flex lg:w-1/2 relative justify-center items-center">
-      <div className="relative w-150 h-150 rounded-lg">
-  <Image
-    src="/Images/download.jpg"
-    alt="MarketCode"
-    fill
-    className="object-contain"
-    priority
-  />
-</div>
-
+        <div className="relative w-150 h-150 rounded-2xl overflow-hidden">
+          <Image
+            src="/Images/BEO.jpg"
+            alt="MarketCode"
+            fill
+            className="object-contain rounded-2xl"
+            priority
+          />
+        </div>
       </div>
 
       {/* Right Side - Auth Form (Fixed, No Scroll) */}

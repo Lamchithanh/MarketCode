@@ -5,6 +5,7 @@ import { AuthProvider } from "@/components/providers/session-provider";
 import { BackToTop } from "@/components/ui/back-to-top";
 import { FloatingMenu } from "@/components/landing";
 import { NoSSR } from "@/components/ui/no-ssr";
+import { Toaster } from "@/components/ui/sonner";
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -38,6 +39,7 @@ export default function RootLayout({
             <BackToTop />
             <FloatingMenu />
           </NoSSR>
+          <Toaster />
         </AuthProvider>
       </body>
     </html>

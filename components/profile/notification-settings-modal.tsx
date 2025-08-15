@@ -7,6 +7,7 @@ import { Switch } from "@/components/ui/switch";
 import { Label } from "@/components/ui/label";
 import { Separator } from "@/components/ui/separator";
 import { Bell, Save, X } from "lucide-react";
+import { toast, toastMessages } from "@/components/ui/toast";
 import { 
   defaultNotificationSettings,
   type NotificationSettingsForm 
@@ -41,7 +42,7 @@ export function NotificationSettingsModal({
       setOpen(false);
     } catch (error) {
       console.error("Error saving notification settings:", error);
-      // TODO: Show error toast
+      toast.error("Không thể lưu cài đặt thông báo. Vui lòng thử lại!");
     } finally {
       setIsSaving(false);
     }

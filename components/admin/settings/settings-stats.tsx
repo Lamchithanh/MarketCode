@@ -1,0 +1,44 @@
+'use client';
+
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Settings, Globe, Key, Bell } from 'lucide-react';
+
+interface Setting {
+  id: string;
+  type: string;
+}
+
+interface SettingsStatsProps {
+  settings: Setting[];
+}
+
+export function SettingsStats({ settings }: SettingsStatsProps) {
+  const stats = [
+    { title: 'Total Settings', value: settings.length, icon: Settings, bgColor: 'bg-stone-100', iconColor: 'text-stone-600' },
+    { title: 'String Settings', value: settings.filter(s => s.type === 'string').length, icon: Globe, bgColor: 'bg-stone-100', iconColor: 'text-stone-600' },
+    { title: 'Boolean Settings', value: settings.filter(s => s.type === 'boolean').length, icon: Bell, bgColor: 'bg-stone-100', iconColor: 'text-stone-600' },
+    { title: 'Number Settings', value: settings.filter(s => s.type === 'number').length, icon: Key, bgColor: 'bg-stone-100', iconColor: 'text-stone-600' },
+  ];
+
+  return (
+    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+      {stats.map((stat, index) => {
+        const Icon = stat.icon;
+        return (
+          <Card key={index} className="border-0 shadow-lg hover:shadow-xl transition-shadow duration-300">
+            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+              <CardTitle className="text-sm font-medium text-muted-foreground">{stat.title}</CardTitle>
+              <div className={`w-10 h-10 ${stat.bgColor} rounded-lg flex items-center justify-center`}>
+                <Icon className={`h-5 w-5 ${stat.iconColor}`} />
+              </div>
+            </CardHeader>
+            <CardContent>
+              <div className="text-2xl font-bold text-foreground">{stat.value}</div>
+              <p className="text-xs text-stone-600">Updated recently</p>
+            </CardContent>
+          </Card>
+        );
+      })}
+    </div>
+  );
+}

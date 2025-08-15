@@ -244,9 +244,13 @@ function Sidebar({
         <div
           data-sidebar="sidebar"
           data-slot="sidebar-inner"
-          className="bg-sidebar group-data-[variant=floating]:border-sidebar-border flex h-full w-full flex-col group-data-[variant=floating]:rounded-lg group-data-[variant=floating]:border group-data-[variant=floating]:shadow-sm"
+          className="relative bg-sidebar text-sidebar-foreground flex h-full w-full flex-col group-data-[variant=floating]:border-sidebar-border group-data-[variant=floating]:rounded-lg group-data-[variant=floating]:border group-data-[variant=floating]:shadow-sm"
         >
-          {children}
+          <div className="pointer-events-none absolute inset-0 bg-gradient-to-b from-primary/10 via-background/40 to-accent/10" />
+          <div className="pointer-events-none absolute inset-0 bg-grid-pattern opacity-5" />
+          <div className="relative flex h-full w-full flex-col">
+            {children}
+          </div>
         </div>
       </div>
     </div>
@@ -337,7 +341,11 @@ function SidebarHeader({ className, ...props }: React.ComponentProps<"div">) {
     <div
       data-slot="sidebar-header"
       data-sidebar="header"
-      className={cn("flex flex-col gap-2 p-2", className)}
+      className={cn(
+        "flex flex-col gap-2 p-2",
+        "bg-gradient-to-r from-primary/10 via-background to-accent/10 rounded-md",
+        className
+      )}
       {...props}
     />
   )
@@ -348,7 +356,11 @@ function SidebarFooter({ className, ...props }: React.ComponentProps<"div">) {
     <div
       data-slot="sidebar-footer"
       data-sidebar="footer"
-      className={cn("flex flex-col gap-2 p-2", className)}
+      className={cn(
+        "flex flex-col gap-2 p-2",
+        "bg-gradient-to-r from-accent/10 via-background to-primary/10 rounded-md",
+        className
+      )}
       {...props}
     />
   )
@@ -362,7 +374,11 @@ function SidebarSeparator({
     <Separator
       data-slot="sidebar-separator"
       data-sidebar="separator"
-      className={cn("bg-sidebar-border mx-2 w-auto", className)}
+      className={cn(
+        "mx-2 w-auto",
+        "bg-gradient-to-r from-transparent via-primary/20 to-transparent",
+        className
+      )}
       {...props}
     />
   )
@@ -406,6 +422,7 @@ function SidebarGroupLabel({
       data-sidebar="group-label"
       className={cn(
         "text-sidebar-foreground/70 ring-sidebar-ring flex h-8 shrink-0 items-center rounded-md px-2 text-xs font-medium outline-hidden transition-[margin,opacity] duration-200 ease-linear focus-visible:ring-2 [&>svg]:size-4 [&>svg]:shrink-0",
+        "bg-background/60 border border-sidebar-border",
         "group-data-[collapsible=icon]:-mt-8 group-data-[collapsible=icon]:opacity-0",
         className
       )}

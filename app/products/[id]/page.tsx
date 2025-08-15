@@ -4,6 +4,7 @@ import { Header } from "@/components/landing/header";
 import { Footer } from "@/components/landing/footer";
 import { ProductDetail } from "@/components/products/product-detail";
 import { Project } from "@/types";
+import { CardLoader } from "@/components/ui/loader";
 
 // Mock data - trong thực tế sẽ fetch từ database
 const products: Project[] = [
@@ -64,7 +65,7 @@ export default async function ProductPage({ params }: ProductPageProps) {
     <div className="min-h-screen bg-background">
       <Header />
       <main>
-        <Suspense fallback={<div>Loading...</div>}>
+        <Suspense fallback={<CardLoader />}>
           <ProductDetail product={product} />
         </Suspense>
       </main>

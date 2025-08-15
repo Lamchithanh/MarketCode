@@ -10,6 +10,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
 import { Settings, Save, X } from "lucide-react";
+import { toast, toastMessages } from "@/components/ui/toast";
 import { AvatarUpload } from "./avatar-upload";
 import { 
   updateProfileSchema, 
@@ -52,7 +53,7 @@ export function UpdateProfileModal({
       setOpen(false);
     } catch (error) {
       console.error("Error updating profile:", error);
-      // TODO: Show error toast
+      toast.error("Không thể cập nhật thông tin. Vui lòng thử lại!");
     }
   };
 
@@ -66,7 +67,7 @@ export function UpdateProfileModal({
       await onAvatarChange?.(file);
     } catch (error) {
       console.error("Error uploading avatar:", error);
-      // TODO: Show error toast
+      toast.error("Không thể tải ảnh đại diện. Vui lòng thử lại!");
     }
   };
 

@@ -40,6 +40,16 @@ export const FloatingMenu = ({ className }: FloatingMenuProps) => {
   const pathname = usePathname();
   const { data: session } = useSession();
 
+  // Ẩn floating menu khi ở trong admin panel
+  const isAdminPanel = pathname.startsWith('/admin');
+
+  // Ẩn menu ngay lập tức khi chuyển vào admin panel
+  useEffect(() => {
+    if (isAdminPanel) {
+      setIsVisible(false);
+    }
+  }, [isAdminPanel]);
+
   // Enhanced scroll detection
   useEffect(() => {
     let lastScrollY = 0;
@@ -50,8 +60,8 @@ export const FloatingMenu = ({ className }: FloatingMenuProps) => {
         requestAnimationFrame(() => {
           const scrollY = window.scrollY;
           
-          // Show menu after scrolling down 150px
-          const shouldShow = scrollY > 150;
+          // Show menu after scrolling down 150px, nhưng chỉ khi không ở admin panel
+          const shouldShow = scrollY > 150 && !isAdminPanel;
           setIsVisible(shouldShow);
           
           // Track scroll direction for subtle animations
@@ -64,9 +74,12 @@ export const FloatingMenu = ({ className }: FloatingMenuProps) => {
       }
     };
 
-    window.addEventListener('scroll', handleScroll, { passive: true });
-    return () => window.removeEventListener('scroll', handleScroll);
-  }, []);
+    // Chỉ thêm event listener khi không ở admin panel
+    if (!isAdminPanel) {
+      window.addEventListener('scroll', handleScroll, { passive: true });
+      return () => window.removeEventListener('scroll', handleScroll);
+    }
+  }, [isAdminPanel]);
 
   // Navigation items with icons
   const navigationItems = [
@@ -121,10 +134,14 @@ export const FloatingMenu = ({ className }: FloatingMenuProps) => {
     setShowUserDropdown(false);
   };
 
-  // Hide FloatingMenu on auth pages
+  // Hide FloatingMenu on auth pages and admin panel
   const isAuthPage = pathname === "/login" || pathname === "/register";
   
-  if (!isVisible || isAuthPage) return null;
+  // Ẩn hoàn toàn khi ở admin panel hoặc auth pages
+  if (isAuthPage || isAdminPanel) return null;
+  
+  // Ẩn khi không visible
+  if (!isVisible) return null;
 
   return (
     <div className={cn(

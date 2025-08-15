@@ -15,6 +15,7 @@ import { signIn } from "next-auth/react";
 import { useRouter, usePathname } from "next/navigation";
 import { ArrowLeft, ArrowRight, Eye, EyeOff } from "lucide-react";
 import Image from "next/image";
+import { toast, toastMessages } from "@/components/ui/toast";
 
 interface AuthFormProps {
   mode?: "login" | "register";
@@ -90,16 +91,20 @@ export function AuthForm({ mode: propMode, onModeChange }: AuthFormProps) {
 
       if (result?.error) {
         setError("Email hoặc mật khẩu không chính xác");
+        toast.error("Email hoặc mật khẩu không chính xác");
         return;
       }
 
       if (result?.ok) {
+        toast.success(toastMessages.auth.loginSuccess);
         router.push("/");
         router.refresh();
       }
     } catch (error) {
       console.error("Login error:", error);
-      setError("Đã xảy ra lỗi khi đăng nhập");
+      const errorMessage = "Đã xảy ra lỗi khi đăng nhập";
+      setError(errorMessage);
+      toast.error(errorMessage);
     }
   };
 
@@ -119,11 +124,15 @@ export function AuthForm({ mode: propMode, onModeChange }: AuthFormProps) {
       const result = await response.json();
 
       if (!response.ok) {
-        setError(result.error || "Đã xảy ra lỗi khi đăng ký");
+        const errorMessage = result.error || "Đã xảy ra lỗi khi đăng ký";
+        setError(errorMessage);
+        toast.error(errorMessage);
         return;
       }
 
-      setSuccess("Tài khoản đã được tạo thành công!");
+      const successMessage = "Tài khoản đã được tạo thành công!";
+      setSuccess(successMessage);
+      toast.success(successMessage);
       
       // Auto switch to login after 2 seconds
       setTimeout(() => {
@@ -132,7 +141,9 @@ export function AuthForm({ mode: propMode, onModeChange }: AuthFormProps) {
       }, 2000);
     } catch (error) {
       console.error("Registration error:", error);
-      setError("Đã xảy ra lỗi khi đăng ký");
+      const errorMessage = "Đã xảy ra lỗi khi đăng ký";
+      setError(errorMessage);
+      toast.error(errorMessage);
     }
   };
 
