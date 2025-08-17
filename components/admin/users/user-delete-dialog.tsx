@@ -12,33 +12,29 @@ import {
 } from '@/components/ui/dialog';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { AlertTriangle, Trash2 } from 'lucide-react';
-
-interface User {
-  id: string;
-  name: string;
-  email: string;
-  avatar?: string;
-}
+import { User } from '@/lib/services/user-service';
 
 interface UserDeleteDialogProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
   user: User | null;
   onConfirm: (user: User) => void;
+  loading?: boolean;
 }
 
 export function UserDeleteDialog({ 
   open, 
   onOpenChange, 
   user, 
-  onConfirm 
+  onConfirm,
+  loading = false
 }: UserDeleteDialogProps) {
-  const [loading, setLoading] = useState(false);
+  const [localLoading, setLocalLoading] = useState(false);
 
   const handleConfirm = async () => {
     if (!user) return;
     
-    setLoading(true);
+    setLocalLoading(true);
     try {
       // Simulate API call
       await new Promise(resolve => setTimeout(resolve, 1000));
@@ -47,9 +43,11 @@ export function UserDeleteDialog({
     } catch (error) {
       console.error('Error deleting user:', error);
     } finally {
-      setLoading(false);
+      setLocalLoading(false);
     }
   };
+
+  const isLoading = loading || localLoading;
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
@@ -98,18 +96,20 @@ export function UserDeleteDialog({
           <Button 
             variant="outline" 
             onClick={() => onOpenChange(false)}
-            disabled={loading}
+            disabled={isLoading}
           >
             Cancel
           </Button>
           <Button 
-            variant="destructive"
+            variant="destructive" 
             onClick={handleConfirm}
-            disabled={loading}
-            className="bg-red-600 hover:bg-red-700"
+            disabled={isLoading}
           >
-            {loading ? (
-              'Deleting...'
+            {isLoading ? (
+              <>
+                <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white mr-2" />
+                Deleting...
+              </>
             ) : (
               <>
                 <Trash2 className="h-4 w-4 mr-2" />

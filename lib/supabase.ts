@@ -20,41 +20,6 @@ export const supabase = createClient(supabaseUrl, supabaseAnonKey, {
   },
 });
 
-// Admin client with service role key (for server-side operations)
-// Using SERVICE ROLE for full database access - Admin/Roles server
-export const supabaseAdmin = createClient(
-  supabaseUrl,
-  process.env.SUPABASE_SERVICE_ROLE_KEY!,
-  {
-    auth: {
-      autoRefreshToken: false,
-      persistSession: false,
-    },
-    global: {
-      headers: {
-        "x-client-info": "market-code-admin@1.0.0",
-      },
-    },
-  }
-);
-
-// Primary client using SERVICE ROLE for this roles/admin server
-export const supabaseServiceRole = createClient(
-  supabaseUrl,
-  process.env.SUPABASE_SERVICE_ROLE_KEY!,
-  {
-    auth: {
-      autoRefreshToken: false,
-      persistSession: false,
-    },
-    global: {
-      headers: {
-        "x-client-info": "market-code-service-role@1.0.0",
-      },
-    },
-  }
-);
-
 // Types for better TypeScript support
 export type Database = {
   public: {

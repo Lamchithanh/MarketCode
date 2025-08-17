@@ -9,15 +9,8 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
-import { MoreHorizontal, Edit, Eye, Trash2, Shield, UserX } from 'lucide-react';
-
-interface User {
-  id: string;
-  name: string;
-  email: string;
-  role: 'USER' | 'ADMIN';
-  isActive: boolean;
-}
+import { MoreHorizontal, Edit, Eye, Trash2, Shield, UserX, Mail, CheckCircle } from 'lucide-react';
+import { User } from '@/lib/services/user-service';
 
 interface UserActionsProps {
   user: User;
@@ -25,6 +18,7 @@ interface UserActionsProps {
   onDelete: (user: User) => void;
   onView?: (user: User) => void;
   onToggleStatus?: (user: User) => void;
+  onVerifyEmail?: (user: User) => void;
 }
 
 export function UserActions({ 
@@ -32,7 +26,8 @@ export function UserActions({
   onEdit, 
   onDelete, 
   onView,
-  onToggleStatus 
+  onToggleStatus,
+  onVerifyEmail
 }: UserActionsProps) {
   return (
     <DropdownMenu>
@@ -67,6 +62,18 @@ export function UserActions({
                 Activate
               </>
             )}
+          </DropdownMenuItem>
+        )}
+        {onVerifyEmail && !user.emailVerified && (
+          <DropdownMenuItem onClick={() => onVerifyEmail(user)}>
+            <Mail className="mr-2 h-4 w-4" />
+            Verify Email
+          </DropdownMenuItem>
+        )}
+        {user.emailVerified && (
+          <DropdownMenuItem disabled className="text-green-600">
+            <CheckCircle className="mr-2 h-4 w-4" />
+            Email Verified
           </DropdownMenuItem>
         )}
         <DropdownMenuSeparator />

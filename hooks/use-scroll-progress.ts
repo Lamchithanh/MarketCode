@@ -14,9 +14,16 @@ export function useScrollProgress({ threshold = 300 }: UseScrollProgressProps = 
     const updateScrollProgress = () => {
       const scrolled = document.documentElement.scrollTop;
       const maxHeight = document.documentElement.scrollHeight - document.documentElement.clientHeight;
-      const progress = Math.round((scrolled / maxHeight) * 100);
       
-      setScrollProgress(Math.min(progress, 100));
+      // Prevent division by zero and ensure valid progress value
+      let progress = 0;
+      if (maxHeight > 0) {
+        progress = Math.round((scrolled / maxHeight) * 100);
+        progress = Math.min(progress, 100);
+        progress = Math.max(progress, 0); // Ensure progress is not negative
+      }
+      
+      setScrollProgress(progress);
       setIsVisible(scrolled > threshold);
     };
 

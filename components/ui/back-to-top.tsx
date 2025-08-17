@@ -28,7 +28,7 @@ export function BackToTop() {
   const shouldShowFloating = isVisible && !isScrolledHeader && scrollY < 150;
 
   const circumference = 2 * Math.PI * 18; // radius = 18
-  const strokeDashoffset = circumference - (scrollProgress / 100) * circumference;
+  const strokeDashoffset = Math.max(0, Math.min(circumference, circumference - (scrollProgress / 100) * circumference));
 
   return (
     <div className={cn(
@@ -64,8 +64,8 @@ export function BackToTop() {
                     stroke="currentColor"
                     strokeWidth="2"
                     strokeLinecap="round"
-                    strokeDasharray={circumference}
-                    strokeDashoffset={strokeDashoffset}
+                    strokeDasharray={circumference.toString()}
+                    strokeDashoffset={strokeDashoffset.toString()}
                     className="text-primary transition-all duration-300 ease-out"
                   />
                 </svg>

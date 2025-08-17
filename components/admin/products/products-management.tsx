@@ -29,8 +29,10 @@ import { MoreHorizontal, Edit, Eye, Trash2, Download, Database } from 'lucide-re
 import { ProductViewDialog } from './product-view-dialog';
 import { ProductFormDialog } from './product-form-dialog';
 import { ProductDeleteDialog } from './product-delete-dialog';
+import { useProducts } from '@/hooks/use-products';
+import { toast } from 'sonner';
 
-interface Product {
+interface ProductItem {
   id: string;
   title: string;
   slug: string;
@@ -47,88 +49,72 @@ interface Product {
   updatedAt: string;
 }
 
-const mockProducts: Product[] = [
-  {
-    id: '1',
-    title: 'React Admin Dashboard',
-    slug: 'react-admin-dashboard',
-    description: 'Modern admin dashboard built with React',
-    price: 29.99,
-    thumbnailUrl: 'https://via.placeholder.com/150',
-    downloadCount: 1250,
-    viewCount: 5670,
-    isActive: true,
-    category: 'Dashboard',
-    tags: ['React', 'Admin', 'Dashboard'],
-    technologies: ['React', 'TypeScript', 'Tailwind CSS'],
-    createdAt: '2024-01-01T00:00:00Z',
-    updatedAt: '2024-01-15T00:00:00Z',
-  },
-  {
-    id: '2',
-    title: 'Vue.js E-commerce Template',
-    slug: 'vuejs-ecommerce-template',
-    description: 'E-commerce website template with Vue.js',
-    price: 39.99,
-    thumbnailUrl: 'https://via.placeholder.com/150',
-    downloadCount: 890,
-    viewCount: 3420,
-    isActive: true,
-    category: 'E-commerce',
-    tags: ['Vue.js', 'E-commerce', 'Template'],
-    technologies: ['Vue.js', 'JavaScript', 'CSS'],
-    createdAt: '2024-01-05T00:00:00Z',
-    updatedAt: '2024-01-12T00:00:00Z',
-  },
-  {
-    id: '3',
-    title: 'Node.js API Starter',
-    slug: 'nodejs-api-starter',
-    description: 'API starter kit with Node.js and Express',
-    price: 19.99,
-    thumbnailUrl: 'https://via.placeholder.com/150',
-    downloadCount: 567,
-    viewCount: 1890,
-    isActive: false,
-    category: 'Backend',
-    tags: ['Node.js', 'API', 'Express'],
-    technologies: ['Node.js', 'Express', 'MongoDB'],
-    createdAt: '2024-01-10T00:00:00Z',
-    updatedAt: '2024-01-18T00:00:00Z',
-  },
-];
+interface ProductFormData {
+  id?: string;
+  title: string;
+  slug: string;
+  description: string;
+  price: number;
+  thumbnailUrl?: string;
+  categoryId: string;
+  tags: string[];
+  technologies: string[];
+  isActive?: boolean;
+}
 
 export function ProductsManagement() {
-  const [products, setProducts] = useState<Product[]>(mockProducts);
-  const [filteredProducts, setFilteredProducts] = useState<Product[]>(mockProducts);
   const [searchTerm, setSearchTerm] = useState('');
-  const [loading, setLoading] = useState(false);
-  const [lastUpdated, setLastUpdated] = useState<Date | null>(null);
-  const [selectedProduct, setSelectedProduct] = useState<Product | null>(null);
+  const [filteredProducts, setFilteredProducts] = useState<ProductItem[]>([]);
+  const [selectedProduct, setSelectedProduct] = useState<ProductItem | null>(null);
   const [isViewDialogOpen, setIsViewDialogOpen] = useState(false);
   const [isFormDialogOpen, setIsFormDialogOpen] = useState(false);
   const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
 
+  const {
+    products,
+    loading,
+    error,
+    createProduct,
+    updateProduct,
+    deleteProduct,
+    fetchProducts,
+    stats
+  } = useProducts();
+
   // Filter products based on search term
   useEffect(() => {
-    const filtered = products.filter(product =>
-      product.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      product.description.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      product.category.toLowerCase().includes(searchTerm.toLowerCase())
-    );
-    setFilteredProducts(filtered);
+    if (products) {
+      const filtered = products.map(product => ({
+        id: product.id,
+        title: product.title,
+        slug: product.slug,
+        description: product.description || '',
+        price: product.price,
+        thumbnailUrl: product.thumbnailUrl,
+        downloadCount: product.downloadCount || 0,
+        viewCount: product.viewCount || 0,
+        isActive: product.isActive ?? true,
+        category: 'Unknown', // We'll need to fetch category name separately
+        tags: [], // We'll need to fetch tags separately
+        technologies: product.technologies || [],
+        createdAt: product.createdAt,
+        updatedAt: product.updatedAt
+      })).filter(product =>
+        product.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
+        product.description.toLowerCase().includes(searchTerm.toLowerCase()) ||
+        product.slug.toLowerCase().includes(searchTerm.toLowerCase())
+      );
+      setFilteredProducts(filtered);
+    }
   }, [products, searchTerm]);
 
   const handleRefresh = async () => {
-    setLoading(true);
     try {
-      // Simulate API call
-      await new Promise(resolve => setTimeout(resolve, 1000));
-      setLastUpdated(new Date());
+      await fetchProducts();
+      toast.success('Products refreshed successfully');
     } catch (error) {
       console.error('Error refreshing products:', error);
-    } finally {
-      setLoading(false);
+      toast.error('Failed to refresh products');
     }
   };
 
@@ -152,50 +138,85 @@ export function ProductsManagement() {
     setIsFormDialogOpen(true);
   };
 
-  const handleEditProduct = (product: Product) => {
+  const handleEditProduct = (product: ProductItem) => {
     setSelectedProduct(product); // product = Edit mode
     setIsFormDialogOpen(true);
   };
 
-  const handleDeleteProduct = (product: Product) => {
+  const handleDeleteProduct = (product: ProductItem) => {
     setSelectedProduct(product);
     setIsDeleteDialogOpen(true);
   };
 
-  const handleViewProduct = (product: Product) => {
+  const handleViewProduct = (product: ProductItem) => {
     setSelectedProduct(product);
     setIsViewDialogOpen(true);
   };
 
-  const handleSaveProduct = (productData: any) => {
-    if (productData.id) {
-      // Edit mode - update existing product
-      setProducts(products.map(p => p.id === productData.id ? { ...p, ...productData } : p));
-    } else {
-      // Add mode - create new product
-      const newProduct: Product = {
-        id: Date.now().toString(),
-        title: productData.title,
-        slug: productData.slug,
-        description: productData.description,
-        price: productData.price,
-        thumbnailUrl: productData.thumbnailUrl,
-        isActive: productData.isActive,
-        category: productData.category,
-        tags: productData.tags,
-        technologies: productData.technologies,
-        createdAt: new Date().toISOString(),
-        updatedAt: new Date().toISOString(),
-      };
-      setProducts([...products, newProduct]);
+  const handleSaveProduct = async (productData: ProductFormData) => {
+    try {
+      if (productData.id) {
+        // Edit mode - update existing product
+        await updateProduct(productData.id, {
+          title: productData.title,
+          slug: productData.slug,
+          description: productData.description,
+          price: productData.price,
+          thumbnailUrl: productData.thumbnailUrl,
+          categoryId: productData.categoryId,
+          technologies: productData.technologies,
+          isActive: productData.isActive
+        });
+        toast.success('Product updated successfully');
+      } else {
+        // Add mode - create new product
+        // For now, we'll use a placeholder userId - in a real app, this would come from auth context
+        await createProduct({
+          userId: '00000000-0000-0000-0000-000000000000', // Placeholder - should come from auth
+          title: productData.title,
+          slug: productData.slug,
+          description: productData.description,
+          price: productData.price,
+          thumbnailUrl: productData.thumbnailUrl,
+          categoryId: productData.categoryId,
+          technologies: productData.technologies,
+          isActive: productData.isActive ?? true
+        });
+        toast.success('Product created successfully');
+      }
+      setSelectedProduct(null);
+      setIsFormDialogOpen(false);
+    } catch (error) {
+      console.error('Error saving product:', error);
+      toast.error('Failed to save product');
     }
-    setSelectedProduct(null);
   };
 
-  const handleConfirmDelete = (productToDelete: Product) => {
-    setProducts(products.filter(p => p.id !== productToDelete.id));
-    setSelectedProduct(null);
+  const handleConfirmDelete = async (productToDelete: ProductItem) => {
+    try {
+      await deleteProduct(productToDelete.id);
+      toast.success('Product deleted successfully');
+      setSelectedProduct(null);
+      setIsDeleteDialogOpen(false);
+    } catch (error) {
+      console.error('Error deleting product:', error);
+      toast.error('Failed to delete product');
+    }
   };
+
+  // Show error if any
+  if (error) {
+    return (
+      <div className="space-y-6">
+        <div className="bg-red-50 border border-red-200 rounded-lg p-4">
+          <p className="text-red-800">Error: {error}</p>
+          <Button onClick={handleRefresh} className="mt-2">
+            Try Again
+          </Button>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="space-y-6">
@@ -204,11 +225,10 @@ export function ProductsManagement() {
 
       {/* Refresh Info */}
       <div className="flex items-center justify-end space-x-2">
-        {lastUpdated && (
-          <p className="text-sm text-muted-foreground">
-            Last updated: {lastUpdated.toLocaleTimeString()}
-          </p>
-        )}
+        {/* lastUpdated state was removed, so this will always be null */}
+        {/* <p className="text-sm text-muted-foreground">
+          Last updated: {lastUpdated?.toLocaleTimeString()}
+        </p> */}
         <RefreshCw 
           className={`h-4 w-4 ${loading ? 'animate-spin' : ''} text-muted-foreground cursor-pointer hover:text-foreground`}
           onClick={handleRefresh}
@@ -216,7 +236,7 @@ export function ProductsManagement() {
       </div>
 
       {/* Stats Cards */}
-      <ProductsStats products={products} />
+      {stats && <ProductsStats products={products || []} />}
 
       {/* Search and Filters */}
       <ProductsSearch

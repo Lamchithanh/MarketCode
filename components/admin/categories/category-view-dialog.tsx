@@ -6,13 +6,13 @@ import { Badge } from '@/components/ui/badge';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Folder, Package } from 'lucide-react';
 
-interface Category {
+interface CategoryItem {
   id: string;
   name: string;
   slug: string;
-  description: string;
+  description?: string;
   icon?: string;
-  productCount: number;
+  productCount?: number;
   isActive: boolean;
   createdAt: string;
   updatedAt: string;
@@ -21,7 +21,7 @@ interface Category {
 interface CategoryViewDialogProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
-  category: Category | null;
+  category: CategoryItem | null;
 }
 
 export function CategoryViewDialog({ open, onOpenChange, category }: CategoryViewDialogProps) {

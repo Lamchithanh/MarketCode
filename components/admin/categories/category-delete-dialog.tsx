@@ -3,18 +3,23 @@
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
 
-interface Category {
+interface CategoryItem {
   id: string;
   name: string;
   slug: string;
-  productCount: number;
+  description?: string;
+  icon?: string;
+  productCount?: number;
+  isActive: boolean;
+  createdAt: string;
+  updatedAt: string;
 }
 
 interface CategoryDeleteDialogProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
-  category: Category | null;
-  onConfirm: (category: Category) => void;
+  category: CategoryItem | null;
+  onConfirm: (category: CategoryItem) => void;
 }
 
 export function CategoryDeleteDialog({ open, onOpenChange, category, onConfirm }: CategoryDeleteDialogProps) {

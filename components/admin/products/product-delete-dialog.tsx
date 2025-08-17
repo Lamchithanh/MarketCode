@@ -3,19 +3,28 @@
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
 
-interface Product {
+interface ProductItem {
   id: string;
   title: string;
-  category: string;
+  slug: string;
+  description: string;
   price: number;
+  thumbnailUrl?: string;
   downloadCount: number;
+  viewCount: number;
+  isActive: boolean;
+  category: string;
+  tags: string[];
+  technologies: string[];
+  createdAt: string;
+  updatedAt: string;
 }
 
 interface ProductDeleteDialogProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
-  product: Product | null;
-  onConfirm: (product: Product) => void;
+  product: ProductItem | null;
+  onConfirm: (product: ProductItem) => void;
 }
 
 export function ProductDeleteDialog({ open, onOpenChange, product, onConfirm }: ProductDeleteDialogProps) {

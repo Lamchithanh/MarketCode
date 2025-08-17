@@ -8,27 +8,32 @@ import { Textarea } from '@/components/ui/textarea';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { useState, useEffect } from 'react';
 
-interface Category {
+interface CategoryItem {
   id: string;
   name: string;
   slug: string;
-  description: string;
+  description?: string;
   icon?: string;
+  productCount?: number;
   isActive: boolean;
+  createdAt: string;
+  updatedAt: string;
 }
 
 interface CategoryFormDialogProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
-  category?: Category | null; // undefined = Add mode, Category = Edit mode
-  onSave: (categoryData: {
-    id?: string;
-    name: string;
-    slug: string;
-    description: string;
-    icon?: string;
-    isActive: boolean;
-  }) => void;
+  category: CategoryItem | null;
+  onSave: (categoryData: CategoryFormData) => void;
+}
+
+interface CategoryFormData {
+  id?: string;
+  name: string;
+  slug: string;
+  description?: string;
+  icon?: string;
+  isActive?: boolean;
 }
 
 export function CategoryFormDialog({ open, onOpenChange, category, onSave }: CategoryFormDialogProps) {
@@ -51,7 +56,7 @@ export function CategoryFormDialog({ open, onOpenChange, category, onSave }: Cat
         setFormData({
           name: category.name,
           slug: category.slug,
-          description: category.description,
+          description: category.description || '',
           icon: category.icon || '',
           isActive: category.isActive,
         });
@@ -91,7 +96,7 @@ export function CategoryFormDialog({ open, onOpenChange, category, onSave }: Cat
 
   const handleSave = () => {
     if (validateForm()) {
-      const categoryData = {
+      const categoryData: CategoryFormData = {
         ...formData,
         ...(isEditMode && category ? { id: category.id } : {}),
       };

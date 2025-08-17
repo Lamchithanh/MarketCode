@@ -8,35 +8,41 @@ import { Textarea } from '@/components/ui/textarea';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { useState, useEffect } from 'react';
 
-interface Product {
+interface ProductItem {
   id: string;
   title: string;
   slug: string;
   description: string;
   price: number;
   thumbnailUrl?: string;
+  downloadCount: number;
+  viewCount: number;
   isActive: boolean;
   category: string;
   tags: string[];
   technologies: string[];
+  createdAt: string;
+  updatedAt: string;
 }
 
 interface ProductFormDialogProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
-  product?: Product | null; // undefined = Add mode, Product = Edit mode
-  onSave: (productData: {
-    id?: string;
-    title: string;
-    slug: string;
-    description: string;
-    price: number;
-    thumbnailUrl?: string;
-    isActive: boolean;
-    category: string;
-    tags: string[];
-    technologies: string[];
-  }) => void;
+  product: ProductItem | null;
+  onSave: (productData: ProductFormData) => void;
+}
+
+interface ProductFormData {
+  id?: string;
+  title: string;
+  slug: string;
+  description: string;
+  price: number;
+  thumbnailUrl?: string;
+  categoryId: string;
+  tags: string[];
+  technologies: string[];
+  isActive?: boolean;
 }
 
 export function ProductFormDialog({ open, onOpenChange, product, onSave }: ProductFormDialogProps) {
@@ -49,7 +55,7 @@ export function ProductFormDialog({ open, onOpenChange, product, onSave }: Produ
     price: 0,
     thumbnailUrl: '',
     isActive: true,
-    category: '',
+    categoryId: '',
     tags: '',
     technologies: '',
   });
@@ -67,7 +73,7 @@ export function ProductFormDialog({ open, onOpenChange, product, onSave }: Produ
           price: product.price,
           thumbnailUrl: product.thumbnailUrl || '',
           isActive: product.isActive,
-          category: product.category,
+          categoryId: product.category, // We'll need to map category name to ID
           tags: product.tags.join(', '),
           technologies: product.technologies.join(', '),
         });
@@ -79,7 +85,7 @@ export function ProductFormDialog({ open, onOpenChange, product, onSave }: Produ
           price: 0,
           thumbnailUrl: '',
           isActive: true,
-          category: '',
+          categoryId: '',
           tags: '',
           technologies: '',
         });
@@ -98,7 +104,7 @@ export function ProductFormDialog({ open, onOpenChange, product, onSave }: Produ
     if (!formData.slug.trim()) {
       newErrors.slug = 'Slug is required';
     } else if (!/^[a-z0-9-]+$/.test(formData.slug)) {
-      newErrors.slug = 'Slug can only contain lowercase letters, numbers, and hyphens';
+      newErrors.slug = 'Slug must contain only lowercase letters, numbers, and hyphens';
     }
 
     if (!formData.description.trim()) {
@@ -109,8 +115,8 @@ export function ProductFormDialog({ open, onOpenChange, product, onSave }: Produ
       newErrors.price = 'Price must be greater than 0';
     }
 
-    if (!formData.category.trim()) {
-      newErrors.category = 'Category is required';
+    if (!formData.categoryId.trim()) {
+      newErrors.categoryId = 'Category is required';
     }
 
     setErrors(newErrors);
@@ -119,15 +125,14 @@ export function ProductFormDialog({ open, onOpenChange, product, onSave }: Produ
 
   const handleSave = () => {
     if (validateForm()) {
-      const productData = {
+      const productData: ProductFormData = {
         ...formData,
         ...(isEditMode && product ? { id: product.id } : {}),
         tags: formData.tags.split(',').map(tag => tag.trim()).filter(tag => tag),
         technologies: formData.technologies.split(',').map(tech => tech.trim()).filter(tech => tech),
+        price: Number(formData.price),
       };
-      
       onSave(productData);
-      onOpenChange(false);
     }
   };
 
@@ -227,13 +232,13 @@ export function ProductFormDialog({ open, onOpenChange, product, onSave }: Produ
               <Label htmlFor="category">Category *</Label>
               <Input 
                 id="category"
-                value={formData.category}
-                onChange={(e) => handleInputChange('category', e.target.value)}
-                className={`mt-1 ${errors.category ? 'border-red-500' : ''}`}
+                value={formData.categoryId}
+                onChange={(e) => handleInputChange('categoryId', e.target.value)}
+                className={`mt-1 ${errors.categoryId ? 'border-red-500' : ''}`}
                 placeholder="Web Development"
               />
-              {errors.category && (
-                <p className="text-sm text-red-600 mt-1">{errors.category}</p>
+              {errors.categoryId && (
+                <p className="text-sm text-red-600 mt-1">{errors.categoryId}</p>
               )}
             </div>
           </div>

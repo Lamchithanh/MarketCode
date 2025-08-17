@@ -3,15 +3,20 @@
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { FolderTree, Package, Eye, Hash } from 'lucide-react';
 
-interface Category {
+interface CategoryItem {
   id: string;
   name: string;
+  slug: string;
+  description?: string;
+  icon?: string;
   productCount?: number;
   isActive: boolean;
+  createdAt: string;
+  updatedAt: string;
 }
 
 interface CategoriesStatsProps {
-  categories: Category[];
+  categories: CategoryItem[];
 }
 
 export function CategoriesStats({ categories }: CategoriesStatsProps) {

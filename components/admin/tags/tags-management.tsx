@@ -28,6 +28,8 @@ import { MoreHorizontal, Edit, Eye, Trash2, Database } from 'lucide-react';
 import { TagViewDialog } from './tag-view-dialog';
 import { TagFormDialog } from './tag-form-dialog';
 import { TagDeleteDialog } from './tag-delete-dialog';
+import { useTags } from '@/hooks/use-tags';
+import { toast } from 'sonner';
 
 interface TagItem {
   id: string;
@@ -39,84 +41,58 @@ interface TagItem {
   updatedAt: string;
 }
 
-const mockTags: TagItem[] = [
-  {
-    id: '1',
-    name: 'React',
-    slug: 'react',
-    color: '#61DAFB',
-    productCount: 25,
-    createdAt: '2024-01-01T00:00:00Z',
-    updatedAt: '2024-01-15T00:00:00Z',
-  },
-  {
-    id: '2',
-    name: 'Next.js',
-    slug: 'nextjs',
-    color: '#000000',
-    productCount: 18,
-    createdAt: '2024-01-02T00:00:00Z',
-    updatedAt: '2024-01-12T00:00:00Z',
-  },
-  {
-    id: '3',
-    name: 'TypeScript',
-    slug: 'typescript',
-    color: '#3178C6',
-    productCount: 32,
-    createdAt: '2024-01-03T00:00:00Z',
-    updatedAt: '2024-01-10T00:00:00Z',
-  },
-  {
-    id: '4',
-    name: 'Vue.js',
-    slug: 'vuejs',
-    color: '#4FC08D',
-    productCount: 12,
-    createdAt: '2024-01-04T00:00:00Z',
-    updatedAt: '2024-01-08T00:00:00Z',
-  },
-  {
-    id: '5',
-    name: 'Node.js',
-    slug: 'nodejs',
-    color: '#339933',
-    productCount: 15,
-    createdAt: '2024-01-05T00:00:00Z',
-    updatedAt: '2024-01-07T00:00:00Z',
-  },
-];
+interface TagFormData {
+  id?: string;
+  name: string;
+  slug: string;
+  color: string;
+}
 
 export function TagsManagement() {
-  const [tags, setTags] = useState<TagItem[]>(mockTags);
-  const [filteredTags, setFilteredTags] = useState<TagItem[]>(mockTags);
   const [searchTerm, setSearchTerm] = useState('');
-  const [loading, setLoading] = useState(false);
-  const [lastUpdated, setLastUpdated] = useState<Date | null>(null);
+  const [filteredTags, setFilteredTags] = useState<TagItem[]>([]);
   const [selectedTag, setSelectedTag] = useState<TagItem | null>(null);
   const [isViewDialogOpen, setIsViewDialogOpen] = useState(false);
   const [isFormDialogOpen, setIsFormDialogOpen] = useState(false);
   const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
 
+  const {
+    tags,
+    loading,
+    error,
+    createTag,
+    updateTag,
+    deleteTag,
+    fetchTags,
+    stats
+  } = useTags();
+
   // Filter tags based on search term
   useEffect(() => {
-    const filtered = tags.filter(tag =>
-      tag.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      tag.slug.toLowerCase().includes(searchTerm.toLowerCase())
-    );
-    setFilteredTags(filtered);
+    if (tags) {
+      const filtered = tags.map(tag => ({
+        id: tag.id,
+        name: tag.name,
+        slug: tag.slug,
+        color: tag.color || '#000000',
+        productCount: 0, // We'll need to fetch this separately or modify the API
+        createdAt: tag.createdAt,
+        updatedAt: tag.updatedAt
+      })).filter(tag =>
+        tag.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
+        tag.slug.toLowerCase().includes(searchTerm.toLowerCase())
+      );
+      setFilteredTags(filtered);
+    }
   }, [tags, searchTerm]);
 
   const handleRefresh = async () => {
-    setLoading(true);
     try {
-      // Simulate API call
-      await new Promise(resolve => setTimeout(resolve, 1000));
-      setLastUpdated(new Date());
+      await fetchTags();
+      toast.success('Tags refreshed successfully');
     } catch (error) {
       console.error('Error refreshing tags:', error);
-    } finally {
-      setLoading(false);
+      toast.error('Failed to refresh tags');
     }
   };
 
@@ -148,30 +124,58 @@ export function TagsManagement() {
     setIsViewDialogOpen(true);
   };
 
-  const handleSaveTag = (tagData: any) => {
-    if (tagData.id) {
-      // Edit mode - update existing tag
-      setTags(tags.map(t => t.id === tagData.id ? { ...t, ...tagData } : t));
-    } else {
-      // Add mode - create new tag
-      const newTag: TagItem = {
-        id: Date.now().toString(),
-        name: tagData.name,
-        slug: tagData.slug,
-        color: tagData.color,
-        productCount: 0, // New tags start with 0 products
-        createdAt: new Date().toISOString(),
-        updatedAt: new Date().toISOString(),
-      };
-      setTags([...tags, newTag]);
+  const handleSaveTag = async (tagData: TagFormData) => {
+    try {
+      if (tagData.id) {
+        // Edit mode - update existing tag
+        await updateTag(tagData.id, {
+          name: tagData.name,
+          slug: tagData.slug,
+          color: tagData.color
+        });
+        toast.success('Tag updated successfully');
+      } else {
+        // Add mode - create new tag
+        await createTag({
+          name: tagData.name,
+          slug: tagData.slug,
+          color: tagData.color
+        });
+        toast.success('Tag created successfully');
+      }
+      setSelectedTag(null);
+      setIsFormDialogOpen(false);
+    } catch (error) {
+      console.error('Error saving tag:', error);
+      toast.error('Failed to save tag');
     }
-    setSelectedTag(null);
   };
 
-  const handleConfirmDelete = (tagToDelete: TagItem) => {
-    setTags(tags.filter(t => t.id !== tagToDelete.id));
-    setSelectedTag(null);
+  const handleConfirmDelete = async (tagToDelete: TagItem) => {
+    try {
+      await deleteTag(tagToDelete.id);
+      toast.success('Tag deleted successfully');
+      setSelectedTag(null);
+      setIsDeleteDialogOpen(false);
+    } catch (error) {
+      console.error('Error deleting tag:', error);
+      toast.error('Failed to delete tag');
+    }
   };
+
+  // Show error if any
+  if (error) {
+    return (
+      <div className="space-y-6">
+        <div className="bg-red-50 border border-red-200 rounded-lg p-4">
+          <p className="text-red-800">Error: {error}</p>
+          <Button onClick={handleRefresh} className="mt-2">
+            Try Again
+          </Button>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="space-y-6">
@@ -180,11 +184,9 @@ export function TagsManagement() {
 
       {/* Refresh Info */}
       <div className="flex items-center justify-end space-x-2">
-        {lastUpdated && (
-          <p className="text-sm text-muted-foreground">
-            Last updated: {lastUpdated.toLocaleTimeString()}
-          </p>
-        )}
+        <p className="text-sm text-muted-foreground">
+          Total: {stats?.total || 0} tags
+        </p>
         <RefreshCw 
           className={`h-4 w-4 ${loading ? 'animate-spin' : ''} text-muted-foreground cursor-pointer hover:text-foreground`}
           onClick={handleRefresh}
@@ -192,7 +194,7 @@ export function TagsManagement() {
       </div>
 
       {/* Stats Cards */}
-      <TagsStats tags={tags} />
+      <TagsStats tags={filteredTags} />
 
       {/* Search and Filters */}
       <TagsSearch

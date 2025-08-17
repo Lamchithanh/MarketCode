@@ -6,35 +6,17 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { useState, useEffect } from 'react';
-
-interface User {
-  id: string;
-  name: string;
-  email: string;
-  role: 'USER' | 'ADMIN';
-  avatar?: string;
-  isActive: boolean;
-  lastLoginAt?: string;
-  emailVerified?: string;
-  createdAt: string;
-}
+import { User, CreateUserData, UpdateUserData } from '@/lib/services/user-service';
 
 interface UserFormDialogProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
   user?: User | null; // undefined = Add mode, User = Edit mode
-  onSave: (userData: {
-    id?: string;
-    name: string;
-    email: string;
-    password?: string;
-    role: 'USER' | 'ADMIN';
-    avatar?: string;
-    isActive: boolean;
-  }) => void;
+  onSave: (userData: CreateUserData | UpdateUserData) => void;
+  loading?: boolean;
 }
 
-export function UserFormDialog({ open, onOpenChange, user, onSave }: UserFormDialogProps) {
+export function UserFormDialog({ open, onOpenChange, user, onSave, loading = false }: UserFormDialogProps) {
   const isEditMode = !!user;
   
   const [formData, setFormData] = useState({
@@ -98,138 +80,168 @@ export function UserFormDialog({ open, onOpenChange, user, onSave }: UserFormDia
     return Object.keys(newErrors).length === 0;
   };
 
-  const handleSave = () => {
-    if (validateForm()) {
-      const userData = {
-        ...formData,
-        ...(isEditMode && user ? { id: user.id } : {}),
-        // Only include password if it's provided
-        ...(formData.password.trim() ? { password: formData.password } : {}),
+  const handleSubmit = (e: React.FormEvent) => {
+    e.preventDefault();
+    
+    if (!validateForm()) {
+      return;
+    }
+
+    if (isEditMode && user) {
+      // Edit mode - create UpdateUserData
+      const updateData: UpdateUserData & { password?: string } = {
+        name: formData.name.trim(),
+        email: formData.email.trim().toLowerCase(),
+        role: formData.role,
+        avatar: formData.avatar || undefined,
+        isActive: formData.isActive,
       };
       
-      onSave(userData);
-      onOpenChange(false);
-    }
-  };
-
-  const handleInputChange = (field: string, value: string | boolean) => {
-    setFormData(prev => ({ ...prev, [field]: value }));
-    // Clear error when user starts typing
-    if (errors[field]) {
-      setErrors(prev => ({ ...prev, [field]: '' }));
+      // Add password only if it was changed
+      if (formData.password.trim()) {
+        updateData.password = formData.password;
+      }
+      
+      onSave(updateData);
+    } else {
+      // Add mode - create CreateUserData
+      const createData: CreateUserData = {
+        name: formData.name.trim(),
+        email: formData.email.trim().toLowerCase(),
+        password: formData.password,
+        role: formData.role,
+        avatar: formData.avatar || undefined,
+        isActive: formData.isActive,
+      };
+      
+      onSave(createData);
     }
   };
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="max-w-md">
+      <DialogContent className="sm:max-w-[425px]">
         <DialogHeader>
-          <DialogTitle>{isEditMode ? 'Edit User' : 'Add New User'}</DialogTitle>
+          <DialogTitle>
+            {isEditMode ? 'Edit User' : 'Add New User'}
+          </DialogTitle>
           <DialogDescription>
-            {isEditMode ? 'Update user account information' : 'Create a new user account'}
+            {isEditMode 
+              ? 'Update user information. Leave password empty to keep current password.'
+              : 'Create a new user account with the information below.'
+            }
           </DialogDescription>
         </DialogHeader>
-        <div className="space-y-4">
-          <div>
-            <Label htmlFor="name">Full Name *</Label>
-            <Input 
-              id="name"
-              value={formData.name}
-              onChange={(e) => handleInputChange('name', e.target.value)}
-              className={`mt-1 ${errors.name ? 'border-red-500' : ''}`}
-              placeholder="John Doe"
-            />
-            {errors.name && (
-              <p className="text-sm text-red-600 mt-1">{errors.name}</p>
-            )}
+        
+        <form onSubmit={handleSubmit} className="space-y-4">
+          <div className="grid grid-cols-2 gap-4">
+            <div className="space-y-2">
+              <Label htmlFor="name">Name *</Label>
+              <Input
+                id="name"
+                value={formData.name}
+                onChange={(e) => setFormData({ ...formData, name: e.target.value })}
+                placeholder="Full name"
+                className={errors.name ? 'border-red-500' : ''}
+              />
+              {errors.name && (
+                <p className="text-sm text-red-500">{errors.name}</p>
+              )}
+            </div>
+            
+            <div className="space-y-2">
+              <Label htmlFor="email">Email *</Label>
+              <Input
+                id="email"
+                type="email"
+                value={formData.email}
+                onChange={(e) => setFormData({ ...formData, email: e.target.value })}
+                placeholder="email@example.com"
+                className={errors.email ? 'border-red-500' : ''}
+              />
+              {errors.email && (
+                <p className="text-sm text-red-500">{errors.email}</p>
+              )}
+            </div>
           </div>
 
-          <div>
-            <Label htmlFor="email">Email Address *</Label>
-            <Input 
-              id="email"
-              type="email"
-              value={formData.email}
-              onChange={(e) => handleInputChange('email', e.target.value)}
-              className={`mt-1 ${errors.email ? 'border-red-500' : ''}`}
-              placeholder="john@example.com"
-            />
-            {errors.email && (
-              <p className="text-sm text-red-600 mt-1">{errors.email}</p>
-            )}
+          <div className="grid grid-cols-2 gap-4">
+            <div className="space-y-2">
+              <Label htmlFor="password">
+                Password {isEditMode ? '(optional)' : '*'}
+              </Label>
+              <Input
+                id="password"
+                type="password"
+                value={formData.password}
+                onChange={(e) => setFormData({ ...formData, password: e.target.value })}
+                placeholder={isEditMode ? 'Leave empty to keep current' : 'Enter password'}
+                className={errors.password ? 'border-red-500' : ''}
+              />
+              {errors.password && (
+                <p className="text-sm text-red-500">{errors.password}</p>
+              )}
+            </div>
+            
+            <div className="space-y-2">
+              <Label htmlFor="role">Role</Label>
+              <Select
+                value={formData.role}
+                onValueChange={(value: 'USER' | 'ADMIN') => setFormData({ ...formData, role: value })}
+              >
+                <SelectTrigger>
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="USER">User</SelectItem>
+                  <SelectItem value="ADMIN">Admin</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
           </div>
 
-          <div>
-            <Label htmlFor="password">
-              Password {isEditMode ? '(leave blank to keep current)' : '*'}
-            </Label>
-            <Input 
-              id="password"
-              type="password"
-              value={formData.password}
-              onChange={(e) => handleInputChange('password', e.target.value)}
-              className={`mt-1 ${errors.password ? 'border-red-500' : ''}`}
-              placeholder={isEditMode ? "Leave blank to keep current password" : "Minimum 6 characters"}
-            />
-            {errors.password && (
-              <p className="text-sm text-red-600 mt-1">{errors.password}</p>
-            )}
+          <div className="grid grid-cols-2 gap-4">
+            <div className="space-y-2">
+              <Label htmlFor="avatar">Avatar URL</Label>
+              <Input
+                id="avatar"
+                value={formData.avatar}
+                onChange={(e) => setFormData({ ...formData, avatar: e.target.value })}
+                placeholder="https://example.com/avatar.jpg"
+              />
+            </div>
+            
+            <div className="space-y-2">
+              <Label htmlFor="isActive">Status</Label>
+              <Select
+                value={formData.isActive ? 'true' : 'false'}
+                onValueChange={(value) => setFormData({ ...formData, isActive: value === 'true' })}
+              >
+                <SelectTrigger>
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="true">Active</SelectItem>
+                  <SelectItem value="false">Inactive</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
           </div>
 
-          <div>
-            <Label htmlFor="role">Role</Label>
-            <Select 
-              value={formData.role} 
-              onValueChange={(value: 'USER' | 'ADMIN') => handleInputChange('role', value)}
+          <DialogFooter>
+            <Button
+              type="button"
+              variant="outline"
+              onClick={() => onOpenChange(false)}
+              disabled={loading}
             >
-              <SelectTrigger className="mt-1">
-                <SelectValue />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="USER">User</SelectItem>
-                <SelectItem value="ADMIN">Admin</SelectItem>
-              </SelectContent>
-            </Select>
-          </div>
-
-          <div>
-            <Label htmlFor="avatar">Avatar URL (optional)</Label>
-            <Input 
-              id="avatar"
-              value={formData.avatar}
-              onChange={(e) => handleInputChange('avatar', e.target.value)}
-              className="mt-1"
-              placeholder="https://example.com/avatar.jpg"
-            />
-          </div>
-
-          <div>
-            <Label htmlFor="status">Account Status</Label>
-            <Select 
-              value={formData.isActive ? 'active' : 'inactive'} 
-              onValueChange={(value) => handleInputChange('isActive', value === 'active')}
-            >
-              <SelectTrigger className="mt-1">
-                <SelectValue />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="active">Active</SelectItem>
-                <SelectItem value="inactive">Inactive</SelectItem>
-              </SelectContent>
-            </Select>
-          </div>
-        </div>
-        <DialogFooter>
-          <Button variant="outline" onClick={() => onOpenChange(false)}>
-            Cancel
-          </Button>
-          <Button 
-            onClick={handleSave}
-            className="bg-gradient-to-r from-stone-600 to-stone-700 hover:from-stone-700 hover:to-stone-800"
-          >
-            {isEditMode ? 'Update User' : 'Add User'}
-          </Button>
-        </DialogFooter>
+              Cancel
+            </Button>
+            <Button type="submit" disabled={loading}>
+              {loading ? 'Saving...' : (isEditMode ? 'Update User' : 'Create User')}
+            </Button>
+          </DialogFooter>
+        </form>
       </DialogContent>
     </Dialog>
   );

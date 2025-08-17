@@ -3,12 +3,13 @@
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Card, CardContent } from '@/components/ui/card';
-import { Search, Filter, RefreshCw } from 'lucide-react';
+import { Search, Filter, RefreshCw, RotateCcw } from 'lucide-react';
 
 interface UsersSearchProps {
   searchTerm: string;
   onSearchChange: (value: string) => void;
   onRefresh?: () => void;
+  onResetFilters?: () => void;
   loading?: boolean;
 }
 
@@ -16,6 +17,7 @@ export function UsersSearch({
   searchTerm, 
   onSearchChange, 
   onRefresh,
+  onResetFilters,
   loading = false 
 }: UsersSearchProps) {
   return (
@@ -33,9 +35,20 @@ export function UsersSearch({
           </div>
           <div className="flex items-center space-x-2">
             <Button variant="outline" size="sm">
-              <Filter className="w-4 w-4 mr-2" />
+              <Filter className="w-4 h-4 mr-2" />
               Filter
             </Button>
+            {onResetFilters && (
+              <Button 
+                variant="outline" 
+                size="sm" 
+                onClick={onResetFilters}
+                disabled={loading}
+              >
+                <RotateCcw className="w-4 h-4 mr-2" />
+                Reset
+              </Button>
+            )}
             {onRefresh && (
               <Button 
                 variant="outline" 

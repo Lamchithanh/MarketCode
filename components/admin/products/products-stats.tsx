@@ -3,16 +3,25 @@
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Package, DollarSign, Download, Eye } from 'lucide-react';
 
-interface Product {
+interface ProductItem {
   id: string;
+  title: string;
+  slug: string;
+  description: string;
   price: number;
+  thumbnailUrl?: string;
   downloadCount: number;
   viewCount: number;
   isActive: boolean;
+  category: string;
+  tags: string[];
+  technologies: string[];
+  createdAt: string;
+  updatedAt: string;
 }
 
 interface ProductsStatsProps {
-  products: Product[];
+  products: ProductItem[];
 }
 
 export function ProductsStats({ products }: ProductsStatsProps) {

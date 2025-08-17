@@ -28,8 +28,10 @@ import { MoreHorizontal, Edit, Eye, Trash2, Database } from 'lucide-react';
 import { CategoryViewDialog } from './category-view-dialog';
 import { CategoryFormDialog } from './category-form-dialog';
 import { CategoryDeleteDialog } from './category-delete-dialog';
+import { useCategories } from '@/hooks/use-categories';
+import { toast } from 'sonner';
 
-interface Category {
+interface CategoryItem {
   id: string;
   name: string;
   slug: string;
@@ -41,84 +43,63 @@ interface Category {
   updatedAt: string;
 }
 
-const mockCategories: Category[] = [
-  {
-    id: '1',
-    name: 'Dashboard Templates',
-    slug: 'dashboard-templates',
-    description: 'Admin and dashboard templates',
-    icon: '📊',
-    productCount: 25,
-    isActive: true,
-    createdAt: '2024-01-01T00:00:00Z',
-    updatedAt: '2024-01-15T00:00:00Z',
-  },
-  {
-    id: '2',
-    name: 'E-commerce',
-    slug: 'ecommerce',
-    description: 'E-commerce website templates',
-    icon: '🛒',
-    productCount: 18,
-    isActive: true,
-    createdAt: '2024-01-02T00:00:00Z',
-    updatedAt: '2024-01-12T00:00:00Z',
-  },
-  {
-    id: '3',
-    name: 'Landing Pages',
-    slug: 'landing-pages',
-    description: 'Marketing and landing page templates',
-    icon: '🌟',
-    productCount: 32,
-    isActive: true,
-    createdAt: '2024-01-03T00:00:00Z',
-    updatedAt: '2024-01-10T00:00:00Z',
-  },
-  {
-    id: '4',
-    name: 'Backend APIs',
-    slug: 'backend-apis',
-    description: 'Backend API starters and frameworks',
-    icon: '⚡',
-    productCount: 12,
-    isActive: false,
-    createdAt: '2024-01-04T00:00:00Z',
-    updatedAt: '2024-01-08T00:00:00Z',
-  },
-];
+interface CategoryFormData {
+  id?: string;
+  name: string;
+  slug: string;
+  description?: string;
+  icon?: string;
+  isActive?: boolean;
+}
 
 export function CategoriesManagement() {
-  const [categories, setCategories] = useState<Category[]>(mockCategories);
-  const [filteredCategories, setFilteredCategories] = useState<Category[]>(mockCategories);
   const [searchTerm, setSearchTerm] = useState('');
-  const [loading, setLoading] = useState(false);
-  const [lastUpdated, setLastUpdated] = useState<Date | null>(null);
-  const [selectedCategory, setSelectedCategory] = useState<Category | null>(null);
+  const [filteredCategories, setFilteredCategories] = useState<CategoryItem[]>([]);
+  const [selectedCategory, setSelectedCategory] = useState<CategoryItem | null>(null);
   const [isViewDialogOpen, setIsViewDialogOpen] = useState(false);
   const [isFormDialogOpen, setIsFormDialogOpen] = useState(false);
   const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
 
+  const {
+    categories,
+    loading,
+    error,
+    createCategory,
+    updateCategory,
+    deleteCategory,
+    fetchCategories,
+    stats
+  } = useCategories();
+
   // Filter categories based on search term
   useEffect(() => {
-    const filtered = categories.filter(category =>
-      category.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      (category.description && category.description.toLowerCase().includes(searchTerm.toLowerCase())) ||
-      category.slug.toLowerCase().includes(searchTerm.toLowerCase())
-    );
-    setFilteredCategories(filtered);
+    if (categories) {
+      const filtered = categories.map(category => ({
+        id: category.id,
+        name: category.name,
+        slug: category.slug,
+        description: category.description,
+        icon: category.icon,
+        productCount: 0, // We'll need to fetch this separately or modify the API
+        isActive: true, // Default to true since Category interface doesn't have this
+        createdAt: category.createdAt,
+        updatedAt: category.updatedAt
+      })).filter(category =>
+        category.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
+        category.slug.toLowerCase().includes(searchTerm.toLowerCase()) ||
+        (category.description && category.description.toLowerCase().includes(searchTerm.toLowerCase()))
+      );
+      setFilteredCategories(filtered);
+    }
   }, [categories, searchTerm]);
 
   const handleRefresh = async () => {
-    setLoading(true);
     try {
-      // Simulate API call
-      await new Promise(resolve => setTimeout(resolve, 1000));
-      setLastUpdated(new Date());
+      await fetchCategories();
+      toast.success('Categories refreshed successfully');
     } catch (error) {
       console.error('Error refreshing categories:', error);
-    } finally {
-      setLoading(false);
+      toast.error('Failed to refresh categories');
     }
   };
 
@@ -135,47 +116,75 @@ export function CategoriesManagement() {
     setIsFormDialogOpen(true);
   };
 
-  const handleEditCategory = (category: Category) => {
+  const handleEditCategory = (category: CategoryItem) => {
     setSelectedCategory(category); // category = Edit mode
     setIsFormDialogOpen(true);
   };
 
-  const handleDeleteCategory = (category: Category) => {
+  const handleDeleteCategory = (category: CategoryItem) => {
     setSelectedCategory(category);
     setIsDeleteDialogOpen(true);
   };
 
-  const handleViewCategory = (category: Category) => {
+  const handleViewCategory = (category: CategoryItem) => {
     setSelectedCategory(category);
     setIsViewDialogOpen(true);
   };
 
-  const handleSaveCategory = (categoryData: any) => {
-    if (categoryData.id) {
-      // Edit mode - update existing category
-      setCategories(categories.map(c => c.id === categoryData.id ? { ...c, ...categoryData } : c));
-    } else {
-      // Add mode - create new category
-      const newCategory: Category = {
-        id: Date.now().toString(),
-        name: categoryData.name,
-        slug: categoryData.slug,
-        description: categoryData.description,
-        icon: categoryData.icon,
-        isActive: categoryData.isActive,
-        productCount: 0, // New categories start with 0 products
-        createdAt: new Date().toISOString(),
-        updatedAt: new Date().toISOString(),
-      };
-      setCategories([...categories, newCategory]);
+  const handleSaveCategory = async (categoryData: CategoryFormData) => {
+    try {
+      if (categoryData.id) {
+        // Edit mode - update existing category
+        await updateCategory(categoryData.id, {
+          name: categoryData.name,
+          slug: categoryData.slug,
+          description: categoryData.description,
+          icon: categoryData.icon
+        });
+        toast.success('Category updated successfully');
+      } else {
+        // Add mode - create new category
+        await createCategory({
+          name: categoryData.name,
+          slug: categoryData.slug,
+          description: categoryData.description,
+          icon: categoryData.icon
+        });
+        toast.success('Category created successfully');
+      }
+      setSelectedCategory(null);
+      setIsFormDialogOpen(false);
+    } catch (error) {
+      console.error('Error saving category:', error);
+      toast.error('Failed to save category');
     }
-    setSelectedCategory(null);
   };
 
-  const handleConfirmDelete = (categoryToDelete: Category) => {
-    setCategories(categories.filter(c => c.id !== categoryToDelete.id));
-    setSelectedCategory(null);
+  const handleConfirmDelete = async (categoryToDelete: CategoryItem) => {
+    try {
+      await deleteCategory(categoryToDelete.id);
+      toast.success('Category deleted successfully');
+      setSelectedCategory(null);
+      setIsDeleteDialogOpen(false);
+    } catch (error) {
+      console.error('Error deleting category:', error);
+      toast.error('Failed to delete category');
+    }
   };
+
+  // Show error if any
+  if (error) {
+    return (
+      <div className="space-y-6">
+        <div className="bg-red-50 border border-red-200 rounded-lg p-4">
+          <p className="text-red-800">Error: {error}</p>
+          <Button onClick={handleRefresh} className="mt-2">
+            Try Again
+          </Button>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="space-y-6">
@@ -184,11 +193,9 @@ export function CategoriesManagement() {
 
       {/* Refresh Info */}
       <div className="flex items-center justify-end space-x-2">
-        {lastUpdated && (
-          <p className="text-sm text-muted-foreground">
-            Last updated: {lastUpdated.toLocaleTimeString()}
-          </p>
-        )}
+        <p className="text-sm text-muted-foreground">
+          Total: {stats?.total || 0} categories
+        </p>
         <RefreshCw 
           className={`h-4 w-4 ${loading ? 'animate-spin' : ''} text-muted-foreground cursor-pointer hover:text-foreground`}
           onClick={handleRefresh}
@@ -196,7 +203,7 @@ export function CategoriesManagement() {
       </div>
 
       {/* Stats Cards */}
-      <CategoriesStats categories={categories} />
+      <CategoriesStats categories={filteredCategories} />
 
       {/* Search and Filters */}
       <CategoriesSearch

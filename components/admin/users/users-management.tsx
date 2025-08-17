@@ -1,7 +1,6 @@
 'use client';
 
-import { useState, useEffect } from 'react';
-import { RefreshCw } from 'lucide-react';
+import { useState } from 'react';
 import { UsersHeader } from './users-header';
 import { UsersStats } from './users-stats';
 import { UsersSearch } from './users-search';
@@ -9,154 +8,121 @@ import { UsersDataTable } from './users-data-table';
 import { UserViewDialog } from './user-view-dialog';
 import { UserFormDialog } from './user-form-dialog';
 import { UserDeleteDialog } from './user-delete-dialog';
-
-interface User {
-  id: string;
-  name: string;
-  email: string;
-  role: 'USER' | 'ADMIN';
-  avatar?: string;
-  isActive: boolean;
-  lastLoginAt?: string;
-  emailVerified?: string;
-  createdAt: string;
-}
-
-const mockUsers: User[] = [
-  {
-    id: '1',
-    name: 'John Doe',
-    email: 'john@example.com',
-    role: 'USER',
-    avatar: 'https://github.com/shadcn.png',
-    isActive: true,
-    lastLoginAt: '2024-01-15T10:30:00Z',
-    emailVerified: '2024-01-10T09:00:00Z',
-    createdAt: '2024-01-01T00:00:00Z',
-  },
-  {
-    id: '2',
-    name: 'Jane Smith',
-    email: 'jane@example.com',
-    role: 'ADMIN',
-    avatar: 'https://github.com/shadcn.png',
-    isActive: true,
-    lastLoginAt: '2024-01-15T11:45:00Z',
-    emailVerified: '2024-01-05T14:30:00Z',
-    createdAt: '2024-01-02T00:00:00Z',
-  },
-  {
-    id: '3',
-    name: 'Bob Johnson',
-    email: 'bob@example.com',
-    role: 'USER',
-    avatar: 'https://github.com/shadcn.png',
-    isActive: false,
-    lastLoginAt: '2024-01-10T16:20:00Z',
-    emailVerified: '2024-01-08T10:15:00Z',
-    createdAt: '2024-01-03T00:00:00Z',
-  },
-  {
-    id: '4',
-    name: 'Alice Wilson',
-    email: 'alice@example.com',
-    role: 'USER',
-    avatar: 'https://github.com/shadcn.png',
-    isActive: true,
-    lastLoginAt: '2024-01-14T09:15:00Z',
-    emailVerified: '2024-01-12T08:30:00Z',
-    createdAt: '2024-01-04T00:00:00Z',
-  },
-  {
-    id: '5',
-    name: 'Charlie Brown',
-    email: 'charlie@example.com',
-    role: 'ADMIN',
-    avatar: 'https://github.com/shadcn.png',
-    isActive: true,
-    lastLoginAt: '2024-01-15T14:20:00Z',
-    emailVerified: '2024-01-06T16:45:00Z',
-    createdAt: '2024-01-05T00:00:00Z',
-  },
-];
+import { useUsers } from '@/hooks/use-users';
+import { User, CreateUserData, UpdateUserData } from '@/lib/services/user-service';
 
 export function UsersManagement() {
-  const [users, setUsers] = useState<User[]>(mockUsers);
-  const [filteredUsers, setFilteredUsers] = useState<User[]>(mockUsers);
-  const [searchTerm, setSearchTerm] = useState('');
-  const [selectedUser, setSelectedUser] = useState<User | null>(null);
+  const {
+    users,
+    selectedUser,
+    stats,
+    pagination,
+    filters,
+    loading,
+    statsLoading,
+    actionLoading,
+    error,
+    createUser,
+    updateUser,
+    deleteUser,
+    restoreUser,
+    toggleUserStatus,
+    verifyUserEmail,
+    setSelectedUser,
+    updateFilters,
+    resetFilters,
+    clearError,
+    refreshUsers,
+    goToPage,
+    changeLimit
+  } = useUsers({
+    initialFilters: {
+      page: 1,
+      limit: 20
+    }
+  });
+
+  // Dialog states
   const [isViewDialogOpen, setIsViewDialogOpen] = useState(false);
   const [isFormDialogOpen, setIsFormDialogOpen] = useState(false);
   const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
-  const [loading, setLoading] = useState(false);
-  const [lastUpdated, setLastUpdated] = useState<Date | null>(null);
 
-  // Filter users based on search term
-  useEffect(() => {
-    const filtered = users.filter(user =>
-      user.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      user.email.toLowerCase().includes(searchTerm.toLowerCase())
-    );
-    setFilteredUsers(filtered);
-  }, [users, searchTerm]);
-
-  const handleRefresh = async () => {
-    setLoading(true);
-    try {
-      // Simulate API call
-      await new Promise(resolve => setTimeout(resolve, 1000));
-      // In real app, this would fetch fresh data
-      setLastUpdated(new Date());
-    } catch (error) {
-      console.error('Error refreshing users:', error);
-    } finally {
-      setLoading(false);
-    }
-  };
-
+  // Handle add user
   const handleAddUser = () => {
     setSelectedUser(null); // null = Add mode
     setIsFormDialogOpen(true);
   };
 
+  // Handle edit user
   const handleEditUser = (user: User) => {
     setSelectedUser(user); // user = Edit mode
     setIsFormDialogOpen(true);
   };
 
+  // Handle delete user
   const handleDeleteUser = (user: User) => {
     setSelectedUser(user);
     setIsDeleteDialogOpen(true);
   };
 
+  // Handle view user
   const handleViewUser = (user: User) => {
     setSelectedUser(user);
     setIsViewDialogOpen(true);
   };
 
-  const handleSaveUser = (userData: any) => {
-    if (userData.id) {
-      // Edit mode - update existing user
-      setUsers(users.map(u => u.id === userData.id ? { ...u, ...userData } : u));
-    } else {
-      // Add mode - create new user
-      const newUser: User = {
-        id: Date.now().toString(), // In real app, this would be generated by backend
-        name: userData.name,
-        email: userData.email,
-        role: userData.role,
-        avatar: userData.avatar,
-        isActive: userData.isActive,
-        createdAt: new Date().toISOString(),
-      };
-      setUsers([...users, newUser]);
+  // Handle save user (create or update)
+  const handleSaveUser = async (userData: CreateUserData | UpdateUserData) => {
+    try {
+      if ('id' in userData && userData.id) {
+        // Edit mode - update existing user
+        const { id, ...updateData } = userData;
+        await updateUser(id, updateData);
+      } else {
+        // Add mode - create new user
+        await createUser(userData as CreateUserData);
+      }
+      
+      setIsFormDialogOpen(false);
+      setSelectedUser(null);
+    } catch (error) {
+      // Error is handled by the hook
+      console.error('Error saving user:', error);
     }
-    setSelectedUser(null);
   };
 
-  const handleConfirmDelete = (userToDelete: User) => {
-    setUsers(users.filter(u => u.id !== userToDelete.id));
-    setSelectedUser(null);
+  // Handle confirm delete
+  const handleConfirmDelete = async (userToDelete: User) => {
+    try {
+      const success = await deleteUser(userToDelete.id);
+      if (success) {
+        setIsDeleteDialogOpen(false);
+        setSelectedUser(null);
+      }
+    } catch (error) {
+      // Error is handled by the hook
+      console.error('Error deleting user:', error);
+    }
+  };
+
+  // Handle search change
+  const handleSearchChange = (searchTerm: string) => {
+    updateFilters({ search: searchTerm });
+  };
+
+  // Handle refresh
+  const handleRefresh = async () => {
+    await refreshUsers();
+  };
+
+  // Handle pagination
+  const handlePageChange = (page: number) => {
+    goToPage(page);
+  };
+
+  // Handle limit change
+  const handleLimitChange = (limit: number) => {
+    changeLimit(limit);
   };
 
   return (
@@ -165,23 +131,48 @@ export function UsersManagement() {
       <UsersHeader onAddUser={handleAddUser} />
 
       {/* Stats Cards */}
-      <UsersStats users={users} />
+      <UsersStats 
+        stats={stats} 
+        loading={statsLoading} 
+      />
 
       {/* Search and Filters */}
       <UsersSearch
-        searchTerm={searchTerm}
-        onSearchChange={setSearchTerm}
+        searchTerm={filters.search || ''}
+        onSearchChange={handleSearchChange}
         onRefresh={handleRefresh}
         loading={loading}
+        onResetFilters={resetFilters}
       />
 
       {/* Users Table */}
       <UsersDataTable
-        users={filteredUsers}
+        users={users}
+        loading={loading}
+        pagination={pagination}
         onEditUser={handleEditUser}
         onDeleteUser={handleDeleteUser}
         onViewUser={handleViewUser}
+        onToggleStatus={toggleUserStatus}
+        onVerifyEmail={verifyUserEmail}
+        onPageChange={handlePageChange}
+        onLimitChange={handleLimitChange}
       />
+
+      {/* Error Display */}
+      {error && (
+        <div className="bg-destructive/10 border border-destructive/20 rounded-lg p-4">
+          <div className="flex items-center justify-between">
+            <p className="text-destructive text-sm">{error}</p>
+            <button
+              onClick={clearError}
+              className="text-destructive hover:text-destructive/80 text-sm font-medium"
+            >
+              Dismiss
+            </button>
+          </div>
+        </div>
+      )}
 
       {/* View User Dialog */}
       <UserViewDialog
@@ -196,6 +187,7 @@ export function UsersManagement() {
         onOpenChange={setIsFormDialogOpen}
         user={selectedUser}
         onSave={handleSaveUser}
+        loading={actionLoading}
       />
 
       {/* Delete User Dialog */}
@@ -204,6 +196,7 @@ export function UsersManagement() {
         onOpenChange={setIsDeleteDialogOpen}
         user={selectedUser}
         onConfirm={handleConfirmDelete}
+        loading={actionLoading}
       />
     </div>
   );

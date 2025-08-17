@@ -6,7 +6,7 @@ import { Badge } from '@/components/ui/badge';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Download, Eye } from 'lucide-react';
 
-interface Product {
+interface ProductItem {
   id: string;
   title: string;
   slug: string;
@@ -26,7 +26,7 @@ interface Product {
 interface ProductViewDialogProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
-  product: Product | null;
+  product: ProductItem | null;
 }
 
 export function ProductViewDialog({ open, onOpenChange, product }: ProductViewDialogProps) {
