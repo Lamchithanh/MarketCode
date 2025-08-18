@@ -2,6 +2,7 @@
 
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
+import { Tag } from '@/lib/services/product-service';
 
 interface ProductItem {
   id: string;
@@ -14,7 +15,7 @@ interface ProductItem {
   viewCount: number;
   isActive: boolean;
   category: string;
-  tags: string[];
+  tags: Tag[];
   technologies: string[];
   createdAt: string;
   updatedAt: string;

@@ -31,6 +31,7 @@ import { ProductFormDialog } from './product-form-dialog';
 import { ProductDeleteDialog } from './product-delete-dialog';
 import { useProducts } from '@/hooks/use-products';
 import { toast } from 'sonner';
+import { Tag } from '@/lib/services/product-service';
 
 interface ProductItem {
   id: string;
@@ -39,11 +40,14 @@ interface ProductItem {
   description: string;
   price: number;
   thumbnailUrl?: string;
+  images?: string[];
+  githubUrl?: string;
+  demoUrl?: string;
   downloadCount: number;
   viewCount: number;
   isActive: boolean;
   category: string;
-  tags: string[];
+  tags: Tag[];
   technologies: string[];
   createdAt: string;
   updatedAt: string;
@@ -56,6 +60,9 @@ interface ProductFormData {
   description: string;
   price: number;
   thumbnailUrl?: string;
+  images?: string[];
+  githubUrl?: string;
+  demoUrl?: string;
   categoryId: string;
   tags: string[];
   technologies: string[];
@@ -91,11 +98,14 @@ export function ProductsManagement() {
         description: product.description || '',
         price: product.price,
         thumbnailUrl: product.thumbnailUrl,
+        images: product.images || [],
+        githubUrl: product.githubUrl || '',
+        demoUrl: product.demoUrl || '',
         downloadCount: product.downloadCount || 0,
         viewCount: product.viewCount || 0,
         isActive: product.isActive ?? true,
-        category: 'Unknown', // We'll need to fetch category name separately
-        tags: [], // We'll need to fetch tags separately
+        category: product.category?.name || 'Unknown Category',
+        tags: product.tags || [],
         technologies: product.technologies || [],
         createdAt: product.createdAt,
         updatedAt: product.updatedAt
@@ -155,6 +165,8 @@ export function ProductsManagement() {
 
   const handleSaveProduct = async (productData: ProductFormData) => {
     try {
+      console.log('handleSaveProduct received:', productData);
+      
       if (productData.id) {
         // Edit mode - update existing product
         await updateProduct(productData.id, {
@@ -163,9 +175,13 @@ export function ProductsManagement() {
           description: productData.description,
           price: productData.price,
           thumbnailUrl: productData.thumbnailUrl,
+          images: productData.images,
+          githubUrl: productData.githubUrl,
+          demoUrl: productData.demoUrl,
           categoryId: productData.categoryId,
           technologies: productData.technologies,
-          isActive: productData.isActive
+          isActive: productData.isActive,
+          tagIds: productData.tags
         });
         toast.success('Product updated successfully');
       } else {
@@ -178,9 +194,13 @@ export function ProductsManagement() {
           description: productData.description,
           price: productData.price,
           thumbnailUrl: productData.thumbnailUrl,
+          images: productData.images,
+          githubUrl: productData.githubUrl,
+          demoUrl: productData.demoUrl,
           categoryId: productData.categoryId,
           technologies: productData.technologies,
-          isActive: productData.isActive ?? true
+          isActive: productData.isActive ?? true,
+          tagIds: productData.tags
         });
         toast.success('Product created successfully');
       }
@@ -236,7 +256,7 @@ export function ProductsManagement() {
       </div>
 
       {/* Stats Cards */}
-      {stats && <ProductsStats products={products || []} />}
+      {stats && <ProductsStats products={filteredProducts} />}
 
       {/* Search and Filters */}
       <ProductsSearch
@@ -282,9 +302,14 @@ export function ProductsManagement() {
                         <p className="font-medium text-foreground truncate">{product.title}</p>
                         <p className="text-sm text-muted-foreground truncate">{product.description}</p>
                         <div className="flex flex-wrap gap-1 mt-1">
-                          {product.tags.slice(0, 2).map((tag, index) => (
-                            <Badge key={index} variant="secondary" className="text-xs">
-                              {tag}
+                          {product.tags.slice(0, 2).map((tag) => (
+                            <Badge 
+                              key={tag.id} 
+                              variant="secondary" 
+                              className="text-xs text-white"
+                              style={{ backgroundColor: tag.color || '#6B7280' }}
+                            >
+                              {tag.name}
                             </Badge>
                           ))}
                           {product.tags.length > 2 && (

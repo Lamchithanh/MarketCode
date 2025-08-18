@@ -5,6 +5,8 @@ import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Download, Eye } from 'lucide-react';
+import { Tag } from '@/lib/services/product-service';
+import Image from 'next/image';
 
 interface ProductItem {
   id: string;
@@ -13,11 +15,15 @@ interface ProductItem {
   description: string;
   price: number;
   thumbnailUrl?: string;
+  images?: string[];
+  githubUrl?: string;
+  demoUrl?: string;
   downloadCount: number;
   viewCount: number;
   isActive: boolean;
   category: string;
-  tags: string[];
+  categoryIcon?: string; // For future enhancement
+  tags: Tag[];
   technologies: string[];
   createdAt: string;
   updatedAt: string;
@@ -31,6 +37,14 @@ interface ProductViewDialogProps {
 
 export function ProductViewDialog({ open, onOpenChange, product }: ProductViewDialogProps) {
   if (!product) return null;
+
+  // Debug logging
+  console.log('ProductViewDialog - product data:', {
+    title: product.title,
+    images: product.images,
+    githubUrl: product.githubUrl,
+    demoUrl: product.demoUrl
+  });
 
   const formatDate = (dateString: string) => {
     return new Date(dateString).toLocaleDateString('en-US', {
@@ -85,7 +99,11 @@ export function ProductViewDialog({ open, onOpenChange, product }: ProductViewDi
           <div className="grid grid-cols-2 gap-4">
             <div>
               <label className="text-sm font-medium text-muted-foreground">Category</label>
-              <Badge variant="outline" className="mt-1">{product.category}</Badge>
+              <div className="mt-1">
+                <Badge variant="outline" className="flex items-center gap-1 w-fit">
+                  {product.category}
+                </Badge>
+              </div>
             </div>
             <div>
               <label className="text-sm font-medium text-muted-foreground">Statistics</label>
@@ -105,13 +123,77 @@ export function ProductViewDialog({ open, onOpenChange, product }: ProductViewDi
           <div>
             <label className="text-sm font-medium text-muted-foreground">Tags</label>
             <div className="flex flex-wrap gap-1 mt-1">
-              {product.tags.map((tag, index) => (
-                <Badge key={index} variant="secondary" className="text-xs">
-                  {tag}
-                </Badge>
-              ))}
+              {product.tags?.length > 0 ? (
+                product.tags.map((tag) => (
+                  <Badge 
+                    key={tag.id} 
+                    variant="secondary" 
+                    className={`text-xs text-white`}
+                    style={{ 
+                      backgroundColor: tag.color || '#6B7280'
+                    }}
+                  >
+                    {tag.name}
+                  </Badge>
+                ))
+              ) : (
+                <span className="text-sm text-muted-foreground">No tags assigned</span>
+              )}
             </div>
           </div>
+
+          {/* Images section */}
+          {product.images && product.images.length > 0 && (
+            <div>
+              <label className="text-sm font-medium text-muted-foreground">Product Images</label>
+              <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mt-2">
+                {product.images.map((imageUrl, index) => (
+                  <div key={index} className="aspect-square rounded-lg overflow-hidden border">
+                    <Image
+                      src={imageUrl}
+                      alt={`Product image ${index + 1}`}
+                      width={200}
+                      height={200}
+                      className="w-full h-full object-cover"
+                      onError={(e) => {
+                        const target = e.target as HTMLImageElement;
+                        target.src = '/placeholder-image.svg';
+                      }}
+                    />
+                  </div>
+                ))}
+              </div>
+            </div>
+          )}
+
+          {/* Links section */}
+          {(product.githubUrl || product.demoUrl) && (
+            <div>
+              <label className="text-sm font-medium text-muted-foreground">Links</label>
+              <div className="flex flex-wrap gap-2 mt-1">
+                {product.githubUrl && (
+                  <a 
+                    href={product.githubUrl} 
+                    target="_blank" 
+                    rel="noopener noreferrer"
+                    className="inline-flex items-center px-3 py-1 text-xs font-medium rounded-full border bg-background hover:bg-accent"
+                  >
+                    🔗 GitHub Source
+                  </a>
+                )}
+                {product.demoUrl && (
+                  <a 
+                    href={product.demoUrl} 
+                    target="_blank" 
+                    rel="noopener noreferrer"
+                    className="inline-flex items-center px-3 py-1 text-xs font-medium rounded-full border bg-background hover:bg-accent"
+                  >
+                    🚀 Live Demo
+                  </a>
+                )}
+              </div>
+            </div>
+          )}
 
           <div>
             <label className="text-sm font-medium text-muted-foreground">Technologies</label>

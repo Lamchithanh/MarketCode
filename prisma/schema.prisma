@@ -3,8 +3,8 @@ generator client {
 }
 
 datasource db {
-  provider = "postgresql"
-  url      = env("DATABASE_URL")
+  provider  = "postgresql"
+  url       = env("DATABASE_URL")
   directUrl = env("DIRECT_URL")
 }
 
@@ -99,6 +99,7 @@ model Product {
   description   String?
   price         Decimal
   thumbnailUrl  String?
+  images        Json?     // Store up to 4 product images
   fileUrl       String?
   demoUrl       String?
   githubUrl     String?

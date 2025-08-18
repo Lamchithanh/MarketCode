@@ -1,6 +1,6 @@
 import bcrypt from "bcryptjs";
 import { NextRequest, NextResponse } from "next/server";
-import { prisma } from "@/lib/prisma";
+import { supabaseServiceRole } from "@/lib/supabase-server";
 import { registerSchema } from "@/lib/validations/auth";
 
 export async function POST(request: NextRequest) {
@@ -23,11 +23,13 @@ export async function POST(request: NextRequest) {
     const { firstName, lastName, email, password } = validatedFields.data;
 
     // Check if user already exists
-    const existingUser = await prisma.user.findUnique({
-      where: { email },
-    });
+    const { data: existingUser, error: findError } = await supabaseServiceRole
+      .from('User')
+      .select('id')
+      .eq('email', email)
+      .single();
 
-    if (existingUser) {
+    if (existingUser && !findError) {
       return NextResponse.json(
         { error: "Email đã được sử dụng" },
         { status: 400 }
@@ -38,15 +40,25 @@ export async function POST(request: NextRequest) {
     const hashedPassword = await bcrypt.hash(password, 12);
 
     // Create user
-    const user = await prisma.user.create({
-      data: {
+    const { data: user, error: createError } = await supabaseServiceRole
+      .from('User')
+      .insert({
         name: `${firstName} ${lastName}`,
         email,
         password: hashedPassword,
         role: "USER",
         isActive: true,
-      },
-    });
+      })
+      .select()
+      .single();
+
+    if (createError) {
+      console.error('Create user error:', createError);
+      return NextResponse.json(
+        { error: "Không thể tạo tài khoản" },
+        { status: 500 }
+      );
+    }
 
     // Remove password from response
     const { password: _, ...userWithoutPassword } = user;

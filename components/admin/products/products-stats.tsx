@@ -2,6 +2,7 @@
 
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Package, DollarSign, Download, Eye } from 'lucide-react';
+import { Tag } from '@/lib/services/product-service';
 
 interface ProductItem {
   id: string;
@@ -14,7 +15,7 @@ interface ProductItem {
   viewCount: number;
   isActive: boolean;
   category: string;
-  tags: string[];
+  tags: Tag[];
   technologies: string[];
   createdAt: string;
   updatedAt: string;

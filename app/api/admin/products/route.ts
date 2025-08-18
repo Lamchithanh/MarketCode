@@ -28,6 +28,16 @@ export async function GET(request: NextRequest) {
       limit
     });
     
+    // Debug: Log first product to check if images are included
+    if (result.products.length > 0) {
+      console.log('GET /api/admin/products - First product sample:', {
+        title: result.products[0].title,
+        images: result.products[0].images,
+        githubUrl: result.products[0].githubUrl,
+        demoUrl: result.products[0].demoUrl
+      });
+    }
+    
     return NextResponse.json(result);
   } catch (error) {
     console.error('Error in GET /api/admin/products:', error);
@@ -41,6 +51,10 @@ export async function GET(request: NextRequest) {
 export async function POST(request: NextRequest) {
   try {
     const body = await request.json();
+    
+    // Log incoming data for debugging
+    console.log('POST /api/admin/products - Received body:', JSON.stringify(body, null, 2));
+    
     const {
       userId,
       categoryId,
@@ -49,6 +63,7 @@ export async function POST(request: NextRequest) {
       description,
       price,
       thumbnailUrl,
+      images,
       fileUrl,
       demoUrl,
       githubUrl,
@@ -73,6 +88,7 @@ export async function POST(request: NextRequest) {
       description,
       price,
       thumbnailUrl,
+      images,
       fileUrl,
       demoUrl,
       githubUrl,

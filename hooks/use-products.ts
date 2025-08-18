@@ -103,6 +103,19 @@ export function useProducts(): UseProductsReturn {
 
       const data: PaginatedProducts = await response.json();
       
+      // Debug: Log fetched data
+      if (data.products.length > 0) {
+        const testProduct = data.products.find(p => p.title === 'Test Product with Images');
+        if (testProduct) {
+          console.log('useProducts - Fetched product data:', {
+            title: testProduct.title,
+            images: testProduct.images,
+            githubUrl: testProduct.githubUrl,
+            demoUrl: testProduct.demoUrl
+          });
+        }
+      }
+      
       setProducts(data.products);
       setTotal(data.total);
       setTotalPages(data.totalPages);

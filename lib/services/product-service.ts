@@ -1,4 +1,6 @@
 import { supabaseServiceRole } from '@/lib/supabase-server';
+import { extractImagePath } from '@/lib/storage-utils';
+import { deleteImageFromStorage } from '@/lib/storage-server-utils';
 
 export interface Product {
   id: string;
@@ -9,6 +11,7 @@ export interface Product {
   description?: string;
   price: number;
   thumbnailUrl?: string;
+  images?: string[]; // Array of up to 4 image URLs
   fileUrl?: string;
   demoUrl?: string;
   githubUrl?: string;
@@ -56,6 +59,7 @@ export interface CreateProductData {
   description?: string;
   price: number;
   thumbnailUrl?: string;
+  images?: string[];
   fileUrl?: string;
   demoUrl?: string;
   githubUrl?: string;
@@ -72,6 +76,7 @@ export interface UpdateProductData {
   description?: string;
   price?: number;
   thumbnailUrl?: string;
+  images?: string[];
   fileUrl?: string;
   demoUrl?: string;
   githubUrl?: string;
@@ -197,17 +202,57 @@ export class ProductService {
 
       // If tag filtering is required, filter products by tags
       let filteredProducts = products || [];
+      
+      // Debug: Log raw Supabase data for first product  
+      if (filteredProducts.length > 0) {
+        const firstProduct = filteredProducts[0];
+        if (firstProduct.title === 'Test Product with Images') {
+          console.log('ProductService - Raw Supabase data:', {
+            title: firstProduct.title,
+            images: firstProduct.images,
+            githubUrl: firstProduct.githubUrl,
+            demoUrl: firstProduct.demoUrl
+          });
+        }
+      }
+      
       if (tagIds && tagIds.length > 0) {
         const productsWithTags = await this.getProductsByTags(tagIds);
         const productIds = new Set(productsWithTags.map(p => p.productId));
         filteredProducts = filteredProducts.filter(p => productIds.has(p.id));
       }
 
+      // Load tags for each product
+      const productsWithTags = await Promise.all(
+        filteredProducts.map(async (product) => {
+          const tags = await this.getProductTags(product.id);
+          const result = { ...product, tags };
+          
+          // Debug: Log transformation for first product
+          if (product.title === 'Test Product with Images') {
+            console.log('ProductService - Before transform:', {
+              title: product.title,
+              images: product.images,
+              githubUrl: product.githubUrl,
+              demoUrl: product.demoUrl
+            });
+            console.log('ProductService - After transform:', {
+              title: result.title,
+              images: result.images,
+              githubUrl: result.githubUrl,
+              demoUrl: result.demoUrl
+            });
+          }
+          
+          return result;
+        })
+      );
+
       const total = count || 0;
       const totalPages = Math.ceil(total / limit);
 
       return {
-        products: filteredProducts,
+        products: productsWithTags,
         total: filteredProducts.length,
         page,
         limit,
@@ -315,6 +360,7 @@ export class ProductService {
           description: productData.description,
           price: productData.price,
           thumbnailUrl: productData.thumbnailUrl,
+          images: productData.images || [],
           fileUrl: productData.fileUrl,
           demoUrl: productData.demoUrl,
           githubUrl: productData.githubUrl,
@@ -364,6 +410,23 @@ export class ProductService {
         }
       }
 
+      // Handle image cleanup if images are being updated
+      if (productData.images !== undefined) {
+        const oldImages = existingProduct.images || [];
+        const newImages = productData.images || [];
+
+        // Find images that need to be deleted (old images not in new images)
+        const imagesToDelete = oldImages.filter(oldImage => !newImages.includes(oldImage));
+
+        // Delete old images from storage
+        for (const imageUrl of imagesToDelete) {
+          const imagePath = extractImagePath(imageUrl);
+          if (imagePath) {
+            await deleteImageFromStorage(imagePath);
+          }
+        }
+      }
+
       const { data: product, error } = await supabaseServiceRole
         .from('Product')
         .update({
@@ -395,6 +458,9 @@ export class ProductService {
    */
   async deleteProduct(id: string): Promise<void> {
     try {
+      // Get product to access its images before deletion
+      const existingProduct = await this.getProductById(id);
+      
       const { error } = await supabaseServiceRole
         .from('Product')
         .update({
@@ -405,6 +471,16 @@ export class ProductService {
 
       if (error) {
         throw new Error(`Failed to delete product: ${error.message}`);
+      }
+
+      // Delete all product images from storage
+      if (existingProduct?.images?.length) {
+        for (const imageUrl of existingProduct.images) {
+          const imagePath = extractImagePath(imageUrl);
+          if (imagePath) {
+            await deleteImageFromStorage(imagePath);
+          }
+        }
       }
     } catch (error) {
       console.error('Error deleting product:', error);
@@ -488,7 +564,6 @@ export class ProductService {
       const { data: productTags, error } = await supabaseServiceRole
         .from('ProductTag')
         .select(`
-          tagId,
           tag:Tag(id, name, slug, color)
         `)
         .eq('productId', productId);
@@ -497,7 +572,7 @@ export class ProductService {
         throw new Error(`Failed to fetch product tags: ${error.message}`);
       }
 
-      return productTags?.map(pt => pt.tag).filter(Boolean) || [];
+      return productTags?.map((pt: any) => pt.tag as Tag).filter(Boolean) || [];
     } catch (error) {
       console.error('Error fetching product tags:', error);
       return [];
