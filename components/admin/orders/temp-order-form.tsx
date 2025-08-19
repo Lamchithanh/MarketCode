@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Order, CreateOrderData, UpdateOrderData } from '@/lib/services/order-service';
 import {
   Dialog,
@@ -124,9 +124,10 @@ export function OrderFormDialog({
 
   const calculateTotal = () => {
     const itemsTotal = items.reduce((sum, item) => sum + item.productPrice, 0);
+    const finalTotal = itemsTotal - formData.discountAmount + formData.taxAmount;
     setFormData(prev => ({
       ...prev,
-      totalAmount: itemsTotal,
+      totalAmount: Math.max(0, finalTotal),
     }));
   };
 
@@ -337,20 +338,6 @@ export function OrderFormDialog({
             </div>
 
             {!isEditMode && (
-              <div>
-                <Label htmlFor="totalAmount">Tổng tiền (VND)</Label>
-                <Input
-                  id="totalAmount"
-                  type="number"
-                  value={formData.totalAmount}
-                  onChange={(e) => handleInputChange('totalAmount', Number(e.target.value))}
-                  placeholder="0"
-                  min="0"
-                />
-              </div>
-            )}
-
-            {!isEditMode && (
               <>
                 <div>
                   <Label htmlFor="discountAmount">Giảm giá (VND)</Label>
@@ -361,6 +348,7 @@ export function OrderFormDialog({
                     onChange={(e) => handleInputChange('discountAmount', Number(e.target.value))}
                     placeholder="0"
                     min="0"
+                    onBlur={calculateTotal}
                   />
                 </div>
 
@@ -373,7 +361,17 @@ export function OrderFormDialog({
                     onChange={(e) => handleInputChange('taxAmount', Number(e.target.value))}
                     placeholder="0"
                     min="0"
+                    onBlur={calculateTotal}
                   />
+                </div>
+
+                <div className="col-span-2">
+                  <Label htmlFor="totalAmount" className="text-base font-semibold">
+                    Tổng tiền (VND): {formData.totalAmount.toLocaleString('vi-VN')}
+                  </Label>
+                  <div className="text-sm text-muted-foreground">
+                    Tự động tính từ giá sản phẩm + thuế - giảm giá
+                  </div>
                 </div>
               </>
             )}
@@ -413,6 +411,3 @@ export function OrderFormDialog({
     </Dialog>
   );
 }
-
-// Also provide default export to ensure compatibility
-export default OrderFormDialog;

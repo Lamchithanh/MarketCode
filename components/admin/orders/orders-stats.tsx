@@ -2,54 +2,82 @@
 
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { ShoppingCart, DollarSign, Clock, CheckCircle } from 'lucide-react';
-
-interface Order {
-  id: string;
-  status: 'PENDING' | 'PROCESSING' | 'COMPLETED' | 'CANCELLED';
-  totalAmount: number;
-}
+import { OrderStats } from '@/lib/services/order-service';
 
 interface OrdersStatsProps {
-  orders: Order[];
+  stats: OrderStats | null;
+  loading?: boolean;
 }
 
-export function OrdersStats({ orders }: OrdersStatsProps) {
-  const totalRevenue = orders.reduce((sum, order) => sum + order.totalAmount, 0);
-  const completedOrders = orders.filter(order => order.status === 'COMPLETED').length;
-  const pendingOrders = orders.filter(order => order.status === 'PENDING').length;
-
+export function OrdersStats({ stats, loading = false }: OrdersStatsProps) {
   const formatCurrency = (amount: number) => {
-    return new Intl.NumberFormat('en-US', {
+    return new Intl.NumberFormat('vi-VN', {
       style: 'currency',
-      currency: 'USD',
+      currency: 'VND',
     }).format(amount);
   };
 
-  const stats = [
+  if (loading) {
+    return (
+      <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
+        {[1, 2, 3, 4].map((i) => (
+          <Card key={i}>
+            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+              <CardTitle className="text-sm font-medium">
+                <div className="h-4 bg-gray-200 rounded animate-pulse w-20"></div>
+              </CardTitle>
+              <div className="h-4 w-4 bg-gray-200 rounded animate-pulse"></div>
+            </CardHeader>
+            <CardContent>
+              <div className="h-8 bg-gray-200 rounded animate-pulse w-16 mb-1"></div>
+              <div className="h-3 bg-gray-200 rounded animate-pulse w-24"></div>
+            </CardContent>
+          </Card>
+        ))}
+      </div>
+    );
+  }
+
+  if (!stats) {
+    return (
+      <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
+        <Card>
+          <CardHeader>
+            <CardTitle>Không có dữ liệu</CardTitle>
+          </CardHeader>
+          <CardContent>
+            <p className="text-muted-foreground">Không thể tải thống kê đơn hàng</p>
+          </CardContent>
+        </Card>
+      </div>
+    );
+  }
+
+  const statsData = [
     {
-      title: 'Total Orders',
-      value: orders.length,
+      title: 'Tổng đơn hàng',
+      value: stats.totalOrders,
       icon: ShoppingCart,
       bgColor: 'bg-stone-100',
       iconColor: 'text-stone-600',
     },
     {
-      title: 'Completed Orders',
-      value: completedOrders,
+      title: 'Đơn hoàn thành',
+      value: stats.completedOrders,
       icon: CheckCircle,
       bgColor: 'bg-stone-100',
       iconColor: 'text-stone-600',
     },
     {
-      title: 'Pending Orders',
-      value: pendingOrders,
+      title: 'Đơn chờ xử lý',
+      value: stats.pendingOrders,
       icon: Clock,
       bgColor: 'bg-stone-100',
       iconColor: 'text-stone-600',
     },
     {
-      title: 'Total Revenue',
-      value: formatCurrency(totalRevenue),
+      title: 'Tổng doanh thu',
+      value: formatCurrency(stats.totalRevenue),
       icon: DollarSign,
       bgColor: 'bg-stone-100',
       iconColor: 'text-stone-600',
@@ -58,7 +86,7 @@ export function OrdersStats({ orders }: OrdersStatsProps) {
 
   return (
     <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
-      {stats.map((stat, index) => {
+      {statsData.map((stat, index) => {
         const Icon = stat.icon;
         return (
           <Card key={index} className="border-0 shadow-lg hover:shadow-xl transition-shadow duration-300">

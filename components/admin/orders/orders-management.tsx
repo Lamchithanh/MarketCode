@@ -1,8 +1,7 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState } from 'react';
 import { RefreshCw } from 'lucide-react';
-import { OrdersHeader } from './orders-header';
 import { OrdersStats } from './orders-stats';
 import { OrdersSearch } from './orders-search';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
@@ -25,105 +24,24 @@ import {
 } from '@/components/ui/dropdown-menu';
 import { Button } from '@/components/ui/button';
 import { MoreHorizontal, Edit, Eye, Trash2, Database } from 'lucide-react';
-import { OrderViewDialog } from './order-view-dialog';
-import { OrderFormDialog } from './order-form-dialog';
-import { OrderDeleteDialog } from './order-delete-dialog';
-
-interface Order {
-  id: string;
-  orderNumber: string;
-  customerName: string;
-  customerEmail: string;
-  status: 'PENDING' | 'PROCESSING' | 'COMPLETED' | 'CANCELLED';
-  totalAmount: number;
-  paymentStatus: 'PENDING' | 'PAID' | 'FAILED' | 'REFUNDED';
-  createdAt: string;
-  itemCount: number;
-}
-
-const mockOrders: Order[] = [
-  {
-    id: '1',
-    orderNumber: 'ORD-001',
-    customerName: 'John Doe',
-    customerEmail: 'john@example.com',
-    status: 'COMPLETED',
-    totalAmount: 29.99,
-    paymentStatus: 'PAID',
-    createdAt: '2024-01-15T10:30:00Z',
-    itemCount: 1,
-  },
-  {
-    id: '2',
-    orderNumber: 'ORD-002',
-    customerName: 'Jane Smith',
-    customerEmail: 'jane@example.com',
-    status: 'PROCESSING',
-    totalAmount: 59.98,
-    paymentStatus: 'PAID',
-    createdAt: '2024-01-15T11:45:00Z',
-    itemCount: 2,
-  },
-  {
-    id: '3',
-    orderNumber: 'ORD-003',
-    customerName: 'Bob Johnson',
-    customerEmail: 'bob@example.com',
-    status: 'PENDING',
-    totalAmount: 19.99,
-    paymentStatus: 'PENDING',
-    createdAt: '2024-01-15T12:20:00Z',
-    itemCount: 1,
-  },
-  {
-    id: '4',
-    orderNumber: 'ORD-004',
-    customerName: 'Alice Wilson',
-    customerEmail: 'alice@example.com',
-    status: 'CANCELLED',
-    totalAmount: 39.99,
-    paymentStatus: 'REFUNDED',
-    createdAt: '2024-01-15T13:15:00Z',
-    itemCount: 1,
-  },
-];
+import { useOrders } from '@/hooks/use-orders';
+import type { Order } from '@/lib/services/order-service';
 
 export function OrdersManagement() {
-  const [orders, setOrders] = useState<Order[]>(mockOrders);
-  const [filteredOrders, setFilteredOrders] = useState<Order[]>(mockOrders);
+  const {
+    orders,
+    stats,
+    loading,
+    error,
+    refreshOrders,
+    updateOrder: updateOrderData,
+    deleteOrder: deleteOrderData
+  } = useOrders();
+
   const [searchTerm, setSearchTerm] = useState('');
-  const [loading, setLoading] = useState(false);
-  const [lastUpdated, setLastUpdated] = useState<Date | null>(null);
-  const [selectedOrder, setSelectedOrder] = useState<Order | null>(null);
-  const [isViewDialogOpen, setIsViewDialogOpen] = useState(false);
-  const [isFormDialogOpen, setIsFormDialogOpen] = useState(false);
-  const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
-
-  // Filter orders based on search term
-  useEffect(() => {
-    const filtered = orders.filter(order =>
-      order.orderNumber.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      order.customerName.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      order.customerEmail.toLowerCase().includes(searchTerm.toLowerCase())
-    );
-    setFilteredOrders(filtered);
-  }, [orders, searchTerm]);
-
-  const handleRefresh = async () => {
-    setLoading(true);
-    try {
-      // Simulate API call
-      await new Promise(resolve => setTimeout(resolve, 1000));
-      setLastUpdated(new Date());
-    } catch (error) {
-      console.error('Error refreshing orders:', error);
-    } finally {
-      setLoading(false);
-    }
-  };
 
   const formatDate = (dateString: string) => {
-    return new Date(dateString).toLocaleDateString('en-US', {
+    return new Date(dateString).toLocaleDateString('vi-VN', {
       year: 'numeric',
       month: 'short',
       day: 'numeric',
@@ -133,232 +51,214 @@ export function OrdersManagement() {
   };
 
   const formatCurrency = (amount: number) => {
-    return new Intl.NumberFormat('en-US', {
+    return new Intl.NumberFormat('vi-VN', {
       style: 'currency',
-      currency: 'USD',
+      currency: 'VND',
     }).format(amount);
   };
 
   const getStatusBadge = (status: string) => {
-    const statusConfig = {
-      PENDING: { variant: 'secondary' as const, label: 'Pending', className: '' },
-      PROCESSING: { variant: 'default' as const, label: 'Processing', className: '' },
-      COMPLETED: { variant: 'default' as const, label: 'Completed', className: 'bg-green-100 text-green-800' },
-      CANCELLED: { variant: 'destructive' as const, label: 'Cancelled', className: '' },
-    };
-
-    const config = statusConfig[status as keyof typeof statusConfig] || statusConfig.PENDING;
-    return (
-      <Badge variant={config.variant} className={config.className}>
-        {config.label}
-      </Badge>
-    );
+    switch (status) {
+      case 'COMPLETED':
+        return <Badge className="bg-green-100 text-green-800 hover:bg-green-100">Hoàn thành</Badge>;
+      case 'PROCESSING':
+        return <Badge className="bg-blue-100 text-blue-800 hover:bg-blue-100">Đang xử lý</Badge>;
+      case 'PENDING':
+        return <Badge className="bg-yellow-100 text-yellow-800 hover:bg-yellow-100">Chờ xử lý</Badge>;
+      case 'CANCELLED':
+        return <Badge className="bg-red-100 text-red-800 hover:bg-red-100">Đã hủy</Badge>;
+      default:
+        return <Badge variant="secondary">{status}</Badge>;
+    }
   };
 
   const getPaymentStatusBadge = (status: string) => {
-    const statusConfig = {
-      PENDING: { variant: 'secondary' as const, label: 'Pending', className: '' },
-      PAID: { variant: 'default' as const, label: 'Paid', className: 'bg-green-100 text-green-800' },
-      FAILED: { variant: 'destructive' as const, label: 'Failed', className: '' },
-      REFUNDED: { variant: 'secondary' as const, label: 'Refunded', className: '' },
-    };
-
-    const config = statusConfig[status as keyof typeof statusConfig] || statusConfig.PENDING;
-    return (
-      <Badge variant={config.variant} className={config.className}>
-        {config.label}
-      </Badge>
-    );
-  };
-
-  const handleAddOrder = () => {
-    setSelectedOrder(null); // null = Add mode
-    setIsFormDialogOpen(true);
-  };
-
-  const handleEditOrder = (order: Order) => {
-    setSelectedOrder(order); // order = Edit mode
-    setIsFormDialogOpen(true);
-  };
-
-  const handleDeleteOrder = (order: Order) => {
-    setSelectedOrder(order);
-    setIsDeleteDialogOpen(true);
-  };
-
-  const handleViewOrder = (order: Order) => {
-    setSelectedOrder(order);
-    setIsViewDialogOpen(true);
-  };
-
-  const handleSaveOrder = (orderData: any) => {
-    if (orderData.id) {
-      // Edit mode - update existing order
-      setOrders(orders.map(o => o.id === orderData.id ? { ...o, ...orderData } : o));
-    } else {
-      // Add mode - create new order
-      const newOrder: Order = {
-        id: Date.now().toString(),
-        orderNumber: orderData.orderNumber,
-        customerName: orderData.customerName,
-        customerEmail: orderData.customerEmail,
-        productTitle: orderData.productTitle,
-        amount: orderData.amount,
-        status: orderData.status,
-        paymentStatus: orderData.paymentStatus,
-        paymentMethod: orderData.paymentMethod,
-        createdAt: new Date().toISOString(),
-        updatedAt: new Date().toISOString(),
-      };
-      setOrders([...orders, newOrder]);
+    switch (status) {
+      case 'PAID':
+        return <Badge className="bg-green-100 text-green-800 hover:bg-green-100">Đã thanh toán</Badge>;
+      case 'PENDING':
+        return <Badge className="bg-yellow-100 text-yellow-800 hover:bg-yellow-100">Chờ thanh toán</Badge>;
+      case 'FAILED':
+        return <Badge className="bg-red-100 text-red-800 hover:bg-red-100">Thất bại</Badge>;
+      case 'REFUNDED':
+        return <Badge className="bg-gray-100 text-gray-800 hover:bg-gray-100">Đã hoàn tiền</Badge>;
+      default:
+        return <Badge variant="secondary">{status}</Badge>;
     }
-    setSelectedOrder(null);
   };
 
-  const handleConfirmDelete = (orderToDelete: Order) => {
-    setOrders(orders.filter(o => o.id !== orderToDelete.id));
-    setSelectedOrder(null);
+  const handleView = (order: Order) => {
+    console.log('View order:', order);
   };
+
+  const handleEdit = (order: Order) => {
+    console.log('Edit order:', order);
+  };
+
+  const handleDelete = async (order: Order) => {
+    if (window.confirm('Bạn có chắc chắn muốn xóa đơn hàng này?')) {
+      try {
+        await deleteOrderData(order.id);
+        refreshOrders();
+      } catch (error) {
+        console.error('Error deleting order:', error);
+        alert('Có lỗi xảy ra khi xóa đơn hàng');
+      }
+    }
+  };
+
+  // Filter orders based on search term
+  const filteredOrders = orders.filter(order =>
+    order.orderNumber.toLowerCase().includes(searchTerm.toLowerCase()) ||
+    (order.buyerName || order.buyerEmail || '').toLowerCase().includes(searchTerm.toLowerCase())
+  );
+
+  if (error) {
+    return (
+      <div className="container mx-auto p-6">
+        <Card>
+          <CardHeader>
+            <CardTitle className="text-red-600">Lỗi</CardTitle>
+          </CardHeader>
+          <CardContent>
+            <p>Không thể tải dữ liệu đơn hàng: {error}</p>
+            <Button onClick={refreshOrders} className="mt-4">
+              <RefreshCw className="mr-2 h-4 w-4" />
+              Thử lại
+            </Button>
+          </CardContent>
+        </Card>
+      </div>
+    );
+  }
 
   return (
-    <div className="space-y-6">
+    <div className="container mx-auto p-6 space-y-8">
       {/* Header */}
-      <OrdersHeader onAddOrder={handleAddOrder} />
-
-      {/* Refresh Info */}
-      <div className="flex items-center justify-end space-x-2">
-        {lastUpdated && (
-          <p className="text-sm text-muted-foreground">
-            Last updated: {lastUpdated.toLocaleTimeString()}
+      <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
+        <div>
+          <h1 className="text-3xl font-bold tracking-tight">Quản lý đơn hàng</h1>
+          <p className="text-muted-foreground">
+            Quản lý và theo dõi tất cả đơn hàng trong hệ thống
           </p>
-        )}
-        <RefreshCw 
-          className={`h-4 w-4 ${loading ? 'animate-spin' : ''} text-muted-foreground cursor-pointer hover:text-foreground`}
-          onClick={handleRefresh}
-        />
+        </div>
+        <Button onClick={refreshOrders} disabled={loading}>
+          <RefreshCw className={`mr-2 h-4 w-4 ${loading ? 'animate-spin' : ''}`} />
+          Làm mới
+        </Button>
       </div>
+      
+      <OrdersStats stats={stats} loading={loading} />
 
-      {/* Stats Cards */}
-      <OrdersStats orders={orders} />
-
-      {/* Search and Filters */}
-      <OrdersSearch
-        searchTerm={searchTerm}
-        onSearchChange={setSearchTerm}
-        onRefresh={handleRefresh}
-        loading={loading}
-      />
-
-      {/* Orders Table */}
-      <Card className="border-0 shadow-lg">
-        <CardHeader>
-          <CardTitle className="flex items-center">
-            <Database className="h-5 w-5 mr-2" />
-            Orders Database
-          </CardTitle>
+      <Card>
+        <CardHeader className="pb-4">
+          <div className="flex flex-col sm:flex-row gap-4 items-start sm:items-center justify-between">
+            <div>
+              <CardTitle className="text-xl font-semibold">Danh sách đơn hàng</CardTitle>
+              <p className="text-sm text-muted-foreground mt-1">
+                Quản lý tất cả đơn hàng trong hệ thống
+              </p>
+            </div>
+            <OrdersSearch 
+              searchTerm={searchTerm}
+              onSearchChange={setSearchTerm}
+            />
+          </div>
         </CardHeader>
         <CardContent>
-          <Table>
-            <TableHeader>
-              <TableRow>
-                <TableHead>Order</TableHead>
-                <TableHead>Customer</TableHead>
-                <TableHead>Status</TableHead>
-                <TableHead>Payment</TableHead>
-                <TableHead>Amount</TableHead>
-                <TableHead>Date</TableHead>
-                <TableHead className="text-right">Actions</TableHead>
-              </TableRow>
-            </TableHeader>
-            <TableBody>
-              {filteredOrders.map((order) => (
-                <TableRow key={order.id}>
-                  <TableCell>
-                    <div>
-                      <p className="font-medium text-foreground">{order.orderNumber}</p>
-                      <p className="text-sm text-muted-foreground">{order.itemCount} item(s)</p>
-                    </div>
-                  </TableCell>
-                  <TableCell>
-                    <div>
-                      <p className="font-medium text-foreground">{order.customerName}</p>
-                      <p className="text-sm text-muted-foreground">{order.customerEmail}</p>
-                    </div>
-                  </TableCell>
-                  <TableCell>
-                    {getStatusBadge(order.status)}
-                  </TableCell>
-                  <TableCell>
-                    {getPaymentStatusBadge(order.paymentStatus)}
-                  </TableCell>
-                  <TableCell>
-                    <span className="font-semibold text-foreground">
-                      {formatCurrency(order.totalAmount)}
-                    </span>
-                  </TableCell>
-                  <TableCell>
-                    <span className="text-sm text-muted-foreground">
-                      {formatDate(order.createdAt)}
-                    </span>
-                  </TableCell>
-                  <TableCell className="text-right">
-                    <DropdownMenu>
-                      <DropdownMenuTrigger asChild>
-                        <Button variant="ghost" className="h-8 w-8 p-0">
-                          <span className="sr-only">Open menu</span>
-                          <MoreHorizontal className="h-4 w-4" />
-                        </Button>
-                      </DropdownMenuTrigger>
-                      <DropdownMenuContent align="end">
-                        <DropdownMenuLabel>Actions</DropdownMenuLabel>
-                        <DropdownMenuItem onClick={() => handleViewOrder(order)}>
-                          <Eye className="mr-2 h-4 w-4" />
-                          View Details
-                        </DropdownMenuItem>
-                        <DropdownMenuItem onClick={() => handleEditOrder(order)}>
-                          <Edit className="mr-2 h-4 w-4" />
-                          Edit Status
-                        </DropdownMenuItem>
-                        <DropdownMenuSeparator />
-                        <DropdownMenuItem
-                          onClick={() => handleDeleteOrder(order)}
-                          className="text-red-600 focus:text-red-600"
-                        >
-                          <Trash2 className="mr-2 h-4 w-4" />
-                          Delete
-                        </DropdownMenuItem>
-                      </DropdownMenuContent>
-                    </DropdownMenu>
-                  </TableCell>
-                </TableRow>
+          {loading ? (
+            <div className="space-y-4">
+              {[1, 2, 3].map((i) => (
+                <div key={i} className="h-16 bg-gray-200 rounded animate-pulse"></div>
               ))}
-            </TableBody>
-          </Table>
+            </div>
+          ) : filteredOrders.length === 0 ? (
+            <div className="text-center py-12">
+              <Database className="mx-auto h-12 w-12 text-muted-foreground/50" />
+              <h3 className="mt-4 text-lg font-semibold">Không có đơn hàng</h3>
+              <p className="mt-2 text-muted-foreground">
+                {searchTerm ? 'Không tìm thấy đơn hàng nào phù hợp với từ khóa tìm kiếm.' : 'Chưa có đơn hàng nào trong hệ thống.'}
+              </p>
+            </div>
+          ) : (
+            <div className="rounded-md border">
+              <Table>
+                <TableHeader>
+                  <TableRow>
+                    <TableHead>Mã đơn hàng</TableHead>
+                    <TableHead>Khách hàng</TableHead>
+                    <TableHead>Trạng thái</TableHead>
+                    <TableHead>Thanh toán</TableHead>
+                    <TableHead>Tổng tiền</TableHead>
+                    <TableHead>Ngày tạo</TableHead>
+                    <TableHead className="text-right">Thao tác</TableHead>
+                  </TableRow>
+                </TableHeader>
+                <TableBody>
+                  {filteredOrders.map((order) => (
+                    <TableRow key={order.id}>
+                      <TableCell className="font-medium">
+                        {order.orderNumber}
+                      </TableCell>
+                      <TableCell>
+                        <div>
+                          <p className="font-medium text-foreground">
+                            {order.buyerName || 'N/A'}
+                          </p>
+                          <p className="text-sm text-muted-foreground">
+                            {order.buyerEmail || 'N/A'}
+                          </p>
+                        </div>
+                      </TableCell>
+                      <TableCell>
+                        {getStatusBadge(order.status)}
+                      </TableCell>
+                      <TableCell>
+                        {getPaymentStatusBadge(order.paymentStatus)}
+                      </TableCell>
+                      <TableCell>
+                        {formatCurrency(order.totalAmount)}
+                      </TableCell>
+                      <TableCell>
+                        {formatDate(order.createdAt)}
+                      </TableCell>
+                      <TableCell className="text-right">
+                        <DropdownMenu>
+                          <DropdownMenuTrigger asChild>
+                            <Button variant="ghost" className="h-8 w-8 p-0">
+                              <span className="sr-only">Mở menu</span>
+                              <MoreHorizontal className="h-4 w-4" />
+                            </Button>
+                          </DropdownMenuTrigger>
+                          <DropdownMenuContent align="end">
+                            <DropdownMenuLabel>Thao tác</DropdownMenuLabel>
+                            <DropdownMenuItem onClick={() => handleView(order)}>
+                              <Eye className="mr-2 h-4 w-4" />
+                              Xem chi tiết
+                            </DropdownMenuItem>
+                            <DropdownMenuItem onClick={() => handleEdit(order)}>
+                              <Edit className="mr-2 h-4 w-4" />
+                              Chỉnh sửa
+                            </DropdownMenuItem>
+                            <DropdownMenuSeparator />
+                            <DropdownMenuItem 
+                              className="text-red-600"
+                              onClick={() => handleDelete(order)}
+                            >
+                              <Trash2 className="mr-2 h-4 w-4" />
+                              Xóa
+                            </DropdownMenuItem>
+                          </DropdownMenuContent>
+                        </DropdownMenu>
+                      </TableCell>
+                    </TableRow>
+                  ))}
+                </TableBody>
+              </Table>
+            </div>
+          )}
         </CardContent>
       </Card>
-
-      {/* View Order Dialog */}
-      <OrderViewDialog
-        open={isViewDialogOpen}
-        onOpenChange={setIsViewDialogOpen}
-        order={selectedOrder}
-      />
-
-      {/* Order Form Dialog (Add/Edit) */}
-      <OrderFormDialog
-        open={isFormDialogOpen}
-        onOpenChange={setIsFormDialogOpen}
-        order={selectedOrder}
-        onSave={handleSaveOrder}
-      />
-
-      {/* Delete Order Dialog */}
-      <OrderDeleteDialog
-        open={isDeleteDialogOpen}
-        onOpenChange={setIsDeleteDialogOpen}
-        order={selectedOrder}
-        onConfirm={handleConfirmDelete}
-      />
     </div>
   );
 }

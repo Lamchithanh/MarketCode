@@ -1,44 +1,77 @@
 'use client';
 
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Settings, Globe, Key, Bell } from 'lucide-react';
+import { Settings, Palette, Server, Activity } from 'lucide-react';
 
 interface Setting {
   id: string;
+  key: string;
+  value: string;
   type: string;
+  createdAt: string;
+  updatedAt: string;
 }
 
 interface SettingsStatsProps {
-  settings: Setting[];
+  settings: {
+    general: Setting[];
+    branding: Setting[];
+    system: Setting[];
+  };
 }
 
 export function SettingsStats({ settings }: SettingsStatsProps) {
+  const totalSettings = settings.general.length + settings.branding.length + settings.system.length;
+  
   const stats = [
-    { title: 'Total Settings', value: settings.length, icon: Settings, bgColor: 'bg-stone-100', iconColor: 'text-stone-600' },
-    { title: 'String Settings', value: settings.filter(s => s.type === 'string').length, icon: Globe, bgColor: 'bg-stone-100', iconColor: 'text-stone-600' },
-    { title: 'Boolean Settings', value: settings.filter(s => s.type === 'boolean').length, icon: Bell, bgColor: 'bg-stone-100', iconColor: 'text-stone-600' },
-    { title: 'Number Settings', value: settings.filter(s => s.type === 'number').length, icon: Key, bgColor: 'bg-stone-100', iconColor: 'text-stone-600' },
+    {
+      title: "Tổng cài đặt",
+      value: totalSettings,
+      description: "Tổng số cài đặt trong hệ thống",
+      icon: Activity,
+      color: "text-blue-600"
+    },
+    {
+      title: "Cài đặt chung",
+      value: settings.general.length,
+      description: "Các cài đặt cơ bản",
+      icon: Settings,
+      color: "text-green-600"
+    },
+    {
+      title: "Thương hiệu",
+      value: settings.branding.length,
+      description: "Cài đặt giao diện và thương hiệu",
+      icon: Palette,
+      color: "text-purple-600"
+    },
+    {
+      title: "Hệ thống",
+      value: settings.system.length,
+      description: "Cài đặt kỹ thuật và bảo mật",
+      icon: Server,
+      color: "text-orange-600"
+    }
   ];
 
   return (
-    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
-      {stats.map((stat, index) => {
-        const Icon = stat.icon;
-        return (
-          <Card key={index} className="border-0 shadow-lg hover:shadow-xl transition-shadow duration-300">
-            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-              <CardTitle className="text-sm font-medium text-muted-foreground">{stat.title}</CardTitle>
-              <div className={`w-10 h-10 ${stat.bgColor} rounded-lg flex items-center justify-center`}>
-                <Icon className={`h-5 w-5 ${stat.iconColor}`} />
-              </div>
-            </CardHeader>
-            <CardContent>
-              <div className="text-2xl font-bold text-foreground">{stat.value}</div>
-              <p className="text-xs text-stone-600">Updated recently</p>
-            </CardContent>
-          </Card>
-        );
-      })}
+    <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
+      {stats.map((stat, index) => (
+        <Card key={index}>
+          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+            <CardTitle className="text-sm font-medium">
+              {stat.title}
+            </CardTitle>
+            <stat.icon className={`h-4 w-4 ${stat.color}`} />
+          </CardHeader>
+          <CardContent>
+            <div className="text-2xl font-bold">{stat.value}</div>
+            <p className="text-xs text-muted-foreground">
+              {stat.description}
+            </p>
+          </CardContent>
+        </Card>
+      ))}
     </div>
   );
 }

@@ -6,6 +6,7 @@ import { BackToTop } from "@/components/ui/back-to-top";
 import { FloatingMenu } from "@/components/landing";
 import { NoSSR } from "@/components/ui/no-ssr";
 import { Toaster } from "@/components/ui/sonner";
+import { Chatbox } from "@/components/ui/chatbox";
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -38,6 +39,7 @@ export default function RootLayout({
           <NoSSR>
             <BackToTop />
             <FloatingMenu />
+            <Chatbox dailyLimit={50} />
           </NoSSR>
           <Toaster />
         </AuthProvider>

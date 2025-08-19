@@ -33,9 +33,6 @@ import {
   Settings,
   Activity,
   Code,
-  Palette,
-  FileText,
-  Database,
   Shield,
   LogOut,
 } from "lucide-react";
@@ -60,15 +57,19 @@ export function AdminSidebar() {
     <>
       <Sidebar className="min-h-screen border-r border-border/40">
         <SidebarHeader className="bg-gradient-to-r from-primary/10 via-background to-accent/10 border-b border-border/40">
-          <div className="flex items-center gap-3 px-3 py-4">
-            <div className="w-10 h-10 bg-gradient-to-br from-primary to-accent rounded-lg flex items-center justify-center">
+          <Link 
+            href="/" 
+            className="flex items-center gap-3 px-3 py-4 hover:bg-accent/20 transition-colors rounded-md group"
+            title="Về trang chủ"
+          >
+            <div className="w-10 h-10 bg-gradient-to-br from-primary to-accent rounded-lg flex items-center justify-center group-hover:scale-105 transition-transform">
               <Shield className="w-6 h-6 text-white" />
             </div>
             <div>
               <h2 className="font-bold text-lg text-foreground">MarketCode</h2>
               <p className="text-xs text-muted-foreground">Admin Panel</p>
             </div>
-          </div>
+          </Link>
         </SidebarHeader>
 
         <SidebarContent className="py-4">
