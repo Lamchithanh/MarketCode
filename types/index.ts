@@ -30,11 +30,21 @@ export interface Project {
   title: string;
   description: string;
   image: string;
+  thumbnailUrl?: string;
   technologies: string[];
   category: string;
   price: string;
   rating: number;
   reviews: number;
+  downloadCount?: number;
+  viewCount?: number;
+  createdAt?: string;
+  updatedAt?: string;
+  fileUrl?: string;
+  demoUrl?: string;
+  githubUrl?: string;
+  fileSize?: number;
+  images?: string[];
 }
 
 export interface NavItem {

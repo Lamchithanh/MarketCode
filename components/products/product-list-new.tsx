@@ -2,7 +2,6 @@
 
 import { useState } from "react";
 import Link from "next/link";
-import Image from "next/image";
 import { Card, CardContent, CardHeader } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -189,116 +188,83 @@ export function ProductList() {
               : "grid-cols-1"
           )}>
             {products.map((product) => (
-              <Link key={product.id} href={`/products/${product.id}`}>
-                <Card className="group hover:shadow-lg transition-all duration-300 overflow-hidden cursor-pointer">
-                  <div className="relative">
-                    <div className="aspect-video bg-gradient-to-br from-primary/10 to-accent/10 relative overflow-hidden">
-                      <Image
-                        src={product.thumbnailUrl || "/Images/images.png"}
-                        alt={product.title}
-                        fill
-                        className="object-cover transition-transform group-hover:scale-105"
-                        sizes="(max-width: 768px) 100vw, (max-width: 1024px) 50vw, 25vw"
-                      />
-                      
-                      {/* Demo Overlay */}
-                      {product.demoUrl && (
-                        <div className="absolute inset-0 bg-black/50 opacity-0 group-hover:opacity-100 transition-opacity duration-300 flex items-center justify-center">
-                          <Button
-                            variant="secondary"
-                            size="sm"
-                            onClick={(e) => {
-                              e.preventDefault();
-                              window.open(product.demoUrl, '_blank');
-                            }}
-                            className="bg-white/90 hover:bg-white text-black"
-                          >
-                            <Eye className="h-4 w-4 mr-2" />
-                            Xem Demo
-                          </Button>
-                        </div>
-                      )}
-                    </div>
-                    <Badge
-                      variant="secondary"
-                      className="absolute top-3 left-3 bg-background/80 backdrop-blur-sm"
-                    >
-                      {product.category}
-                    </Badge>
-                    <div className="absolute top-3 right-3 flex items-center space-x-1 bg-background/80 backdrop-blur-sm rounded-full px-2 py-1">
-                      <Eye className="h-3 w-3 text-muted-foreground" />
-                      <span className="text-xs text-muted-foreground">
-                        {product.viewCount || 0}
-                      </span>
+              <Card
+                key={product.id}
+                className="group hover:shadow-lg transition-all duration-300 overflow-hidden"
+              >
+                <div className="relative">
+                  <div className="aspect-video bg-gradient-to-br from-primary/10 to-accent/10 flex items-center justify-center">
+                    <div className="text-4xl font-bold text-primary/20">
+                      {product.title.split(" ")[0]}
                     </div>
                   </div>
+                  <Badge
+                    variant="secondary"
+                    className="absolute top-3 left-3 bg-background/80 backdrop-blur-sm"
+                  >
+                    {product.category}
+                  </Badge>
+                  <div className="absolute top-3 right-3 flex items-center space-x-1 bg-background/80 backdrop-blur-sm rounded-full px-2 py-1">
+                    <Eye className="h-3 w-3 text-muted-foreground" />
+                    <span className="text-xs text-muted-foreground">
+                      {product.viewCount || 0}
+                    </span>
+                  </div>
+                </div>
 
-                  <CardHeader className="pb-3">
-                    <div className="flex items-start justify-between">
-                      <h3 className="font-semibold text-lg leading-tight line-clamp-2">
-                        {product.title}
-                      </h3>
+                <CardHeader className="pb-3">
+                  <div className="flex items-start justify-between">
+                    <h3 className="font-semibold text-lg leading-tight line-clamp-2">
+                      {product.title}
+                    </h3>
+                  </div>
+                  <p className="text-sm text-muted-foreground line-clamp-2 mt-2">
+                    {product.description}
+                  </p>
+                </CardHeader>
+
+                <CardContent className="pt-0">
+                  <div className="flex flex-wrap gap-1 mb-4">
+                    {product.technologies.slice(0, 3).map((tech) => (
+                      <Badge key={tech} variant="outline" className="text-xs">
+                        {tech}
+                      </Badge>
+                    ))}
+                    {product.technologies.length > 3 && (
+                      <Badge variant="outline" className="text-xs">
+                        +{product.technologies.length - 3}
+                      </Badge>
+                    )}
+                  </div>
+
+                  <div className="flex items-center space-x-2 mb-4">
+                    <div className="flex items-center space-x-1">
+                      {renderStars(product.rating)}
                     </div>
-                    <p className="text-sm text-muted-foreground line-clamp-2 mt-2">
-                      {product.description}
-                    </p>
-                  </CardHeader>
+                    <span className="text-sm font-medium">{product.rating}</span>
+                    <span className="text-xs text-muted-foreground">
+                      ({product.reviews} đánh giá)
+                    </span>
+                  </div>
 
-                  <CardContent className="pt-0">
-                    <div className="flex flex-wrap gap-1 mb-4">
-                      {product.technologies.slice(0, 3).map((tech) => (
-                        <Badge key={tech} variant="outline" className="text-xs">
-                          {tech}
-                        </Badge>
-                      ))}
-                      {product.technologies.length > 3 && (
-                        <Badge variant="outline" className="text-xs">
-                          +{product.technologies.length - 3}
-                        </Badge>
-                      )}
+                  <div className="flex items-center justify-between">
+                    <div className="text-2xl font-bold text-primary">
+                      {product.price}
                     </div>
-
-                    <div className="flex items-center space-x-2 mb-4">
-                      <div className="flex items-center space-x-1">
-                        {renderStars(product.rating)}
-                      </div>
-                      <span className="text-sm font-medium">{product.rating}</span>
-                      <span className="text-xs text-muted-foreground">
-                        ({product.reviews} đánh giá)
-                      </span>
-                    </div>
-
-                    <div className="flex items-center justify-between">
-                      <div className="text-2xl font-bold text-primary">
-                        {product.price}
-                      </div>
-                      <div className="flex space-x-2">
-                        <Button 
-                          variant="outline" 
-                          size="sm"
-                          onClick={(e) => {
-                            e.preventDefault();
-                            window.open(`/products/${product.id}`, '_blank');
-                          }}
-                        >
-                          <Eye className="h-4 w-4" />
-                        </Button>
-                        <Button 
-                          size="sm" 
-                          onClick={(e) => {
-                            e.preventDefault();
-                            // Handle direct purchase or navigate to product page
-                            window.location.href = `/products/${product.id}`;
-                          }}
-                        >
+                    <div className="flex space-x-2">
+                      <Button variant="outline" size="sm">
+                        <Eye className="h-4 w-4" />
+                      </Button>
+                      <Button size="sm" asChild>
+                        <Link href={`/products/${product.id}`}>
                           <ShoppingCart className="h-4 w-4 mr-2" />
                           Mua ngay
-                        </Button>
-                      </div>
+                        </Link>
+                      </Button>
                     </div>
-                  </CardContent>
-                </Card>
-              </Link>
+                  </div>
+                </CardContent>
+              </Card>
             ))}
           </div>
 

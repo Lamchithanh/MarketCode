@@ -6,46 +6,31 @@ import { ProductDetail } from "@/components/products/product-detail";
 import { Project } from "@/types";
 import { CardLoader } from "@/components/ui/loader";
 
-// Mock data - trong thực tế sẽ fetch từ database
-const products: Project[] = [
-  {
-    id: "1",
-    title: "E-commerce Website Complete",
-    description: "Website bán hàng hoàn chỉnh với React, NextJS, Prisma, Stripe payment integration và dashboard quản trị mạnh mẽ",
-    image: "/products/ecommerce.jpg",
-    technologies: ["React", "NextJS", "Prisma", "Stripe", "Tailwind", "TypeScript"],
-    category: "E-commerce",
-    price: "499,000đ",
-    rating: 4.8,
-    reviews: 156,
-  },
-  {
-    id: "2", 
-    title: "Social Media App",
-    description: "Ứng dụng mạng xã hội với real-time chat, posts, comments, likes và user profiles",
-    image: "/products/social.jpg",
-    technologies: ["React", "NextJS", "Socket.io", "MongoDB", "Cloudinary"],
-    category: "Social Media",
-    price: "799,000đ",
-    rating: 4.9,
-    reviews: 89,
-  },
-  {
-    id: "3",
-    title: "Learning Management System",
-    description: "Hệ thống quản lý học tập với video streaming, assignments, grading và certificates",
-    image: "/products/lms.jpg",
-    technologies: ["React", "NextJS", "Prisma", "AWS S3", "Stripe"],
-    category: "Education", 
-    price: "1,299,000đ",
-    rating: 4.7,
-    reviews: 67,
-  },
-];
-
 async function getProduct(id: string): Promise<Project | null> {
-  // Simulate API call
-  return products.find(p => p.id === id) || null;
+  try {
+    const baseUrl = process.env.NODE_ENV === 'development' 
+      ? 'http://localhost:3000' 
+      : process.env.NEXT_PUBLIC_SITE_URL || 'https://your-domain.com';
+      
+    const response = await fetch(`${baseUrl}/api/products/${id}`, {
+      next: { revalidate: 300 } // Cache for 5 minutes
+    });
+
+    if (!response.ok) {
+      return null;
+    }
+
+    const result = await response.json();
+    
+    if (result.success && result.product) {
+      return result.product;
+    }
+
+    return null;
+  } catch (error) {
+    console.error('Error fetching product:', error);
+    return null;
+  }
 }
 
 interface ProductPageProps {
@@ -75,9 +60,30 @@ export default async function ProductPage({ params }: ProductPageProps) {
 }
 
 export async function generateStaticParams() {
-  return products.map((product) => ({
-    id: product.id,
-  }));
+  try {
+    const baseUrl = process.env.NODE_ENV === 'development' 
+      ? 'http://localhost:3000' 
+      : process.env.NEXT_PUBLIC_SITE_URL || 'https://your-domain.com';
+      
+    const response = await fetch(`${baseUrl}/api/products`);
+    
+    if (!response.ok) {
+      return [];
+    }
+
+    const result = await response.json();
+    
+    if (result.success && result.products) {
+      return result.products.map((product: Project) => ({
+        id: product.id,
+      }));
+    }
+
+    return [];
+  } catch (error) {
+    console.error('Error generating static params:', error);
+    return [];
+  }
 }
 
 export async function generateMetadata({ params }: ProductPageProps) {

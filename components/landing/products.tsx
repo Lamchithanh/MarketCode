@@ -1,84 +1,21 @@
+"use client";
+
+import { useState, useEffect } from "react";
+import Image from "next/image";
 import { Card, CardContent, CardHeader } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { Star, Download, Eye, ShoppingCart } from "lucide-react";
+import { Star, Download, Eye, ShoppingCart, Loader2 } from "lucide-react";
 import { Project } from "@/types";
 import Link from "next/link";
+import { useProductsLanding } from "@/hooks/use-products-landing";
 
-const products: Project[] = [
-  {
-    id: "1",
-    title: "E-commerce Website Complete",
-    description:
-      "Website bán hàng hoàn chỉnh với React, NextJS, Prisma, Stripe payment integration",
-    image: "/products/ecommerce.jpg",
-    technologies: ["React", "NextJS", "Prisma", "Stripe", "Tailwind"],
-    category: "E-commerce",
-    price: "499,000đ",
-    rating: 4.8,
-    reviews: 156,
-  },
-  {
-    id: "2",
-    title: "Social Media App",
-    description:
-      "Ứng dụng mạng xã hội với real-time chat, posts, comments, likes và user profiles",
-    image: "/products/social.jpg",
-    technologies: ["React", "NextJS", "Socket.io", "MongoDB", "Cloudinary"],
-    category: "Social Media",
-    price: "799,000đ",
-    rating: 4.9,
-    reviews: 89,
-  },
-  {
-    id: "3",
-    title: "Learning Management System",
-    description:
-      "Hệ thống quản lý học tập với video streaming, assignments, grading và certificates",
-    image: "/products/lms.jpg",
-    technologies: ["React", "NextJS", "Prisma", "AWS S3", "Stripe"],
-    category: "Education",
-    price: "1,299,000đ",
-    rating: 4.7,
-    reviews: 67,
-  },
-  {
-    id: "4",
-    title: "Task Management App",
-    description:
-      "Ứng dụng quản lý công việc kiểu Trello với drag & drop, team collaboration",
-    image: "/products/task.jpg",
-    technologies: ["React", "NextJS", "DnD Kit", "Prisma", "WebSocket"],
-    category: "Productivity",
-    price: "599,000đ",
-    rating: 4.6,
-    reviews: 124,
-  },
-  {
-    id: "5",
-    title: "Blog CMS Platform",
-    description:
-      "Hệ thống quản lý blog với rich text editor, SEO optimization, multi-author",
-    image: "/products/blog.jpg",
-    technologies: ["React", "NextJS", "MDX", "Prisma", "Vercel"],
-    category: "CMS",
-    price: "399,000đ",
-    rating: 4.5,
-    reviews: 203,
-  },
-  {
-    id: "6",
-    title: "Real Estate Platform",
-    description:
-      "Nền tảng bất động sản với tìm kiếm, bộ lọc, map integration, virtual tours",
-    image: "/products/realestate.jpg",
-    technologies: ["React", "NextJS", "Google Maps", "Prisma", "Cloudinary"],
-    category: "Real Estate",
-    price: "999,000đ",
-    rating: 4.8,
-    reviews: 45,
-  },
-];
+interface Category {
+  id: string;
+  name: string;
+}
+
+
 
 const renderStars = (rating: number) => {
   return Array.from({ length: 5 }, (_, i) => (
@@ -94,6 +31,39 @@ const renderStars = (rating: number) => {
 };
 
 export function Products() {
+  const { products, loading, error } = useProductsLanding();
+  const [categories, setCategories] = useState<Category[]>([]);
+  const [selectedCategory, setSelectedCategory] = useState("Tất cả");
+
+  useEffect(() => {
+    // Fetch categories from API
+    const fetchCategories = async () => {
+      try {
+        const response = await fetch("/api/categories");
+        if (response.ok) {
+          const data = await response.json();
+          setCategories(data.categories);
+        }
+      } catch (error) {
+        console.error("Error fetching categories:", error);
+      }
+    };
+
+    fetchCategories();
+  }, []);
+
+  if (error) {
+    return (
+      <section className="py-24">
+        <div className="container">
+          <div className="text-center">
+            <p className="text-red-500">Có lỗi xảy ra khi tải sản phẩm</p>
+          </div>
+        </div>
+      </section>
+    );
+  }
+
   return (
     <section className="py-24">
       <div className="container">
@@ -110,87 +80,124 @@ export function Products() {
           </p>
         </div>
 
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
-          {products.map((product) => (
-            <Card
-              key={product.id}
-              className="group hover:shadow-lg transition-all duration-300 overflow-hidden"
-            >
-              <div className="relative">
-                <div className="aspect-video bg-gradient-to-br from-primary/10 to-accent/10 flex items-center justify-center">
-                  <div className="text-4xl font-bold text-primary/20">
-                    {product.title.split(" ")[0]}
-                  </div>
-                </div>
-                <Badge
-                  variant="secondary"
-                  className="absolute top-3 left-3 bg-background/80 backdrop-blur-sm"
-                >
-                  {product.category}
-                </Badge>
-                <div className="absolute top-3 right-3 flex items-center space-x-1 bg-background/80 backdrop-blur-sm rounded-full px-2 py-1">
-                  <Eye className="h-3 w-3 text-muted-foreground" />
-                  <span className="text-xs text-muted-foreground">
-                    {product.reviews}
-                  </span>
-                </div>
-              </div>
-
-              <CardHeader className="pb-3">
-                <div className="flex items-start justify-between">
-                  <h3 className="font-semibold text-lg leading-tight line-clamp-2">
-                    {product.title}
-                  </h3>
-                </div>
-                <p className="text-sm text-muted-foreground line-clamp-2 mt-2">
-                  {product.description}
-                </p>
-              </CardHeader>
-
-              <CardContent className="pt-0">
-                <div className="flex flex-wrap gap-1 mb-4">
-                  {product.technologies.slice(0, 3).map((tech) => (
-                    <Badge key={tech} variant="outline" className="text-xs">
-                      {tech}
+        {loading ? (
+          <div className="flex justify-center items-center py-12">
+            <Loader2 className="h-8 w-8 animate-spin" />
+          </div>
+        ) : (
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
+            {products.map((product: Project) => (
+              <Link key={product.id} href={`/products/${product.id}`}>
+                <Card className="group hover:shadow-lg transition-all duration-300 overflow-hidden cursor-pointer">
+                  <div className="relative">
+                    <div className="aspect-video overflow-hidden bg-muted">
+                      <Image 
+                        src={product.thumbnailUrl || product.image || "/Images/images.png"} 
+                        alt={product.title}
+                        fill
+                        className="object-cover transition-transform duration-300 group-hover:scale-105"
+                      />
+                    </div>
+                    <Badge
+                      variant="secondary"
+                      className="absolute top-3 left-3 bg-background/80 backdrop-blur-sm"
+                    >
+                      {product.category}
                     </Badge>
-                  ))}
-                  {product.technologies.length > 3 && (
-                    <Badge variant="outline" className="text-xs">
-                      +{product.technologies.length - 3}
-                    </Badge>
-                  )}
-                </div>
+                    <div className="absolute top-3 right-3 flex items-center space-x-1 bg-background/80 backdrop-blur-sm rounded-full px-2 py-1">
+                      <Eye className="h-3 w-3 text-muted-foreground" />
+                      <span className="text-xs text-muted-foreground">
+                        {product.reviews}
+                      </span>
+                    </div>
+                    
+                    {/* Demo overlay */}
+                    {product.demoUrl && (
+                      <div className="absolute inset-0 bg-black/50 opacity-0 group-hover:opacity-100 transition-opacity duration-300 flex items-center justify-center">
+                        <Button 
+                          variant="secondary" 
+                          size="sm"
+                          onClick={(e) => {
+                            e.preventDefault();
+                            window.open(product.demoUrl, '_blank');
+                          }}
+                          className="bg-white text-black hover:bg-gray-100"
+                        >
+                          <Eye className="h-4 w-4 mr-2" />
+                          Xem Demo
+                        </Button>
+                      </div>
+                    )}
+                  </div>
 
-                <div className="flex items-center space-x-2 mb-4">
-                  <div className="flex items-center space-x-1">
-                    {renderStars(product.rating)}
-                  </div>
-                  <span className="text-sm font-medium">{product.rating}</span>
-                  <span className="text-xs text-muted-foreground">
-                    ({product.reviews} đánh giá)
-                  </span>
-                </div>
+                  <CardHeader className="pb-3">
+                    <div className="flex items-start justify-between">
+                      <h3 className="font-semibold text-lg leading-tight line-clamp-2">
+                        {product.title}
+                      </h3>
+                    </div>
+                    <p className="text-sm text-muted-foreground line-clamp-2 mt-2">
+                      {product.description}
+                    </p>
+                  </CardHeader>
 
-                <div className="flex items-center justify-between">
-                  <div className="text-2xl font-bold text-primary">
-                    {product.price}
-                  </div>
-                  <div className="flex space-x-2">
-                    <Button variant="outline" size="sm">
-                      <Eye className="h-4 w-4" />
-                    </Button>
-                    <Button size="sm" asChild>
-                      <Link href={`/products/${product.id}`}>
-                        <ShoppingCart className="h-4 w-4 mr-2" />
-                        Mua ngay
-                      </Link>
-                    </Button>
-                  </div>
-                </div>
-              </CardContent>
-            </Card>
-          ))}
-        </div>
+                  <CardContent className="pt-0">
+                    <div className="flex flex-wrap gap-1 mb-4">
+                      {product.technologies.slice(0, 3).map((tech: string) => (
+                        <Badge key={tech} variant="outline" className="text-xs">
+                          {tech}
+                        </Badge>
+                      ))}
+                      {product.technologies.length > 3 && (
+                        <Badge variant="outline" className="text-xs">
+                          +{product.technologies.length - 3}
+                        </Badge>
+                      )}
+                    </div>
+
+                    <div className="flex items-center space-x-2 mb-4">
+                      <div className="flex items-center space-x-1">
+                        {renderStars(product.rating)}
+                      </div>
+                      <span className="text-sm font-medium">{product.rating}</span>
+                      <span className="text-xs text-muted-foreground">
+                        ({product.reviews} đánh giá)
+                      </span>
+                    </div>
+
+                    <div className="flex items-center justify-between">
+                      <div className="text-2xl font-bold text-primary">
+                        {product.price}
+                      </div>
+                      <div className="flex space-x-2">
+                        <Button 
+                          variant="outline" 
+                          size="sm"
+                          onClick={(e) => {
+                            e.preventDefault();
+                            window.open(`/products/${product.id}`, '_blank');
+                          }}
+                        >
+                          <Eye className="h-4 w-4" />
+                        </Button>
+                        <Button 
+                          size="sm" 
+                          onClick={(e) => {
+                            e.preventDefault();
+                            window.location.href = `/products/${product.id}`;
+                          }}
+                        >
+                          <ShoppingCart className="h-4 w-4 mr-2" />
+                          Mua ngay
+                        </Button>
+                      </div>
+                    </div>
+                  </CardContent>
+                </Card>
+              </Link>
+            ))}
+          </div>
+        )}
 
         {/* View More Button */}
         <div className="text-center mt-12">
@@ -206,22 +213,15 @@ export function Products() {
         <div className="mt-16 text-center">
           <h3 className="text-xl font-semibold mb-6">Danh mục sản phẩm</h3>
           <div className="flex flex-wrap justify-center gap-3">
-            {[
-              "Tất cả",
-              "E-commerce",
-              "Social Media",
-              "Education",
-              "Productivity",
-              "CMS",
-              "Real Estate",
-            ].map((category) => (
+            {categories.map((category) => (
               <Button
-                key={category}
-                variant={category === "Tất cả" ? "default" : "outline"}
+                key={category.id}
+                variant={selectedCategory === category.name ? "default" : "outline"}
                 size="sm"
                 className="rounded-full"
+                onClick={() => setSelectedCategory(category.name)}
               >
-                {category}
+                {category.name}
               </Button>
             ))}
           </div>
