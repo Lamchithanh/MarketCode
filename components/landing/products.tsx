@@ -88,9 +88,9 @@ export function Products() {
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
             {products.map((product: Project) => (
               <Link key={product.id} href={`/products/${product.id}`}>
-                <Card className="group hover:shadow-lg transition-all duration-300 overflow-hidden cursor-pointer">
+                <Card className="group hover:shadow-lg transition-all duration-300 overflow-hidden cursor-pointer h-full flex flex-col">
                   <div className="relative">
-                    <div className="aspect-video overflow-hidden bg-muted">
+                    <div className="aspect-[3/2] overflow-hidden bg-muted relative">
                       <Image 
                         src={product.thumbnailUrl || product.image || "/Images/images.png"} 
                         alt={product.title}
@@ -119,7 +119,9 @@ export function Products() {
                           size="sm"
                           onClick={(e) => {
                             e.preventDefault();
-                            window.open(product.demoUrl, '_blank');
+                            if (product.demoUrl) {
+                              window.location.href = product.demoUrl;
+                            }
                           }}
                           className="bg-white text-black hover:bg-gray-100"
                         >
@@ -130,19 +132,19 @@ export function Products() {
                     )}
                   </div>
 
-                  <CardHeader className="pb-3">
+                  <CardHeader className="pb-3 flex-shrink-0">
                     <div className="flex items-start justify-between">
-                      <h3 className="font-semibold text-lg leading-tight line-clamp-2">
+                      <h3 className="font-semibold text-lg leading-tight line-clamp-2 min-h-[3rem]">
                         {product.title}
                       </h3>
                     </div>
-                    <p className="text-sm text-muted-foreground line-clamp-2 mt-2">
+                    <p className="text-sm text-muted-foreground line-clamp-2 mt-2 min-h-[2.5rem]">
                       {product.description}
                     </p>
                   </CardHeader>
 
-                  <CardContent className="pt-0">
-                    <div className="flex flex-wrap gap-1 mb-4">
+                  <CardContent className="pt-0 flex-grow flex flex-col justify-between">
+                    <div className="flex flex-wrap gap-1 mb-4 min-h-[2rem]">
                       {product.technologies.slice(0, 3).map((tech: string) => (
                         <Badge key={tech} variant="outline" className="text-xs">
                           {tech}
@@ -155,41 +157,43 @@ export function Products() {
                       )}
                     </div>
 
-                    <div className="flex items-center space-x-2 mb-4">
-                      <div className="flex items-center space-x-1">
-                        {renderStars(product.rating)}
+                    <div className="space-y-4">
+                      <div className="flex items-center space-x-2">
+                        <div className="flex items-center space-x-1">
+                          {renderStars(product.rating)}
+                        </div>
+                        <span className="text-sm font-medium">{product.rating}</span>
+                        <span className="text-xs text-muted-foreground">
+                          ({product.reviews} đánh giá)
+                        </span>
                       </div>
-                      <span className="text-sm font-medium">{product.rating}</span>
-                      <span className="text-xs text-muted-foreground">
-                        ({product.reviews} đánh giá)
-                      </span>
-                    </div>
 
-                    <div className="flex items-center justify-between">
-                      <div className="text-2xl font-bold text-primary">
-                        {product.price}
-                      </div>
-                      <div className="flex space-x-2">
-                        <Button 
-                          variant="outline" 
-                          size="sm"
-                          onClick={(e) => {
-                            e.preventDefault();
-                            window.open(`/products/${product.id}`, '_blank');
-                          }}
-                        >
-                          <Eye className="h-4 w-4" />
-                        </Button>
-                        <Button 
-                          size="sm" 
-                          onClick={(e) => {
-                            e.preventDefault();
-                            window.location.href = `/products/${product.id}`;
-                          }}
-                        >
-                          <ShoppingCart className="h-4 w-4 mr-2" />
-                          Mua ngay
-                        </Button>
+                      <div className="flex items-center justify-between">
+                        <div className="text-2xl font-bold text-primary">
+                          {product.price}
+                        </div>
+                        <div className="flex space-x-2">
+                          <Button 
+                            variant="outline" 
+                            size="sm"
+                            onClick={(e) => {
+                              e.preventDefault();
+                              window.location.href = `/products/${product.id}`;
+                            }}
+                          >
+                            <Eye className="h-4 w-4" />
+                          </Button>
+                          <Button 
+                            size="sm" 
+                            onClick={(e) => {
+                              e.preventDefault();
+                              window.location.href = `/products/${product.id}`;
+                            }}
+                          >
+                            <ShoppingCart className="h-4 w-4 mr-2" />
+                            Mua ngay
+                          </Button>
+                        </div>
                       </div>
                     </div>
                   </CardContent>

@@ -36,6 +36,8 @@ export interface Project {
   price: string;
   rating: number;
   reviews: number;
+  averageRating?: number; // New field from database
+  totalReviews?: number;  // New field from database
   downloadCount?: number;
   viewCount?: number;
   createdAt?: string;
@@ -45,6 +47,10 @@ export interface Project {
   githubUrl?: string;
   fileSize?: number;
   images?: string[];
+  features?: Array<{
+    title: string;
+    description: string;
+  }>;
 }
 
 export interface NavItem {

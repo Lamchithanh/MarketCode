@@ -3,18 +3,21 @@ import { supabaseServiceRole } from '@/lib/supabase-server';
 
 export async function GET(
   request: Request,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
-    const { id } = params;
+    const { id } = await params;
 
-    // Lấy product từ database với thông tin category và reviews
+    // Lấy product từ database với thông tin category
     const { data: product, error } = await supabaseServiceRole
       .from('Product')
       .select(`
         *,
-        Category!inner(name),
-        Review(rating, comment, createdAt, User(name))
+        Category(
+          id,
+          name,
+          slug
+        )
       `)
       .eq('id', id)
       .eq('isActive', true)
@@ -24,28 +27,22 @@ export async function GET(
     if (error || !product) {
       console.error('Error fetching product:', error);
       return NextResponse.json(
-        { error: 'Product not found' },
+        { 
+          success: false,
+          error: 'Product not found' 
+        },
         { status: 404 }
       );
     }
 
-    // Calculate average rating from reviews
-    const reviews = product.Review || [];
-    const averageRating = reviews.length > 0 
-      ? reviews.reduce((sum: number, review: { rating: number }) => sum + review.rating, 0) / reviews.length
-      : 4.5; // Default rating
-
-    // Transform data để match với interface Project
+    // Transform data để match với component interface
     const transformedProduct = {
-      id: product.id.toString(),
+      id: product.id,
       title: product.title,
       description: product.description || '',
-      image: product.thumbnailUrl || '/products/default.jpg',
-      technologies: product.technologies || [],
-      category: product.Category?.name || 'Khác',
-      price: `${parseFloat(product.price).toLocaleString('vi-VN')}đ`,
-      rating: Math.round(averageRating * 10) / 10, // Round to 1 decimal
-      reviews: reviews.length,
+      price: product.price,
+      originalPrice: null, // TODO: Add originalPrice field to Product table if needed
+      thumbnailUrl: product.thumbnailUrl || '/Images/images.png',
       downloadCount: product.downloadCount || 0,
       viewCount: product.viewCount || 0,
       fileUrl: product.fileUrl,
@@ -53,6 +50,10 @@ export async function GET(
       githubUrl: product.githubUrl,
       fileSize: product.fileSize,
       images: product.images || [],
+      features: product.features || null,
+      technologies: product.technologies || [],
+      userId: product.userId,
+      Category: product.Category,
       createdAt: product.createdAt,
       updatedAt: product.updatedAt
     };

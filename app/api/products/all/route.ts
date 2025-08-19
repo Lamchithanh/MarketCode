@@ -31,8 +31,8 @@ export async function GET() {
       technologies: product.technologies || [],
       category: product.Category?.name || 'Khác',
       price: `${parseFloat(product.price).toLocaleString('vi-VN')}đ`,
-      rating: 4.5, // Default rating since we don't have reviews yet
-      reviews: product.downloadCount || 0,
+      rating: parseFloat(product.averageRating) || 0,
+      reviews: product.totalReviews || 0,
       downloadCount: product.downloadCount || 0,
       viewCount: product.viewCount || 0,
       createdAt: product.createdAt,

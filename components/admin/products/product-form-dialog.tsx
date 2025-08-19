@@ -62,6 +62,10 @@ interface ProductFormData {
   categoryId: string;
   tags: string[]; // Tag IDs
   technologies: string[];
+  features?: Array<{
+    title: string;
+    description: string;
+  }>;
   isActive?: boolean;
 }
 

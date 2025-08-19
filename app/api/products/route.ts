@@ -32,9 +32,15 @@ export async function GET() {
       technologies: product.technologies || [],
       category: product.Category?.name || 'Khác',
       price: `${parseFloat(product.price).toLocaleString('vi-VN')}đ`,
-      rating: 4.5, // Default rating since we don't have reviews yet
-      reviews: product.downloadCount || 0,
-      downloadCount: product.downloadCount || 0
+      rating: parseFloat(product.averageRating) || 0, // Use database rating
+      reviews: product.totalReviews || 0, // Use database reviews count
+      averageRating: parseFloat(product.averageRating) || 0, // New field
+      totalReviews: product.totalReviews || 0, // New field
+      downloadCount: product.downloadCount || 0,
+      viewCount: product.viewCount || 0,
+      demoUrl: product.demoUrl,
+      githubUrl: product.githubUrl,
+      thumbnailUrl: product.thumbnailUrl
     })) || [];
 
     return NextResponse.json({

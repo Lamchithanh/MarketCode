@@ -10,6 +10,8 @@ import {
   Linkedin,
 } from "lucide-react";
 import { SocialLink } from "@/types";
+import { ClientEmailSupport } from "@/components/ui/client-email-support";
+import { ClientPhoneSupport } from "@/components/ui/client-phone-support";
 
 const socialLinks: SocialLink[] = [
   { name: "Facebook", href: "#", icon: "facebook" },
@@ -148,11 +150,11 @@ export function Footer() {
             <div className="space-y-2 text-sm">
               <div className="flex items-center space-x-2 text-muted-foreground">
                 <Mail className="h-4 w-4" />
-                <span>support@codemarket.com</span>
+                <ClientEmailSupport />
               </div>
               <div className="flex items-center space-x-2 text-muted-foreground">
                 <Phone className="h-4 w-4" />
-                <span>+84 123 456 789</span>
+                <ClientPhoneSupport />
               </div>
               <div className="flex items-center space-x-2 text-muted-foreground">
                 <MapPin className="h-4 w-4" />

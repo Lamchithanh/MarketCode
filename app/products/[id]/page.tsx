@@ -1,37 +1,8 @@
 import { Suspense } from "react";
-import { notFound } from "next/navigation";
 import { Header } from "@/components/landing/header";
 import { Footer } from "@/components/landing/footer";
-import { ProductDetail } from "@/components/products/product-detail";
-import { Project } from "@/types";
+import { ProductDetailContainer } from "@/components/products/product-detail-container";
 import { CardLoader } from "@/components/ui/loader";
-
-async function getProduct(id: string): Promise<Project | null> {
-  try {
-    const baseUrl = process.env.NODE_ENV === 'development' 
-      ? 'http://localhost:3000' 
-      : process.env.NEXT_PUBLIC_SITE_URL || 'https://your-domain.com';
-      
-    const response = await fetch(`${baseUrl}/api/products/${id}`, {
-      next: { revalidate: 300 } // Cache for 5 minutes
-    });
-
-    if (!response.ok) {
-      return null;
-    }
-
-    const result = await response.json();
-    
-    if (result.success && result.product) {
-      return result.product;
-    }
-
-    return null;
-  } catch (error) {
-    console.error('Error fetching product:', error);
-    return null;
-  }
-}
 
 interface ProductPageProps {
   params: {
@@ -39,19 +10,13 @@ interface ProductPageProps {
   };
 }
 
-export default async function ProductPage({ params }: ProductPageProps) {
-  const product = await getProduct(params.id);
-
-  if (!product) {
-    notFound();
-  }
-
+export default function ProductPage() {
   return (
     <div className="min-h-screen bg-background">
       <Header />
       <main>
         <Suspense fallback={<CardLoader />}>
-          <ProductDetail product={product} />
+          <ProductDetailContainer />
         </Suspense>
       </main>
       <Footer />
@@ -59,44 +24,12 @@ export default async function ProductPage({ params }: ProductPageProps) {
   );
 }
 
-export async function generateStaticParams() {
-  try {
-    const baseUrl = process.env.NODE_ENV === 'development' 
-      ? 'http://localhost:3000' 
-      : process.env.NEXT_PUBLIC_SITE_URL || 'https://your-domain.com';
-      
-    const response = await fetch(`${baseUrl}/api/products`);
-    
-    if (!response.ok) {
-      return [];
-    }
-
-    const result = await response.json();
-    
-    if (result.success && result.products) {
-      return result.products.map((product: Project) => ({
-        id: product.id,
-      }));
-    }
-
-    return [];
-  } catch (error) {
-    console.error('Error generating static params:', error);
-    return [];
-  }
-}
-
 export async function generateMetadata({ params }: ProductPageProps) {
-  const product = await getProduct(params.id);
+  const { id } = await params;
   
-  if (!product) {
-    return {
-      title: "Sản phẩm không tồn tại",
-    };
-  }
-
+  // TODO: Fetch product data using MCP tools for metadata
   return {
-    title: `${product.title} - CodeMarket`,
-    description: product.description,
+    title: `Sản phẩm ${id} - MarketCode`,
+    description: "Chi tiết sản phẩm trên MarketCode",
   };
 } 

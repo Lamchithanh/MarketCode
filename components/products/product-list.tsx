@@ -185,14 +185,14 @@ export function ProductList() {
           <div className={cn(
             "grid gap-6 mb-8",
             viewMode === "grid" 
-              ? "grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4"
+              ? "grid-cols-1 md:grid-cols-2 lg:grid-cols-3"
               : "grid-cols-1"
           )}>
             {products.map((product) => (
               <Link key={product.id} href={`/products/${product.id}`}>
-                <Card className="group hover:shadow-lg transition-all duration-300 overflow-hidden cursor-pointer">
+                <Card className="group hover:shadow-lg transition-all duration-300 overflow-hidden cursor-pointer h-full flex flex-col">
                   <div className="relative">
-                    <div className="aspect-video bg-gradient-to-br from-primary/10 to-accent/10 relative overflow-hidden">
+                    <div className="aspect-[3/2] bg-gradient-to-br from-primary/10 to-accent/10 relative overflow-hidden">
                       <Image
                         src={product.thumbnailUrl || "/Images/images.png"}
                         alt={product.title}
@@ -209,7 +209,9 @@ export function ProductList() {
                             size="sm"
                             onClick={(e) => {
                               e.preventDefault();
-                              window.open(product.demoUrl, '_blank');
+                              if (product.demoUrl) {
+                                window.location.href = product.demoUrl;
+                              }
                             }}
                             className="bg-white/90 hover:bg-white text-black"
                           >
@@ -233,61 +235,64 @@ export function ProductList() {
                     </div>
                   </div>
 
-                  <CardHeader className="pb-3">
+                  <CardHeader className="pb-1 flex-shrink-0">
                     <div className="flex items-start justify-between">
-                      <h3 className="font-semibold text-lg leading-tight line-clamp-2">
+                      <h3 className="font-semibold text-lg leading-tight line-clamp-2 min-h-[2.5rem]">
                         {product.title}
                       </h3>
                     </div>
-                    <p className="text-sm text-muted-foreground line-clamp-2 mt-2">
+                    <p className="text-sm text-muted-foreground line-clamp-2 mt-0 min-h-[2rem]">
                       {product.description}
                     </p>
                   </CardHeader>
 
-                  <CardContent className="pt-0">
-                    <div className="flex flex-wrap gap-1 mb-4">
+                  <CardContent className="pt-0 pb-2 flex-grow flex flex-col justify-between">
+                    <div className="flex flex-wrap gap-1 mb-1 min-h-[1.5rem]">
                       {product.technologies.slice(0, 3).map((tech) => (
-                        <Badge key={tech} variant="outline" className="text-xs">
+                        <Badge key={tech} variant="outline" className="text-xs py-0 px-2">
                           {tech}
                         </Badge>
                       ))}
                       {product.technologies.length > 3 && (
-                        <Badge variant="outline" className="text-xs">
+                        <Badge variant="outline" className="text-xs py-0 px-2">
                           +{product.technologies.length - 3}
                         </Badge>
                       )}
                     </div>
 
-                    <div className="flex items-center space-x-2 mb-4">
-                      <div className="flex items-center space-x-1">
-                        {renderStars(product.rating)}
+                    <div className="space-y-2">
+                      <div className="flex items-center space-x-2">
+                        <div className="flex items-center space-x-1">
+                          {renderStars(product.averageRating || 0)}
+                        </div>
+                        <span className="text-sm font-medium">
+                          {product.averageRating ? Number(product.averageRating).toFixed(1) : "0.0"}
+                        </span>
+                        <span className="text-xs text-muted-foreground">
+                          ({product.totalReviews || 0} đánh giá)
+                        </span>
                       </div>
-                      <span className="text-sm font-medium">{product.rating}</span>
-                      <span className="text-xs text-muted-foreground">
-                        ({product.reviews} đánh giá)
-                      </span>
-                    </div>
 
-                    <div className="flex items-center justify-between">
-                      <div className="text-2xl font-bold text-primary">
-                        {product.price}
-                      </div>
-                      <div className="flex space-x-2">
-                        <Button 
-                          variant="outline" 
-                          size="sm"
-                          onClick={(e) => {
-                            e.preventDefault();
-                            window.open(`/products/${product.id}`, '_blank');
-                          }}
-                        >
-                          <Eye className="h-4 w-4" />
-                        </Button>
-                        <Button 
-                          size="sm" 
-                          onClick={(e) => {
-                            e.preventDefault();
-                            // Handle direct purchase or navigate to product page
+                      <div className="flex items-center justify-between">
+                        <div className="text-2xl font-bold text-primary">
+                          {product.price}
+                        </div>
+                        <div className="flex space-x-2">
+                          <Button 
+                            variant="outline" 
+                            size="sm"
+                            onClick={(e) => {
+                              e.preventDefault();
+                              window.location.href = `/products/${product.id}`;
+                            }}
+                          >
+                            <Eye className="h-4 w-4" />
+                          </Button>
+                          <Button 
+                            size="sm" 
+                            onClick={(e) => {
+                              e.preventDefault();
+                              // Handle direct purchase or navigate to product page
                             window.location.href = `/products/${product.id}`;
                           }}
                         >
@@ -295,6 +300,7 @@ export function ProductList() {
                           Mua ngay
                         </Button>
                       </div>
+                    </div>
                     </div>
                   </CardContent>
                 </Card>
