@@ -194,11 +194,12 @@ export function ProductList() {
                   <div className="relative">
                     <div className="aspect-[3/2] bg-gradient-to-br from-primary/10 to-accent/10 relative overflow-hidden">
                       <Image
-                        src={product.thumbnailUrl || "/Images/images.png"}
+                        src={product.thumbnailUrl || "/Images/do.jpg"}
                         alt={product.title}
                         fill
                         className="object-cover transition-transform group-hover:scale-105"
                         sizes="(max-width: 768px) 100vw, (max-width: 1024px) 50vw, 25vw"
+                        unoptimized
                       />
                       
                       {/* Demo Overlay */}

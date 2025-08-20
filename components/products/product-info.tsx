@@ -1,9 +1,13 @@
 "use client";
 
+import { useState, useEffect } from "react";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Separator } from "@/components/ui/separator";
+import { useCart } from "@/hooks/use-cart";
+import { toast } from "sonner";
+import { BuyNowButton } from "@/components/products/buy-now-button";
 import { 
   Star, 
   Download, 
@@ -14,7 +18,7 @@ import {
   ShoppingCart,
   Eye,
   Calendar,
-  Zap
+  Check
 } from "lucide-react";
 
 interface ProductInfoProps {
@@ -36,18 +40,37 @@ interface ProductInfoProps {
 }
 
 export function ProductInfo({ product }: ProductInfoProps) {
+  const { addItem, items } = useCart();
+  const [isInCart, setIsInCart] = useState(false);
+  
+  // Check if product is already in cart
+  useEffect(() => {
+    const productInCart = items.some(item => item.id === product.id);
+    setIsInCart(productInCart);
+  }, [items, product.id]);
+  
   const discountPercentage = product.originalPrice 
     ? Math.round(((product.originalPrice - product.price) / product.originalPrice) * 100)
     : 0;
 
-  const handleAddToCart = () => {
-    // TODO: Implement add to cart logic
-    console.log("Add to cart:", product.id);
-  };
-
-  const handleBuyNow = () => {
-    // TODO: Implement buy now logic
-    console.log("Buy now:", product.id);
+  const handleAddToCart = async () => {
+    try {
+      const result = await addItem(product.id);
+      if (result.success) {
+        toast.success("Đã thêm sản phẩm vào giỏ hàng!");
+        setIsInCart(true);
+      } else {
+        if (result.error === "Item already in cart") {
+          toast.warning("Sản phẩm đã có trong giỏ hàng rồi!");
+          setIsInCart(true);
+        } else {
+          toast.error(result.error || "Không thể thêm sản phẩm vào giỏ hàng");
+        }
+      }
+    } catch (error) {
+      console.error("Lỗi khi thêm vào giỏ hàng:", error);
+      toast.error("Không thể thêm sản phẩm vào giỏ hàng");
+    }
   };
 
   const handlePreview = () => {
@@ -172,23 +195,34 @@ export function ProductInfo({ product }: ProductInfoProps) {
 
       {/* Actions */}
       <div className="space-y-3">
-        <Button 
-          size="lg" 
-          className="w-full text-lg font-semibold bg-primary hover:bg-primary/90"
-          onClick={handleBuyNow}
-        >
-          <Zap className="h-5 w-5 mr-2" />
-          Mua Ngay - ${product.price.toLocaleString()}
-        </Button>
+        <BuyNowButton 
+          product={{
+            id: product.id,
+            title: product.title,
+            price: product.price,
+          }}
+          className="w-full text-lg font-semibold"
+          size="lg"
+        />
         
         <div className="grid grid-cols-2 gap-3">
           <Button 
-            variant="outline" 
+            variant={isInCart ? "default" : "outline"}
             size="lg"
             onClick={handleAddToCart}
+            disabled={isInCart}
           >
-            <ShoppingCart className="h-4 w-4 mr-2" />
-            Thêm Giỏ Hàng
+            {isInCart ? (
+              <>
+                <Check className="h-4 w-4 mr-2" />
+                Đã Thêm Vào Giỏ
+              </>
+            ) : (
+              <>
+                <ShoppingCart className="h-4 w-4 mr-2" />
+                Thêm Giỏ Hàng
+              </>
+            )}
           </Button>
           
           <Button 

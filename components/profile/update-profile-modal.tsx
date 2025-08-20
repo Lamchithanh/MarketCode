@@ -6,11 +6,10 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
-import { Textarea } from "@/components/ui/textarea";
 import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
 import { Settings, Save, X } from "lucide-react";
-import { toast, toastMessages } from "@/components/ui/toast";
+import { toast } from "sonner";
 import { AvatarUpload } from "./avatar-upload";
 import { 
   updateProfileSchema, 
@@ -21,11 +20,10 @@ interface UpdateProfileModalProps {
   user: {
     name?: string | null;
     email?: string | null;
-    phone?: string | null;
     avatar?: string | null;
   };
   onProfileUpdate?: (data: UpdateProfileForm) => Promise<void>;
-  onAvatarChange?: (file: File | null) => Promise<void>;
+  onAvatarChange?: (avatarUrl: string | null) => Promise<void>;
   disabled?: boolean;
 }
 
@@ -42,8 +40,6 @@ export function UpdateProfileModal({
     defaultValues: {
       name: user.name || "",
       email: user.email || "",
-      phone: user.phone || "",
-      bio: "",
     },
   });
 
@@ -62,12 +58,12 @@ export function UpdateProfileModal({
     form.reset();
   };
 
-  const handleAvatarChange = async (file: File | null) => {
+  const handleAvatarChange = async (avatarUrl: string | null) => {
     try {
-      await onAvatarChange?.(file);
+      await onAvatarChange?.(avatarUrl);
     } catch (error) {
-      console.error("Error uploading avatar:", error);
-      toast.error("Không thể tải ảnh đại diện. Vui lòng thử lại!");
+      console.error("Error handling avatar change:", error);
+      toast.error("Không thể cập nhật ảnh đại diện. Vui lòng thử lại!");
     }
   };
 
@@ -143,43 +139,6 @@ export function UpdateProfileModal({
                   )}
                 />
               </div>
-
-              <FormField
-                control={form.control}
-                name="phone"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>Số điện thoại</FormLabel>
-                    <FormControl>
-                      <Input 
-                        placeholder="Nhập số điện thoại" 
-                        {...field} 
-                        disabled={form.formState.isSubmitting}
-                      />
-                    </FormControl>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
-
-              <FormField
-                control={form.control}
-                name="bio"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>Giới thiệu</FormLabel>
-                    <FormControl>
-                      <Textarea 
-                        placeholder="Viết vài dòng về bản thân..."
-                        className="min-h-[80px]"
-                        {...field}
-                        disabled={form.formState.isSubmitting}
-                      />
-                    </FormControl>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
 
               <div className="flex justify-end gap-2 pt-4">
                 <Button 

@@ -29,12 +29,13 @@ export default withAuth(
     const pathname = req.nextUrl.pathname;
 
     // Kiểm tra route admin - chỉ ADMIN mới được truy cập
-    if (isRouteMatch(pathname, ADMIN_ROUTES)) {
+    if (isRouteMatch(pathname, ADMIN_ROUTES)) {      
       if (!token) {
         return NextResponse.redirect(new URL("/login", req.url));
       }
 
-      if (token.role !== "ADMIN") {
+      const userRole = token.role?.toLowerCase();
+      if (userRole !== "admin") {
         return NextResponse.redirect(new URL("/", req.url));
       }
     }
@@ -70,8 +71,13 @@ export default withAuth(
           return true;
         }
 
-        // Yêu cầu authentication cho các route được bảo vệ
-        if (isRouteMatch(pathname, [...USER_ROUTES, ...ADMIN_ROUTES])) {
+        // Kiểm tra admin routes - cần token và role admin
+        if (isRouteMatch(pathname, ADMIN_ROUTES)) {
+          return !!token && token.role?.toLowerCase() === "admin";
+        }
+
+        // Yêu cầu authentication cho các route user
+        if (isRouteMatch(pathname, USER_ROUTES)) {
           return !!token;
         }
 

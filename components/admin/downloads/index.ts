@@ -1,9 +1,1 @@
-export { DownloadsTable } from './downloads-table';
-export { DownloadsManagement } from './downloads-management';
-export { DownloadsHeader } from './downloads-header';
-export { DownloadsStats } from './downloads-stats';
-export { DownloadsSearch } from './downloads-search';
-export { DownloadsDataTable } from './downloads-data-table';
-export { DownloadViewDialog } from './download-view-dialog';
-export { DownloadEditDialog } from './download-edit-dialog';
-export { DownloadDeleteDialog } from './download-delete-dialog';
+export { default as DownloadsManagement } from './downloads-management';

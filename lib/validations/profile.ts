@@ -19,11 +19,6 @@ export const changePasswordSchema = z.object({
 export const updateProfileSchema = z.object({
   name: z.string().min(2, "Tên phải có ít nhất 2 ký tự").max(50, "Tên không được vượt quá 50 ký tự"),
   email: z.string().email("Email không hợp lệ"),
-  phone: z.string()
-    .regex(/^[0-9+\-\s\(\)]*$/, "Số điện thoại không hợp lệ")
-    .optional()
-    .or(z.literal("")),
-  bio: z.string().max(500, "Giới thiệu không được vượt quá 500 ký tự").optional(),
   avatar: z.string().url("URL avatar không hợp lệ").optional(),
 });
 

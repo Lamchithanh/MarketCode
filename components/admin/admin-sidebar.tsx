@@ -35,6 +35,7 @@ import {
   Code,
   Shield,
   LogOut,
+  Github,
 } from "lucide-react";
 
 export function AdminSidebar() {
@@ -144,6 +145,14 @@ export function AdminSidebar() {
                     <Link href="/admin/tags">
                       <Code className="w-4 h-4" />
                       <span>Tags</span>
+                    </Link>
+                  </SidebarMenuButton>
+                </SidebarMenuItem>
+                <SidebarMenuItem>
+                  <SidebarMenuButton asChild isActive={pathname.startsWith("/admin/gitcode")}>
+                    <Link href="/admin/gitcode">
+                      <Github className="w-4 h-4" />
+                      <span>GitCode</span>
                     </Link>
                   </SidebarMenuButton>
                 </SidebarMenuItem>

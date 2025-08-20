@@ -1,12 +1,13 @@
-import { NextResponse } from 'next/server';
+import { NextRequest, NextResponse } from 'next/server';
 import { tagService } from '@/lib/services/tag-service';
 
 export async function POST(
   request: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
-    const tag = await tagService.restoreTag(params.id);
+    const { id } = await params;
+    const tag = await tagService.restoreTag(id);
     
     return NextResponse.json(tag);
   } catch (error) {

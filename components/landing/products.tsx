@@ -92,7 +92,7 @@ export function Products() {
                   <div className="relative">
                     <div className="aspect-[3/2] overflow-hidden bg-muted relative">
                       <Image 
-                        src={product.thumbnailUrl || product.image || "/Images/images.png"} 
+                        src={product.thumbnailUrl || product.image || "/Images/do.jpg"} 
                         alt={product.title}
                         fill
                         className="object-cover transition-transform duration-300 group-hover:scale-105"

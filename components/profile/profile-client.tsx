@@ -1,5 +1,6 @@
 "use client";
 
+import { useState, useEffect } from "react";
 import { useSearchParams } from "next/navigation";
 import { Header } from "@/components/landing/header";
 import { Footer } from "@/components/landing/footer";
@@ -12,6 +13,9 @@ import {
   ProfileWishlist, 
   ProfileSettings 
 } from "@/components/profile";
+import { ProfileDownloads } from "@/components/profile/profile-downloads";
+import { GitCodeManager } from "@/components/profile/gitcode";
+import { useUser } from '@/hooks/use-user';
 
 interface ProfileClientProps {
   user: {
@@ -20,34 +24,90 @@ interface ProfileClientProps {
     avatar?: string | null;
     role?: string;
   };
-  stats: {
-    totalOrders: number;
-    totalSpent: number;
-    downloads: number;
-    wishlist: number;
-    reviews: number;
-    averageRating: number;
-    memberSince: string;
-  };
-  recentOrders: Array<{
-    id: string;
-    title: string;
-    date: string;
-    price: number;
-    status: string;
-    downloaded?: boolean;
-  }>;
-  wishlistItems: Array<{
-    id: string;
-    title: string;
-    price: number;
-    image: string;
-  }>;
 }
 
-export function ProfileClient({ user, stats, recentOrders, wishlistItems }: ProfileClientProps) {
+export function ProfileClient({ user: initialUser }: ProfileClientProps) {
   const searchParams = useSearchParams();
   const defaultTab = searchParams.get('tab') || 'overview';
+  const { user } = useUser();
+  
+  // Use live user data if available, fallback to initial props
+  const profileUser = user || initialUser;
+  
+  // Fetch real stats from API
+  const [stats, setStats] = useState({
+    totalOrders: 0,
+    totalSpent: 0,
+    downloads: 0,
+    wishlist: 0,
+    reviews: 0,
+    averageRating: 0,
+    memberSince: ""
+  });
+  const [recentOrders, setRecentOrders] = useState([]);
+  const [loading, setLoading] = useState(true);
+  
+  useEffect(() => {
+    const fetchProfileData = async () => {
+      if (!user?.id) {
+        setLoading(false);
+        return;
+      }
+      
+      try {
+        setLoading(true);
+        
+        // Fetch user stats
+        const [statsResponse, ordersResponse] = await Promise.all([
+          fetch('/api/user/stats'),
+          fetch('/api/orders')
+        ]);
+        
+        if (statsResponse.ok) {
+          const statsResult = await statsResponse.json();
+          if (statsResult.success) {
+            setStats(statsResult.data);
+          }
+        }
+        
+        if (ordersResponse.ok) {
+          const ordersResult = await ordersResponse.json();
+          if (ordersResult.success) {
+            // Get only recent orders (last 3)
+            const recent = ordersResult.data.slice(0, 3);
+            setRecentOrders(recent);
+          }
+        }
+      } catch (error) {
+        console.error('Failed to fetch profile data:', error);
+      } finally {
+        setLoading(false);
+      }
+    };
+    
+    fetchProfileData();
+  }, [user?.id]);
+
+  if (loading) {
+    return (
+      <div className="min-h-screen bg-background">
+        <Header />
+        <main className="py-8">
+          <div className="container">
+            <div className="max-w-6xl mx-auto">
+              <div className="flex items-center justify-center py-12">
+                <div className="text-center">
+                  <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary mx-auto mb-4"></div>
+                  <p>Đang tải thông tin...</p>
+                </div>
+              </div>
+            </div>
+          </div>
+        </main>
+        <Footer />
+      </div>
+    );
+  }
 
   return (
     <div className="min-h-screen bg-background">
@@ -55,13 +115,15 @@ export function ProfileClient({ user, stats, recentOrders, wishlistItems }: Prof
       <main className="py-8">
         <div className="container">
           <div className="max-w-6xl mx-auto">
-            <ProfileHeader user={user} stats={stats} />
+            <ProfileHeader user={profileUser} stats={stats} />
             <ProfileStats stats={stats} />
 
             <Tabs defaultValue={defaultTab} className="space-y-6">
-              <TabsList className="grid w-full grid-cols-4">
+              <TabsList className="grid w-full grid-cols-6">
                 <TabsTrigger value="overview">Tổng quan</TabsTrigger>
                 <TabsTrigger value="orders">Đơn hàng</TabsTrigger>
+                <TabsTrigger value="downloads">Tải xuống</TabsTrigger>
+                <TabsTrigger value="gitcode">GitCode</TabsTrigger>
                 <TabsTrigger value="wishlist">Yêu thích</TabsTrigger>
                 <TabsTrigger value="settings">Cài đặt</TabsTrigger>
               </TabsList>
@@ -74,15 +136,23 @@ export function ProfileClient({ user, stats, recentOrders, wishlistItems }: Prof
               </TabsContent>
 
               <TabsContent value="orders">
-                <ProfileOrders orders={recentOrders} />
+                <ProfileOrders />
+              </TabsContent>
+
+              <TabsContent value="downloads">
+                <ProfileDownloads />
+              </TabsContent>
+
+              <TabsContent value="gitcode">
+                <GitCodeManager />
               </TabsContent>
 
               <TabsContent value="wishlist">
-                <ProfileWishlist items={wishlistItems} />
+                <ProfileWishlist />
               </TabsContent>
 
               <TabsContent value="settings">
-                <ProfileSettings user={user} stats={stats} />
+                <ProfileSettings user={profileUser} stats={stats} />
               </TabsContent>
             </Tabs>
           </div>

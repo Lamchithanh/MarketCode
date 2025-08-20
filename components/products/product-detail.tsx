@@ -153,7 +153,7 @@ export function ProductDetail({ product }: ProductDetailProps) {
             <Card className="overflow-hidden">
               <div className="aspect-video bg-gradient-to-br from-primary/10 to-accent/10 relative overflow-hidden">
                 <Image
-                  src={product.thumbnailUrl || product.image || "/Images/images.png"}
+                  src={product.thumbnailUrl || product.image || "/Images/do.jpg"}
                   alt={product.title}
                   fill
                   className="object-cover"

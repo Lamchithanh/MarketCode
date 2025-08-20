@@ -4,14 +4,14 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Separator } from "@/components/ui/separator";
 import { ChangePasswordModal } from "./change-password-modal";
 import { UpdateProfileModal } from "./update-profile-modal";
-import { NotificationSettingsModal } from "./notification-settings-modal";
 import { ProfileInfoCard } from "./profile-info-card";
 import { ProfileStatsCard } from "./profile-stats-card";
+import { useUserProfile } from "@/hooks/use-user-profile";
 import { 
-  type ChangePasswordForm, 
-  type UpdateProfileForm,
-  type NotificationSettingsForm
+  type ChangePasswordForm,
+  type UpdateProfileForm
 } from "@/lib/validations/profile";
+import { toast } from "sonner";
 
 interface ProfileSettingsProps {
   user: {
@@ -26,82 +26,55 @@ interface ProfileSettingsProps {
     downloads: number;
     wishlist: number;
   };
-  initialNotificationSettings?: NotificationSettingsForm;
-  onPasswordChange?: (data: ChangePasswordForm) => Promise<void>;
-  onProfileUpdate?: (data: UpdateProfileForm) => Promise<void>;
-  onAvatarChange?: (file: File | null) => Promise<void>;
-  onNotificationSettingsUpdate?: (settings: NotificationSettingsForm) => Promise<void>;
 }
 
 export function ProfileSettings({ 
-  user, 
-  stats, 
-  initialNotificationSettings,
-  onPasswordChange,
-  onProfileUpdate,
-  onAvatarChange,
-  onNotificationSettingsUpdate
+  user: initialUser, 
+  stats
 }: ProfileSettingsProps) {
+  const { user, updateUserProfile, updateAvatar } = useUserProfile(initialUser);
 
-  // Default handlers for demo purposes
   const handlePasswordChange = async (data: ChangePasswordForm) => {
     try {
-      if (onPasswordChange) {
-        await onPasswordChange(data);
+      const response = await fetch('/api/user/change-password', {
+        method: 'PUT',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          currentPassword: data.currentPassword,
+          newPassword: data.newPassword,
+        }),
+      });
+
+      const result = await response.json();
+
+      if (!response.ok) {
+        throw new Error(result.error || 'Failed to change password');
+      }
+
+      if (result.success) {
+        toast.success('Đã thay đổi mật khẩu thành công');
       } else {
-        // Default implementation
-        console.log("Changing password:", data);
-        // TODO: Implement API call
+        throw new Error(result.error || 'Failed to change password');
       }
     } catch (error) {
       console.error("Error changing password:", error);
+      toast.error(error instanceof Error ? error.message : 'Có lỗi xảy ra khi đổi mật khẩu');
       throw error;
     }
   };
 
   const handleProfileUpdate = async (data: UpdateProfileForm) => {
-    try {
-      if (onProfileUpdate) {
-        await onProfileUpdate(data);
-      } else {
-        // Default implementation
-        console.log("Updating profile:", data);
-        // TODO: Implement API call
-      }
-    } catch (error) {
-      console.error("Error updating profile:", error);
-      throw error;
-    }
+    await updateUserProfile({
+      name: data.name,
+      email: data.email,
+      avatar: data.avatar,
+    });
   };
 
-  const handleAvatarChange = async (file: File | null) => {
-    try {
-      if (onAvatarChange) {
-        await onAvatarChange(file);
-      } else {
-        // Default implementation
-        console.log("Uploading avatar:", file);
-        // TODO: Implement API call
-      }
-    } catch (error) {
-      console.error("Error uploading avatar:", error);
-      throw error;
-    }
-  };
-
-  const handleNotificationSettingsUpdate = async (settings: NotificationSettingsForm) => {
-    try {
-      if (onNotificationSettingsUpdate) {
-        await onNotificationSettingsUpdate(settings);
-      } else {
-        // Default implementation
-        console.log("Updating notification settings:", settings);
-        // TODO: Implement API call
-      }
-    } catch (error) {
-      console.error("Error updating notification settings:", error);
-      throw error;
-    }
+  const handleAvatarChange = async (avatarUrl: string | null) => {
+    await updateAvatar(avatarUrl);
   };
 
   return (
@@ -131,10 +104,6 @@ export function ProfileSettings({
               user={user}
               onProfileUpdate={handleProfileUpdate}
               onAvatarChange={handleAvatarChange}
-            />
-            <NotificationSettingsModal 
-              initialSettings={initialNotificationSettings}
-              onSettingsUpdate={handleNotificationSettingsUpdate}
             />
           </div>
         </div>

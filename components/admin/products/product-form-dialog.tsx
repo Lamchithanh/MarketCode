@@ -13,6 +13,7 @@ import { TagMultiSelect } from './tag-multi-select';
 import { ImageUpload } from './image-upload';
 import { useAllTags } from '@/hooks/use-all-tags';
 import { Tag } from '@/lib/services/product-service';
+import Image from 'next/image';
 
 interface ProductItem {
   id: string;
@@ -88,6 +89,8 @@ export function ProductFormDialog({ open, onOpenChange, product, onSave }: Produ
 
   const [selectedTags, setSelectedTags] = useState<Tag[]>([]);
   const [selectedImages, setSelectedImages] = useState<string[]>([]);
+  const [thumbnailFile, setThumbnailFile] = useState<File | null>(null);
+  const [thumbnailPreview, setThumbnailPreview] = useState<string | null>(null);
   const [categories, setCategories] = useState<Category[]>([]);
   const [loading, setLoading] = useState(false);
   const [categoriesLoading, setCategoriesLoading] = useState(false);
@@ -162,6 +165,14 @@ export function ProductFormDialog({ open, onOpenChange, product, onSave }: Produ
         // Set selected tags and images
         setSelectedTags(product.tags || []);
         setSelectedImages(product.images || []);
+        
+        // Set thumbnail preview if exists
+        if (product.thumbnailUrl) {
+          setThumbnailPreview(product.thumbnailUrl);
+        } else {
+          setThumbnailPreview(null);
+        }
+        setThumbnailFile(null);
       } else {
         setFormData({
           title: '',
@@ -179,6 +190,8 @@ export function ProductFormDialog({ open, onOpenChange, product, onSave }: Produ
         // Clear selected tags and images
         setSelectedTags([]);
         setSelectedImages([]);
+        setThumbnailFile(null);
+        setThumbnailPreview(null);
       }
       
       setErrors({});
@@ -219,21 +232,50 @@ export function ProductFormDialog({ open, onOpenChange, product, onSave }: Produ
       newErrors.categoryId = 'Category is required';
     }
 
-    if (formData.thumbnailUrl && formData.thumbnailUrl.trim() && !isValidUrl(formData.thumbnailUrl)) {
-      newErrors.thumbnailUrl = 'Please enter a valid URL';
-    }
+    // Removed thumbnail URL validation - will use default image if not uploaded
 
     setErrors(newErrors);
     return Object.keys(newErrors).length === 0;
   };
 
-  const isValidUrl = (url: string): boolean => {
+  const handleThumbnailUpload = async (file: File) => {
     try {
-      new URL(url);
-      return true;
-    } catch {
-      return false;
+      setThumbnailFile(file);
+      
+      // Create preview URL
+      const previewUrl = URL.createObjectURL(file);
+      setThumbnailPreview(previewUrl);
+      
+      // Upload file to server
+      const formData = new FormData();
+      formData.append('file', file);
+      
+      const response = await fetch('/api/upload', {
+        method: 'POST',
+        body: formData,
+      });
+      
+      if (response.ok) {
+        const result = await response.json();
+        if (result.success && result.urls && result.urls.length > 0) {
+          handleInputChange('thumbnailUrl', result.urls[0]);
+          toast.success('Thumbnail uploaded successfully');
+        } else {
+          throw new Error('Upload failed');
+        }
+      } else {
+        throw new Error('Upload failed');
+      }
+    } catch (error) {
+      console.error('Error uploading thumbnail:', error);
+      toast.error('Failed to upload thumbnail');
     }
+  };
+
+  const removeThumbnail = () => {
+    setThumbnailFile(null);
+    setThumbnailPreview(null);
+    handleInputChange('thumbnailUrl', '');
   };
 
   const handleSave = async () => {
@@ -274,6 +316,8 @@ export function ProductFormDialog({ open, onOpenChange, product, onSave }: Produ
           });
           setSelectedTags([]);
           setSelectedImages([]);
+          setThumbnailFile(null);
+          setThumbnailPreview(null);
         }
         
         toast.success(isEditMode ? 'Product updated successfully' : 'Product created successfully');
@@ -412,19 +456,54 @@ export function ProductFormDialog({ open, onOpenChange, product, onSave }: Produ
             </div>
           </div>
 
+          {/* Thumbnail Upload */}
           <div>
-            <Label htmlFor="thumbnailUrl">Thumbnail URL</Label>
-            <Input 
-              id="thumbnailUrl"
-              value={formData.thumbnailUrl}
-              onChange={(e) => handleInputChange('thumbnailUrl', e.target.value)}
-              className={`mt-1 ${errors.thumbnailUrl ? 'border-red-500' : ''}`}
-              placeholder="https://example.com/image.jpg"
-            />
-            {errors.thumbnailUrl && (
-              <p className="text-sm text-red-600 mt-1">{errors.thumbnailUrl}</p>
-            )}
-            <p className="text-xs text-gray-500 mt-1">Optional: Enter a URL for the product thumbnail image</p>
+            <Label>Thumbnail Image</Label>
+            <div className="mt-2">
+              {thumbnailPreview || formData.thumbnailUrl ? (
+                <div className="relative inline-block">
+                  <Image
+                    src={thumbnailPreview || formData.thumbnailUrl}
+                    alt="Thumbnail preview"
+                    width={128}
+                    height={128}
+                    className="w-32 h-32 object-cover rounded-lg border"
+                  />
+                  <button
+                    type="button"
+                    onClick={removeThumbnail}
+                    className="absolute -top-2 -right-2 bg-red-500 text-white rounded-full w-6 h-6 flex items-center justify-center hover:bg-red-600"
+                  >
+                    ×
+                  </button>
+                </div>
+              ) : (
+                <div className="border-2 border-dashed border-gray-300 rounded-lg p-6 text-center hover:border-gray-400 transition-colors">
+                  <input
+                    type="file"
+                    accept="image/*"
+                    onChange={(e) => {
+                      const file = e.target.files?.[0];
+                      if (file) {
+                        handleThumbnailUpload(file);
+                      }
+                    }}
+                    className="hidden"
+                    id="thumbnail-upload"
+                  />
+                  <label htmlFor="thumbnail-upload" className="cursor-pointer">
+                    <div className="text-gray-500">
+                      <svg className="w-8 h-8 mx-auto mb-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 6v6m0 0v6m0-6h6m-6 0H6" />
+                      </svg>
+                      <p className="text-sm">Click to upload thumbnail</p>
+                      <p className="text-xs text-gray-400 mt-1">PNG, JPG, GIF up to 5MB</p>
+                    </div>
+                  </label>
+                </div>
+              )}
+            </div>
+            <p className="text-xs text-gray-500 mt-1">Optional: Upload a thumbnail image or default image will be used</p>
           </div>
 
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">

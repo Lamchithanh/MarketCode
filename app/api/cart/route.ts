@@ -1,11 +1,20 @@
-import { NextResponse } from 'next/server';
+import { NextResponse, NextRequest } from 'next/server';
 import { supabaseServiceRole } from '@/lib/supabase-server';
 
-export async function GET() {
+export async function GET(request: NextRequest) {
   try {
-    // TODO: Get userId from authentication
-    // For now, using a mock userId - in real app, get from session/JWT
-    const userId = '550e8400-e29b-41d4-a716-446655440001'; // Mock user ID
+    // Temporary solution: get userId from header
+    const userId = request.headers.get('x-user-id');
+    
+    if (!userId) {
+      return NextResponse.json(
+        { 
+          success: false,
+          error: 'User ID required in header' 
+        },
+        { status: 401 }
+      );
+    }
 
     // Fetch cart items with product details
     const { data: cartItems, error } = await supabaseServiceRole
@@ -72,7 +81,7 @@ export async function GET() {
   }
 }
 
-export async function POST(request: Request) {
+export async function POST(request: NextRequest) {
   try {
     const { productId } = await request.json();
     
@@ -86,8 +95,18 @@ export async function POST(request: Request) {
       );
     }
 
-    // TODO: Get userId from authentication
-    const userId = '550e8400-e29b-41d4-a716-446655440001'; // Mock user ID
+    // Temporary solution: get userId from header
+    const userId = request.headers.get('x-user-id');
+    
+    if (!userId) {
+      return NextResponse.json(
+        { 
+          success: false,
+          error: 'User ID required in header' 
+        },
+        { status: 401 }
+      );
+    }
 
     // Check if item already exists in cart
     const { data: existingItem } = await supabaseServiceRole

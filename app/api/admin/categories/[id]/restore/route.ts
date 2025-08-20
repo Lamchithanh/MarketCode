@@ -1,12 +1,13 @@
-import { NextResponse } from 'next/server';
+import { NextRequest, NextResponse } from 'next/server';
 import { categoryService } from '@/lib/services/category-service';
 
 export async function POST(
   request: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
-    const category = await categoryService.restoreCategory(params.id);
+    const { id } = await params;
+    const category = await categoryService.restoreCategory(id);
     
     return NextResponse.json(category);
   } catch (error) {

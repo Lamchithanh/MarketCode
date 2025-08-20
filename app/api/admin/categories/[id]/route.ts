@@ -3,10 +3,11 @@ import { categoryService } from '@/lib/services/category-service';
 
 export async function GET(
   request: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
-    const category = await categoryService.getCategoryById(params.id);
+    const { id } = await params;
+    const category = await categoryService.getCategoryById(id);
     
     if (!category) {
       return NextResponse.json(
@@ -27,9 +28,10 @@ export async function GET(
 
 export async function PUT(
   request: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
+    const { id } = await params;
     const body = await request.json();
     const { name, slug, description, icon } = body;
 
@@ -40,7 +42,7 @@ export async function PUT(
       );
     }
 
-    const category = await categoryService.updateCategory(params.id, { name, slug, description, icon });
+    const category = await categoryService.updateCategory(id, { name, slug, description, icon });
     
     return NextResponse.json(category);
   } catch (error) {
@@ -55,10 +57,11 @@ export async function PUT(
 
 export async function DELETE(
   request: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
-    await categoryService.deleteCategory(params.id);
+    const { id } = await params;
+    await categoryService.deleteCategory(id);
     
     return NextResponse.json({ success: true });
   } catch (error) {

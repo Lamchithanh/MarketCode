@@ -1,5 +1,5 @@
-import { DownloadsTable } from "@/components/admin/downloads/downloads-table";
+import { DownloadsManagement } from "@/components/admin/downloads";
 
 export default function DownloadsPage() {
-  return <DownloadsTable />;
+  return <DownloadsManagement />;
 }

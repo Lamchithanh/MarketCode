@@ -1,15 +1,25 @@
-import { NextResponse } from 'next/server';
+import { NextResponse, NextRequest } from 'next/server';
 import { supabaseServiceRole } from '@/lib/supabase-server';
 
 export async function DELETE(
-  request: Request,
+  request: NextRequest,
   { params }: { params: Promise<{ id: string }> }
 ) {
   try {
     const { id } = await params;
     
-    // TODO: Get userId from authentication and verify ownership
-    const userId = '550e8400-e29b-41d4-a716-446655440001'; // Mock user ID
+    // Temporary solution: get userId from header
+    const userId = request.headers.get('x-user-id');
+    
+    if (!userId) {
+      return NextResponse.json(
+        { 
+          success: false,
+          error: 'User ID required in header' 
+        },
+        { status: 401 }
+      );
+    }
 
     // Delete cart item
     const { error } = await supabaseServiceRole

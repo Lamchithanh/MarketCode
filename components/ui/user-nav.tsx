@@ -21,7 +21,6 @@ import {
   CreditCard,
   Download,
   Heart,
-  ShoppingCart,
 } from "lucide-react";
 import Link from "next/link";
 import { LogoutConfirmationModal } from "@/components/ui/confirmation-modal";
@@ -83,31 +82,31 @@ export function UserNav() {
           <DropdownMenuSeparator />
           <DropdownMenuGroup>
             <DropdownMenuItem asChild>
-              <Link href="/profile">
+              <Link href="/profile?tab=overview">
                 <User className="mr-2 h-4 w-4" />
                 <span>Hồ sơ</span>
               </Link>
             </DropdownMenuItem>
             <DropdownMenuItem asChild>
-              <Link href="/orders">
+              <Link href="/profile?tab=orders">
                 <CreditCard className="mr-2 h-4 w-4" />
                 <span>Đơn hàng</span>
               </Link>
             </DropdownMenuItem>
             <DropdownMenuItem asChild>
-              <Link href="/downloads">
+              <Link href="/profile?tab=downloads">
                 <Download className="mr-2 h-4 w-4" />
                 <span>Tải xuống</span>
               </Link>
             </DropdownMenuItem>
             <DropdownMenuItem asChild>
-              <Link href="/wishlist">
+              <Link href="/profile?tab=wishlist">
                 <Heart className="mr-2 h-4 w-4" />
                 <span>Yêu thích</span>
               </Link>
             </DropdownMenuItem>
             <DropdownMenuItem asChild>
-              <Link href="/settings">
+              <Link href="/profile?tab=settings">
                 <Settings className="mr-2 h-4 w-4" />
                 <span>Cài đặt</span>
               </Link>

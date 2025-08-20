@@ -1,4 +1,5 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
+import { useUser } from './use-user';
 
 export interface CartItem {
   id: string;
@@ -18,14 +19,25 @@ export function useCart() {
   const [items, setItems] = useState<CartItem[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const { user } = useUser();
 
   // Fetch cart items
-  const fetchCartItems = async () => {
+  const fetchCartItems = useCallback(async () => {
     try {
+      if (!user?.id) {
+        setItems([]);
+        setLoading(false);
+        return;
+      }
+
       setLoading(true);
       setError(null);
       
-      const response = await fetch('/api/cart');
+      const response = await fetch('/api/cart', {
+        headers: {
+          'x-user-id': user.id,
+        },
+      });
       const result = await response.json();
       
       if (result.success) {
@@ -39,15 +51,20 @@ export function useCart() {
     } finally {
       setLoading(false);
     }
-  };
+  }, [user?.id]);
 
   // Add item to cart
   const addItem = async (productId: string) => {
     try {
+      if (!user?.id) {
+        return { success: false, error: 'User not authenticated' };
+      }
+
       const response = await fetch('/api/cart', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
+          'x-user-id': user.id,
         },
         body: JSON.stringify({ productId }),
       });
@@ -71,8 +88,15 @@ export function useCart() {
   // Remove item from cart
   const removeItem = async (cartId: string) => {
     try {
+      if (!user?.id) {
+        return { success: false, error: 'User not authenticated' };
+      }
+
       const response = await fetch(`/api/cart/${cartId}`, {
         method: 'DELETE',
+        headers: {
+          'x-user-id': user.id,
+        },
       });
       
       const result = await response.json();
@@ -99,7 +123,7 @@ export function useCart() {
 
   useEffect(() => {
     fetchCartItems();
-  }, []);
+  }, [fetchCartItems]);
 
   return {
     items,

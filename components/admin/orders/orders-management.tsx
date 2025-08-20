@@ -6,6 +6,16 @@ import { OrdersStats } from './orders-stats';
 import { OrdersSearch } from './orders-search';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
+import { 
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from '@/components/ui/alert-dialog';
 import {
   Table,
   TableBody,
@@ -39,6 +49,8 @@ export function OrdersManagement() {
   } = useOrders();
 
   const [searchTerm, setSearchTerm] = useState('');
+  const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
+  const [orderToDelete, setOrderToDelete] = useState<Order | null>(null);
 
   const formatDate = (dateString: string) => {
     return new Date(dateString).toLocaleDateString('vi-VN', {
@@ -95,11 +107,18 @@ export function OrdersManagement() {
     console.log('Edit order:', order);
   };
 
-  const handleDelete = async (order: Order) => {
-    if (window.confirm('Bạn có chắc chắn muốn xóa đơn hàng này?')) {
+  const handleDeleteClick = (order: Order) => {
+    setOrderToDelete(order);
+    setDeleteDialogOpen(true);
+  };
+
+  const handleConfirmDelete = async () => {
+    if (orderToDelete) {
       try {
-        await deleteOrderData(order.id);
+        await deleteOrderData(orderToDelete.id);
         refreshOrders();
+        setDeleteDialogOpen(false);
+        setOrderToDelete(null);
       } catch (error) {
         console.error('Error deleting order:', error);
         alert('Có lỗi xảy ra khi xóa đơn hàng');
@@ -243,7 +262,7 @@ export function OrdersManagement() {
                             <DropdownMenuSeparator />
                             <DropdownMenuItem 
                               className="text-red-600"
-                              onClick={() => handleDelete(order)}
+                              onClick={() => handleDeleteClick(order)}
                             >
                               <Trash2 className="mr-2 h-4 w-4" />
                               Xóa
@@ -259,6 +278,38 @@ export function OrdersManagement() {
           )}
         </CardContent>
       </Card>
+
+      {/* Delete Confirmation Dialog */}
+      <AlertDialog open={deleteDialogOpen} onOpenChange={setDeleteDialogOpen}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Xác nhận xóa đơn hàng</AlertDialogTitle>
+            <AlertDialogDescription>
+              Bạn có chắc chắn muốn xóa đơn hàng này không?
+              {orderToDelete && (
+                <div className="mt-2 p-2 bg-gray-50 rounded text-sm">
+                  <div><strong>Mã đơn hàng:</strong> {orderToDelete.orderNumber}</div>
+                  <div><strong>Khách hàng:</strong> {orderToDelete.buyerEmail}</div>
+                  <div><strong>Tổng tiền:</strong> {orderToDelete.totalAmount?.toLocaleString('vi-VN')}đ</div>
+                  <div><strong>Trạng thái:</strong> {orderToDelete.paymentStatus}</div>
+                </div>
+              )}
+              <p className="mt-2 text-red-600 font-medium">
+                Hành động này không thể hoàn tác!
+              </p>
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Hủy bỏ</AlertDialogCancel>
+            <AlertDialogAction 
+              onClick={handleConfirmDelete}
+              className="bg-red-600 hover:bg-red-700"
+            >
+              Xác nhận xóa
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </div>
   );
 }

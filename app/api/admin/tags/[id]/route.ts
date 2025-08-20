@@ -3,10 +3,11 @@ import { tagService } from '@/lib/services/tag-service';
 
 export async function GET(
   request: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
-    const tag = await tagService.getTagById(params.id);
+    const { id } = await params;
+    const tag = await tagService.getTagById(id);
     
     if (!tag) {
       return NextResponse.json(
@@ -27,9 +28,10 @@ export async function GET(
 
 export async function PUT(
   request: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
+    const { id } = await params;
     const body = await request.json();
     const { name, slug, color } = body;
 
@@ -40,7 +42,7 @@ export async function PUT(
       );
     }
 
-    const tag = await tagService.updateTag(params.id, { name, slug, color });
+    const tag = await tagService.updateTag(id, { name, slug, color });
     
     return NextResponse.json(tag);
   } catch (error) {
@@ -55,10 +57,11 @@ export async function PUT(
 
 export async function DELETE(
   request: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
-    await tagService.deleteTag(params.id);
+    const { id } = await params;
+    await tagService.deleteTag(id);
     
     return NextResponse.json({ success: true });
   } catch (error) {

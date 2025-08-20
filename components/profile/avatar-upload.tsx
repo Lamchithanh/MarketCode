@@ -3,16 +3,17 @@
 import { useState, useRef } from "react";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
-import { Label } from "@/components/ui/label";
 import { Input } from "@/components/ui/input";
 import { Card, CardContent } from "@/components/ui/card";
-import { Camera, Upload, X, AlertCircle } from "lucide-react";
+import { Camera, Upload, X, AlertCircle, Loader2 } from "lucide-react";
 import { cn } from "@/lib/utils";
+import { toast } from "sonner";
+import { avatarService } from "@/lib/services/avatar-service";
 
 interface AvatarUploadProps {
   currentAvatar?: string;
   userName?: string;
-  onAvatarChange?: (file: File | null) => void;
+  onAvatarChange?: (avatarUrl: string | null) => void;
   disabled?: boolean;
   size?: "sm" | "md" | "lg";
 }
@@ -27,6 +28,7 @@ export function AvatarUpload({
   const [preview, setPreview] = useState<string | null>(null);
   const [dragActive, setDragActive] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [isUploading, setIsUploading] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   const sizeClasses = {
@@ -50,33 +52,62 @@ export function AvatarUpload({
       return "File không được vượt quá 5MB";
     }
 
-    // Check file type
-    const allowedTypes = ["image/jpeg", "image/jpg", "image/png", "image/webp"];
+    // Check file type - expanded to support more formats
+    const allowedTypes = [
+      "image/jpeg", 
+      "image/jpg", 
+      "image/png", 
+      "image/webp",
+      "image/gif",
+      "image/svg+xml",
+      "image/bmp",
+      "image/tiff"
+    ];
     if (!allowedTypes.includes(file.type)) {
-      return "Chỉ hỗ trợ file JPG, PNG, WEBP";
+      return "Chỉ hỗ trợ các định dạng ảnh: JPG, PNG, WEBP, GIF, SVG, BMP, TIFF";
     }
 
     return null;
   };
 
-  const handleFileSelect = (file: File) => {
+  const handleFileSelect = async (file: File) => {
+    console.log('File selected for upload:', { fileName: file.name, fileSize: file.size, fileType: file.type });
+    
     const validationError = validateFile(file);
     if (validationError) {
+      console.error('File validation failed:', validationError);
       setError(validationError);
       return;
     }
 
     setError(null);
+    setIsUploading(true);
     
-    // Create preview
-    const reader = new FileReader();
-    reader.onload = (e) => {
-      setPreview(e.target?.result as string);
-    };
-    reader.readAsDataURL(file);
+    try {
+      // Create preview
+      const reader = new FileReader();
+      reader.onload = (e) => {
+        setPreview(e.target?.result as string);
+      };
+      reader.readAsDataURL(file);
 
-    // Notify parent component
-    onAvatarChange?.(file);
+      console.log('Starting avatar upload service call...');
+      // Upload to Supabase via Edge Function
+      const { avatarUrl } = await avatarService.uploadAvatar(file);
+      console.log('Avatar upload service completed:', { avatarUrl });
+      
+      // Notify parent component with avatar URL
+      onAvatarChange?.(avatarUrl);
+      
+      toast.success("Cập nhật ảnh đại diện thành công!");
+    } catch (error) {
+      console.error("Upload error:", error);
+      setError(error instanceof Error ? error.message : "Không thể tải ảnh lên");
+      setPreview(null);
+      toast.error("Không thể tải ảnh lên. Vui lòng thử lại!");
+    } finally {
+      setIsUploading(false);
+    }
   };
 
   const handleFileInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -107,17 +138,27 @@ export function AvatarUpload({
     }
   };
 
-  const handleRemove = () => {
-    setPreview(null);
-    setError(null);
-    if (fileInputRef.current) {
-      fileInputRef.current.value = "";
+  const handleRemove = async () => {
+    setIsUploading(true);
+    try {
+      await avatarService.deleteAvatar();
+      setPreview(null);
+      setError(null);
+      if (fileInputRef.current) {
+        fileInputRef.current.value = "";
+      }
+      onAvatarChange?.(null);
+      toast.success("Đã xóa ảnh đại diện!");
+    } catch (error) {
+      console.error("Delete error:", error);
+      toast.error("Không thể xóa ảnh đại diện!");
+    } finally {
+      setIsUploading(false);
     }
-    onAvatarChange?.(null);
   };
 
   const handleClick = () => {
-    if (!disabled) {
+    if (!disabled && !isUploading) {
       fileInputRef.current?.click();
     }
   };
@@ -145,41 +186,36 @@ export function AvatarUpload({
             size="sm"
             className="absolute -bottom-2 -right-2 h-8 w-8 rounded-full p-0 shadow-md"
             onClick={handleClick}
-            disabled={disabled}
+            disabled={disabled || isUploading}
           >
-            <Camera className="h-4 w-4" />
+            {isUploading ? (
+              <Loader2 className="h-4 w-4 animate-spin" />
+            ) : (
+              <Camera className="h-4 w-4" />
+            )}
           </Button>
         </div>
 
         <div className="flex flex-col gap-2">
-          <div className="flex gap-2">
+          {(preview || currentAvatar) && (
             <Button
               type="button"
               variant="outline"
               size="sm"
-              onClick={handleClick}
-              disabled={disabled}
+              onClick={handleRemove}
+              disabled={disabled || isUploading}
             >
-              <Upload className="h-4 w-4 mr-2" />
-              Tải lên
-            </Button>
-            
-            {(preview || currentAvatar) && (
-              <Button
-                type="button"
-                variant="outline"
-                size="sm"
-                onClick={handleRemove}
-                disabled={disabled}
-              >
+              {isUploading ? (
+                <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+              ) : (
                 <X className="h-4 w-4 mr-2" />
-                Xóa
-              </Button>
-            )}
-          </div>
+              )}
+              Xóa
+            </Button>
+          )}
           
           <p className="text-xs text-muted-foreground">
-            JPG, PNG, WEBP tối đa 5MB
+            Hỗ trợ JPG, PNG, WEBP, GIF, SVG, BMP, TIFF tối đa 5MB
           </p>
         </div>
       </div>
@@ -191,7 +227,7 @@ export function AvatarUpload({
           dragActive
             ? "border-primary bg-primary/5"
             : "border-muted-foreground/25 hover:border-muted-foreground/50",
-          disabled && "opacity-50 cursor-not-allowed"
+          (disabled || isUploading) && "opacity-50 cursor-not-allowed"
         )}
         onDragEnter={handleDrag}
         onDragLeave={handleDrag}
@@ -201,10 +237,18 @@ export function AvatarUpload({
       >
         <CardContent className="p-6 text-center">
           <div className="flex flex-col items-center gap-2">
-            <Upload className="h-8 w-8 text-muted-foreground" />
+            {isUploading ? (
+              <Loader2 className="h-8 w-8 text-muted-foreground animate-spin" />
+            ) : (
+              <Upload className="h-8 w-8 text-muted-foreground" />
+            )}
             <div className="text-sm">
-              <span className="font-medium">Kéo thả file vào đây</span>
-              <span className="text-muted-foreground"> hoặc nhấp để chọn</span>
+              <span className="font-medium">
+                {isUploading ? "Đang tải lên..." : "Kéo thả file vào đây"}
+              </span>
+              {!isUploading && (
+                <span className="text-muted-foreground"> hoặc nhấp để chọn</span>
+              )}
             </div>
           </div>
         </CardContent>
@@ -222,10 +266,10 @@ export function AvatarUpload({
       <Input
         ref={fileInputRef}
         type="file"
-        accept="image/jpeg,image/jpg,image/png,image/webp"
+        accept="image/jpeg,image/jpg,image/png,image/webp,image/gif,image/svg+xml,image/bmp,image/tiff"
         onChange={handleFileInputChange}
         className="hidden"
-        disabled={disabled}
+        disabled={disabled || isUploading}
       />
     </div>
   );
