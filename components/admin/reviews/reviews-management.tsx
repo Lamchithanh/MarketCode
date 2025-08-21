@@ -34,78 +34,20 @@ interface Review {
   id: string;
   userName: string;
   userEmail: string;
-  userAvatar?: string;
+  userAvatar?: string | null;
   productTitle: string;
   productId: string;
   rating: number;
-  comment?: string;
+  comment?: string | null;
   isHelpful: number;
   isApproved: boolean;
   createdAt: string;
   updatedAt: string;
 }
 
-const mockReviews: Review[] = [
-  {
-    id: '1',
-    userName: 'John Doe',
-    userEmail: 'john@example.com',
-    userAvatar: 'https://github.com/shadcn.png',
-    productTitle: 'React Admin Dashboard',
-    productId: '1',
-    rating: 5,
-    comment: 'Excellent template! Very well structured and easy to customize.',
-    isHelpful: 12,
-    isApproved: true,
-    createdAt: '2024-01-15T10:30:00Z',
-    updatedAt: '2024-01-15T10:30:00Z',
-  },
-  {
-    id: '2',
-    userName: 'Jane Smith',
-    userEmail: 'jane@example.com',
-    userAvatar: 'https://github.com/shadcn.png',
-    productTitle: 'Vue.js E-commerce Template',
-    productId: '2',
-    rating: 4,
-    comment: 'Good template but documentation could be better.',
-    isHelpful: 8,
-    isApproved: true,
-    createdAt: '2024-01-14T16:20:00Z',
-    updatedAt: '2024-01-14T16:20:00Z',
-  },
-  {
-    id: '3',
-    userName: 'Bob Johnson',
-    userEmail: 'bob@example.com',
-    productTitle: 'Node.js API Starter',
-    productId: '3',
-    rating: 3,
-    comment: 'Average template, needs some improvements.',
-    isHelpful: 3,
-    isApproved: false,
-    createdAt: '2024-01-13T14:15:00Z',
-    updatedAt: '2024-01-13T14:15:00Z',
-  },
-  {
-    id: '4',
-    userName: 'Alice Wilson',
-    userEmail: 'alice@example.com',
-    userAvatar: 'https://github.com/shadcn.png',
-    productTitle: 'React Admin Dashboard',
-    productId: '1',
-    rating: 5,
-    comment: 'Amazing work! Saved me tons of development time.',
-    isHelpful: 15,
-    isApproved: true,
-    createdAt: '2024-01-12T09:45:00Z',
-    updatedAt: '2024-01-12T09:45:00Z',
-  },
-];
-
 export function ReviewsManagement() {
-  const [reviews, setReviews] = useState<Review[]>(mockReviews);
-  const [filteredReviews, setFilteredReviews] = useState<Review[]>(mockReviews);
+  const [reviews, setReviews] = useState<Review[]>([]);
+  const [filteredReviews, setFilteredReviews] = useState<Review[]>([]);
   const [searchTerm, setSearchTerm] = useState('');
   const [loading, setLoading] = useState(false);
   const [lastUpdated, setLastUpdated] = useState<Date | null>(null);
@@ -113,6 +55,37 @@ export function ReviewsManagement() {
   const [isViewDialogOpen, setIsViewDialogOpen] = useState(false);
   const [isEditDialogOpen, setIsEditDialogOpen] = useState(false);
   const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
+
+  // Fetch reviews from API
+  const fetchReviews = async () => {
+    setLoading(true);
+    try {
+      const response = await fetch('/api/admin/reviews', {
+        method: 'GET',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+      });
+
+      if (!response.ok) {
+        throw new Error('Failed to fetch reviews');
+      }
+
+      const data = await response.json();
+      setReviews(data.reviews || []);
+      setLastUpdated(new Date());
+    } catch (error) {
+      console.error('Error fetching reviews:', error);
+      // You might want to show a toast notification here
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  // Load reviews on mount
+  useEffect(() => {
+    fetchReviews();
+  }, []);
 
   // Filter reviews based on search term
   useEffect(() => {
@@ -126,23 +99,14 @@ export function ReviewsManagement() {
   }, [reviews, searchTerm]);
 
   const handleRefresh = async () => {
-    setLoading(true);
-    try {
-      // Simulate API call
-      await new Promise(resolve => setTimeout(resolve, 1000));
-      setLastUpdated(new Date());
-    } catch (error) {
-      console.error('Error refreshing reviews:', error);
-    } finally {
-      setLoading(false);
-    }
+    await fetchReviews();
   };
 
   const formatDate = (dateString: string) => {
-    return new Date(dateString).toLocaleDateString('en-US', {
+    return new Date(dateString).toLocaleString('vi-VN', {
       year: 'numeric',
-      month: 'short',
-      day: 'numeric',
+      month: '2-digit',
+      day: '2-digit',
       hour: '2-digit',
       minute: '2-digit',
     });
@@ -184,10 +148,30 @@ export function ReviewsManagement() {
     setSelectedReview(null);
   };
 
-  const handleApproveReview = (review: Review) => {
-    setReviews(reviews.map(r => 
-      r.id === review.id ? { ...r, isApproved: !r.isApproved } : r
-    ));
+  const handleApproveReview = async (review: Review) => {
+    try {
+      const response = await fetch(`/api/admin/reviews/${review.id}`, {
+        method: 'PATCH',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          isApproved: !review.isApproved,
+        }),
+      });
+
+      if (!response.ok) {
+        throw new Error('Failed to update review approval status');
+      }
+
+      // Update local state
+      setReviews(reviews.map(r => 
+        r.id === review.id ? { ...r, isApproved: !r.isApproved, updatedAt: new Date().toISOString() } : r
+      ));
+    } catch (error) {
+      console.error('Error updating review approval:', error);
+      // You might want to show a toast notification here
+    }
   };
 
   return (
@@ -231,14 +215,14 @@ export function ReviewsManagement() {
           <Table>
             <TableHeader>
               <TableRow>
-                <TableHead>User</TableHead>
-                <TableHead>Product</TableHead>
-                <TableHead>Rating</TableHead>
-                <TableHead>Comment</TableHead>
-                <TableHead>Helpful</TableHead>
-                <TableHead>Status</TableHead>
-                <TableHead>Date</TableHead>
-                <TableHead className="text-right">Actions</TableHead>
+                <TableHead>Người dùng</TableHead>
+                <TableHead>Sản phẩm</TableHead>
+                <TableHead>Đánh giá</TableHead>
+                <TableHead>Nhận xét</TableHead>
+                <TableHead>Hữu ích</TableHead>
+                <TableHead>Trạng thái</TableHead>
+                <TableHead>Ngày tạo</TableHead>
+                <TableHead className="text-right">Hành động</TableHead>
               </TableRow>
             </TableHeader>
             <TableBody>
@@ -247,7 +231,7 @@ export function ReviewsManagement() {
                   <TableCell>
                     <div className="flex items-center space-x-3">
                       <Avatar className="w-10 h-10">
-                        <AvatarImage src={review.userAvatar} alt={review.userName} />
+                        <AvatarImage src={review.userAvatar || undefined} alt={review.userName} />
                         <AvatarFallback className="bg-stone-100 text-stone-600">
                           {review.userName.charAt(0).toUpperCase()}
                         </AvatarFallback>
@@ -271,7 +255,7 @@ export function ReviewsManagement() {
                   </TableCell>
                   <TableCell>
                     <p className="text-sm text-muted-foreground max-w-xs truncate">
-                      {review.comment || 'No comment'}
+                      {review.comment || 'Không có nhận xét'}
                     </p>
                   </TableCell>
                   <TableCell>
@@ -285,7 +269,7 @@ export function ReviewsManagement() {
                       variant={review.isApproved ? 'default' : 'secondary'}
                       className={review.isApproved ? 'bg-green-100 text-green-800' : 'bg-stone-100 text-stone-600'}
                     >
-                      {review.isApproved ? 'Approved' : 'Pending'}
+                      {review.isApproved ? 'Đã duyệt' : 'Chờ duyệt'}
                     </Badge>
                   </TableCell>
                   <TableCell>
@@ -305,15 +289,15 @@ export function ReviewsManagement() {
                         <DropdownMenuLabel>Actions</DropdownMenuLabel>
                         <DropdownMenuItem onClick={() => handleViewReview(review)}>
                           <Eye className="mr-2 h-4 w-4" />
-                          View Details
+                          Xem chi tiết
                         </DropdownMenuItem>
                         <DropdownMenuItem onClick={() => handleApproveReview(review)}>
                           <Star className="mr-2 h-4 w-4" />
-                          {review.isApproved ? 'Unapprove' : 'Approve'}
+                          {review.isApproved ? 'Bỏ duyệt' : 'Duyệt'}
                         </DropdownMenuItem>
                         <DropdownMenuItem onClick={() => handleEditReview(review)}>
                           <Edit className="mr-2 h-4 w-4" />
-                          Edit
+                          Chỉnh sửa
                         </DropdownMenuItem>
                         <DropdownMenuSeparator />
                         <DropdownMenuItem
@@ -321,7 +305,7 @@ export function ReviewsManagement() {
                           className="text-red-600 focus:text-red-600"
                         >
                           <Trash2 className="mr-2 h-4 w-4" />
-                          Delete
+                          Xóa
                         </DropdownMenuItem>
                       </DropdownMenuContent>
                     </DropdownMenu>

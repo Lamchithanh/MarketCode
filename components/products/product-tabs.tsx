@@ -157,7 +157,9 @@ export function ProductTabs({ product, reviews = [], userHasPurchased }: Product
           <CardContent className="p-6">
             <h3 className="text-xl font-semibold mb-4">Tính năng nổi bật</h3>
             
-            {safeFeatures ? (
+
+
+            {safeFeatures && (safeFeatures.core?.length > 0 || safeFeatures.technical?.length > 0 || safeFeatures.ui?.length > 0) ? (
               <div className="space-y-6">
                 {/* Core Features */}
                 {safeFeatures.core && safeFeatures.core.length > 0 && (
@@ -205,10 +207,11 @@ export function ProductTabs({ product, reviews = [], userHasPurchased }: Product
                 )}
               </div>
             ) : (
+              // Always show fallback features if database features are not available
               <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
                 {[
                   "Responsive Design - Tương thích mọi thiết bị",
-                  "Modern UI/UX - Giao diện hiện đại, thân thiện",
+                  "Modern UI/UX - Giao diện hiện đại, thân thiện", 
                   "Fast Loading - Tối ưu hiệu suất cao",
                   "SEO Friendly - Tối ưu cho công cụ tìm kiếm",
                   "Cross Browser - Hỗ trợ đa trình duyệt",

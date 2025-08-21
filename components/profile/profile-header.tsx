@@ -1,8 +1,11 @@
+import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Shield, Calendar, Star, Edit } from "lucide-react";
+import { UpdateProfileModal } from "./update-profile-modal";
+import { useUserProfile } from "@/hooks/use-user-profile";
 
 interface ProfileHeaderProps {
   user: {
@@ -16,9 +19,13 @@ interface ProfileHeaderProps {
     reviews: number;
     memberSince: string;
   };
+  onUpdateProfile?: () => void;
 }
 
-export function ProfileHeader({ user, stats }: ProfileHeaderProps) {
+export function ProfileHeader({ user: initialUser, stats, onUpdateProfile }: ProfileHeaderProps) {
+  const [isUpdateModalOpen, setIsUpdateModalOpen] = useState(false);
+  const { user, updateUserProfile, updateAvatar } = useUserProfile(initialUser);
+
   const getInitials = (name: string) => {
     return name
       .split(" ")
@@ -26,6 +33,20 @@ export function ProfileHeader({ user, stats }: ProfileHeaderProps) {
       .join("")
       .toUpperCase()
       .slice(0, 2);
+  };
+
+  const handleUpdateProfile = () => {
+    setIsUpdateModalOpen(true);
+  };
+
+  const handleProfileUpdate = async (data: any) => {
+    await updateUserProfile(data);
+    onUpdateProfile?.(); // Notify parent component to refresh
+  };
+
+  const handleAvatarChange = async (avatarUrl: string | null) => {
+    await updateAvatar(avatarUrl);
+    onUpdateProfile?.(); // Notify parent component to refresh
   };
 
   return (
@@ -60,13 +81,27 @@ export function ProfileHeader({ user, stats }: ProfileHeaderProps) {
             </div>
           </div>
           <div className="ml-auto">
-            <Button variant="outline" size="lg" className="flex items-center gap-2">
+            <Button 
+              variant="outline" 
+              size="lg" 
+              className="flex items-center gap-2"
+              onClick={handleUpdateProfile}
+            >
               <Edit className="h-4 w-4" />
               Chỉnh sửa hồ sơ
             </Button>
           </div>
         </div>
       </CardContent>
+      
+      {/* Update Profile Modal */}
+      <UpdateProfileModal
+        user={user}
+        onProfileUpdate={handleProfileUpdate}
+        onAvatarChange={handleAvatarChange}
+        open={isUpdateModalOpen}
+        onOpenChange={setIsUpdateModalOpen}
+      />
     </Card>
   );
 } 

@@ -133,7 +133,73 @@ export type Database = {
           deletedAt?: string | null;
         };
       };
-      // Add other table types as needed...
+      Category: {
+        Row: {
+          id: string;
+          name: string;
+          description: string | null;
+          isActive: boolean;
+          createdAt: string;
+          updatedAt: string;
+          deletedAt: string | null;
+        };
+        Insert: {
+          id?: string;
+          name: string;
+          description?: string | null;
+          isActive?: boolean;
+          createdAt?: string;
+          updatedAt?: string;
+          deletedAt?: string | null;
+        };
+        Update: {
+          id?: string;
+          name?: string;
+          description?: string | null;
+          isActive?: boolean;
+          createdAt?: string;
+          updatedAt?: string;
+          deletedAt?: string | null;
+        };
+      };
+      Review: {
+        Row: {
+          id: string;
+          userId: string;
+          productId: string;
+          rating: number;
+          comment: string | null;
+          isHelpful: number;
+          isApproved: boolean;
+          createdAt: string;
+          updatedAt: string;
+          deletedAt: string | null;
+        };
+        Insert: {
+          id?: string;
+          userId: string;
+          productId: string;
+          rating: number;
+          comment?: string | null;
+          isHelpful?: number;
+          isApproved?: boolean;
+          createdAt?: string;
+          updatedAt?: string;
+          deletedAt?: string | null;
+        };
+        Update: {
+          id?: string;
+          userId?: string;
+          productId?: string;
+          rating?: number;
+          comment?: string | null;
+          isHelpful?: number;
+          isApproved?: boolean;
+          createdAt?: string;
+          updatedAt?: string;
+          deletedAt?: string | null;
+        };
+      };
     };
     Views: {
       [_ in never]: never;

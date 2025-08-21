@@ -3,13 +3,10 @@
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Separator } from "@/components/ui/separator";
 import { ChangePasswordModal } from "./change-password-modal";
-import { UpdateProfileModal } from "./update-profile-modal";
 import { ProfileInfoCard } from "./profile-info-card";
 import { ProfileStatsCard } from "./profile-stats-card";
-import { useUserProfile } from "@/hooks/use-user-profile";
 import { 
-  type ChangePasswordForm,
-  type UpdateProfileForm
+  type ChangePasswordForm
 } from "@/lib/validations/profile";
 import { toast } from "sonner";
 
@@ -32,7 +29,6 @@ export function ProfileSettings({
   user: initialUser, 
   stats
 }: ProfileSettingsProps) {
-  const { user, updateUserProfile, updateAvatar } = useUserProfile(initialUser);
 
   const handlePasswordChange = async (data: ChangePasswordForm) => {
     try {
@@ -65,18 +61,6 @@ export function ProfileSettings({
     }
   };
 
-  const handleProfileUpdate = async (data: UpdateProfileForm) => {
-    await updateUserProfile({
-      name: data.name,
-      email: data.email,
-      avatar: data.avatar,
-    });
-  };
-
-  const handleAvatarChange = async (avatarUrl: string | null) => {
-    await updateAvatar(avatarUrl);
-  };
-
   return (
     <Card className="border-0 shadow-lg">
       <CardHeader>
@@ -89,22 +73,20 @@ export function ProfileSettings({
         <div className="space-y-6">
           {/* Profile Information Grid */}
           <div className="grid md:grid-cols-2 gap-6">
-            <ProfileInfoCard user={user} />
+            <ProfileInfoCard user={initialUser} />
             <ProfileStatsCard stats={stats} />
           </div>
           
           <Separator />
           
-          {/* Action Buttons */}
-          <div className="flex gap-4 flex-wrap">
-            <ChangePasswordModal 
-              onPasswordChange={handlePasswordChange}
-            />
-            <UpdateProfileModal 
-              user={user}
-              onProfileUpdate={handleProfileUpdate}
-              onAvatarChange={handleAvatarChange}
-            />
+          {/* Security Settings */}
+          <div className="space-y-4">
+            <h4 className="font-medium text-lg">Bảo mật tài khoản</h4>
+            <div className="flex gap-4 flex-wrap">
+              <ChangePasswordModal 
+                onPasswordChange={handlePasswordChange}
+              />
+            </div>
           </div>
         </div>
       </CardContent>

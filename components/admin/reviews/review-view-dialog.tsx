@@ -1,20 +1,20 @@
 'use client';
 
-import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from '@/components/ui/dialog';
-import { Button } from '@/components/ui/button';
-import { Badge } from '@/components/ui/badge';
-import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
-import { Star, ThumbsUp } from 'lucide-react';
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+import { Badge } from "@/components/ui/badge";
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
+import { Separator } from "@/components/ui/separator";
+import { Star, ThumbsUp, Calendar, User, Package } from "lucide-react";
 
 interface Review {
   id: string;
   userName: string;
   userEmail: string;
-  userAvatar?: string;
+  userAvatar?: string | null;
   productTitle: string;
   productId: string;
   rating: number;
-  comment?: string;
+  comment?: string | null;
   isHelpful: number;
   isApproved: boolean;
   createdAt: string;
@@ -31,9 +31,9 @@ export function ReviewViewDialog({ open, onOpenChange, review }: ReviewViewDialo
   if (!review) return null;
 
   const formatDate = (dateString: string) => {
-    return new Date(dateString).toLocaleDateString('en-US', {
+    return new Date(dateString).toLocaleString('vi-VN', {
       year: 'numeric',
-      month: 'short',
+      month: 'long',
       day: 'numeric',
       hour: '2-digit',
       minute: '2-digit',
@@ -41,11 +41,11 @@ export function ReviewViewDialog({ open, onOpenChange, review }: ReviewViewDialo
   };
 
   const renderStars = (rating: number) => {
-    return Array.from({ length: 5 }, (_, i) => (
+    return Array.from({ length: 5 }).map((_, index) => (
       <Star
-        key={i}
-        className={`h-4 w-4 ${
-          i < rating ? 'fill-yellow-400 text-yellow-400' : 'text-stone-300'
+        key={index}
+        className={`h-5 w-5 ${
+          index < rating ? 'text-yellow-400 fill-current' : 'text-stone-300'
         }`}
       />
     ));
@@ -55,76 +55,99 @@ export function ReviewViewDialog({ open, onOpenChange, review }: ReviewViewDialo
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="max-w-2xl">
         <DialogHeader>
-          <DialogTitle>Review Details</DialogTitle>
-          <DialogDescription>
-            Detailed information about the review
-          </DialogDescription>
+          <DialogTitle className="flex items-center space-x-2">
+            <Package className="h-5 w-5" />
+            <span>Chi tiết đánh giá</span>
+          </DialogTitle>
         </DialogHeader>
-        <div className="space-y-4">
-          <div className="flex items-center space-x-3">
-            <Avatar className="w-12 h-12">
-              <AvatarImage src={review.userAvatar} alt={review.userName} />
-              <AvatarFallback className="bg-stone-100 text-stone-600">
+
+        <div className="space-y-6">
+          {/* User Info */}
+          <div className="flex items-center space-x-4">
+            <Avatar className="w-16 h-16">
+              <AvatarImage src={review.userAvatar || undefined} alt={review.userName} />
+              <AvatarFallback className="bg-stone-100 text-stone-600 text-lg">
                 {review.userName.charAt(0).toUpperCase()}
               </AvatarFallback>
             </Avatar>
             <div>
-              <p className="font-medium text-foreground">{review.userName}</p>
+              <h3 className="text-lg font-semibold text-foreground">{review.userName}</h3>
               <p className="text-sm text-muted-foreground">{review.userEmail}</p>
+              <Badge 
+                variant={review.isApproved ? 'default' : 'secondary'}
+                className={review.isApproved ? 'bg-green-100 text-green-800' : 'bg-stone-100 text-stone-600'}
+              >
+                {review.isApproved ? 'Đã duyệt' : 'Chờ duyệt'}
+              </Badge>
             </div>
           </div>
 
-          <div className="grid grid-cols-2 gap-4">
-            <div>
-              <label className="text-sm font-medium text-muted-foreground">Product</label>
-              <p className="text-foreground font-medium mt-1">{review.productTitle}</p>
+          <Separator />
+
+          {/* Product Info */}
+          <div className="space-y-2">
+            <div className="flex items-center space-x-2">
+              <Package className="h-4 w-4 text-muted-foreground" />
+              <span className="text-sm font-medium text-muted-foreground">Sản phẩm</span>
             </div>
-            <div>
-              <label className="text-sm font-medium text-muted-foreground">Rating</label>
-              <div className="flex items-center space-x-1 mt-1">
+            <p className="text-lg font-medium text-foreground">{review.productTitle}</p>
+          </div>
+
+          <Separator />
+
+          {/* Rating */}
+          <div className="space-y-2">
+            <div className="flex items-center space-x-2">
+              <Star className="h-4 w-4 text-muted-foreground" />
+              <span className="text-sm font-medium text-muted-foreground">Đánh giá</span>
+            </div>
+            <div className="flex items-center space-x-3">
+              <div className="flex items-center space-x-1">
                 {renderStars(review.rating)}
-                <span className="text-sm text-muted-foreground ml-2">({review.rating}/5)</span>
               </div>
-            </div>
-            <div className="col-span-2">
-              <label className="text-sm font-medium text-muted-foreground">Comment</label>
-              <div className="bg-muted p-3 rounded mt-1">
-                <p className="text-foreground whitespace-pre-wrap">
-                  {review.comment || 'No comment provided'}
-                </p>
-              </div>
-            </div>
-            <div>
-              <label className="text-sm font-medium text-muted-foreground">Helpful Votes</label>
-              <div className="flex items-center space-x-1 mt-1">
-                <ThumbsUp className="h-4 w-4 text-stone-600" />
-                <span className="font-medium">{review.isHelpful}</span>
-              </div>
-            </div>
-            <div>
-              <label className="text-sm font-medium text-muted-foreground">Status</label>
-              <Badge 
-                variant={review.isApproved ? 'default' : 'secondary'}
-                className={review.isApproved ? 'bg-green-100 text-green-800 mt-1' : 'bg-stone-100 text-stone-600 mt-1'}
-              >
-                {review.isApproved ? 'Approved' : 'Pending'}
-              </Badge>
-            </div>
-            <div>
-              <label className="text-sm font-medium text-muted-foreground">Created</label>
-              <p className="text-foreground mt-1">{formatDate(review.createdAt)}</p>
-            </div>
-            <div>
-              <label className="text-sm font-medium text-muted-foreground">Updated</label>
-              <p className="text-foreground mt-1">{formatDate(review.updatedAt)}</p>
+              <span className="text-2xl font-bold text-foreground">{review.rating}/5</span>
             </div>
           </div>
+
+          <Separator />
+
+          {/* Comment */}
+          <div className="space-y-2">
+            <div className="flex items-center space-x-2">
+              <User className="h-4 w-4 text-muted-foreground" />
+              <span className="text-sm font-medium text-muted-foreground">Nhận xét</span>
+            </div>
+            <div className="bg-stone-50 rounded-lg p-4">
+              <p className="text-foreground leading-relaxed">
+                {review.comment || 'Không có nhận xét'}
+              </p>
+            </div>
+          </div>
+
+          <Separator />
+
+          {/* Helpful Stats */}
+          <div className="flex items-center justify-between">
+            <div className="flex items-center space-x-2">
+              <ThumbsUp className="h-4 w-4 text-muted-foreground" />
+              <span className="text-sm text-muted-foreground">
+                {review.isHelpful} người thấy hữu ích
+              </span>
+            </div>
+            
+            <div className="flex items-center space-x-2 text-sm text-muted-foreground">
+              <Calendar className="h-4 w-4" />
+              <span>Tạo lúc: {formatDate(review.createdAt)}</span>
+            </div>
+          </div>
+
+          {review.updatedAt !== review.createdAt && (
+            <div className="text-sm text-muted-foreground">
+              <Calendar className="h-4 w-4 inline mr-2" />
+              Cập nhật lúc: {formatDate(review.updatedAt)}
+            </div>
+          )}
         </div>
-        <DialogFooter>
-          <Button variant="outline" onClick={() => onOpenChange(false)}>
-            Close
-          </Button>
-        </DialogFooter>
       </DialogContent>
     </Dialog>
   );

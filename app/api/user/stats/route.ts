@@ -16,8 +16,8 @@ export async function GET() {
 
     const userId = session.user.id;
 
-    // Fetch user stats từ database
-    const [ordersResult, wishlistResult, reviewsResult] = await Promise.all([
+    // Fetch user stats từ database - including 5 focused tasks
+    const [ordersResult, wishlistResult, reviewsResult, cartResult, shareResult, gitCodeUsageResult] = await Promise.all([
       // Total orders và spending
       supabaseServiceRole
         .from('Order')
@@ -34,14 +34,36 @@ export async function GET() {
       supabaseServiceRole
         .from('Review')
         .select('rating')
+        .eq('userId', userId),
+
+      // Cart items count
+      supabaseServiceRole
+        .from('Cart')
+        .select('id')
+        .eq('userId', userId),
+
+      // Product shares count
+      supabaseServiceRole
+        .from('ProductShare')
+        .select('id')
+        .eq('userId', userId),
+
+      // GitCode usage count
+      supabaseServiceRole
+        .from('GitCodeUsage')
+        .select('id')
         .eq('userId', userId)
     ]);
 
-    if (ordersResult.error || wishlistResult.error || reviewsResult.error) {
+    if (ordersResult.error || wishlistResult.error || reviewsResult.error || 
+        cartResult.error || shareResult.error || gitCodeUsageResult.error) {
       console.error('Error fetching stats:', {
         orders: ordersResult.error,
         wishlist: wishlistResult.error,
-        reviews: reviewsResult.error
+        reviews: reviewsResult.error,
+        cart: cartResult.error,
+        share: shareResult.error,
+        gitCodeUsage: gitCodeUsageResult.error
       });
       return NextResponse.json(
         { success: false, error: 'Failed to fetch stats' },
@@ -52,6 +74,9 @@ export async function GET() {
     const orders = ordersResult.data || [];
     const wishlist = wishlistResult.data || [];
     const reviews = reviewsResult.data || [];
+    const cartItems = cartResult.data || [];
+    const productShares = shareResult.data || [];
+    const gitCodeUsages = gitCodeUsageResult.data || [];
 
     // Calculate stats
     const totalOrders = orders.length;
@@ -77,7 +102,11 @@ export async function GET() {
       wishlist: wishlistCount,
       reviews: reviewsCount,
       averageRating: Math.round(averageRating * 10) / 10,
-      memberSince: userData?.createdAt || new Date().toISOString()
+      memberSince: userData?.createdAt || new Date().toISOString(),
+      // Add new task-related stats
+      cartItems: cartItems.length,
+      productShares: productShares.length,
+      gitCodeUsages: gitCodeUsages.length
     };
 
     return NextResponse.json({

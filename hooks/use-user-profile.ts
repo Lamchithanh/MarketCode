@@ -90,8 +90,10 @@ export function useUserProfile(initialUser: UserProfile) {
 
   const updateAvatar = useCallback(async (avatarUrl: string | null) => {
     try {
-      // Update profile with new avatar URL
+      // Update profile with new avatar URL - include current name and email
       await updateUserProfile({
+        name: user.name || '',
+        email: user.email || '', 
         avatar: avatarUrl || undefined
       });
       
@@ -106,7 +108,7 @@ export function useUserProfile(initialUser: UserProfile) {
       toast.error('Có lỗi xảy ra khi cập nhật ảnh đại diện');
       throw error;
     }
-  }, [updateUserProfile, refreshUserProfile]);
+  }, [updateUserProfile, refreshUserProfile, user.email, user.name]);
 
   return {
     user,

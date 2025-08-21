@@ -18,8 +18,10 @@ import {
   ShoppingCart,
   Eye,
   Calendar,
-  Check
+  Check,
+  Share2
 } from "lucide-react";
+import { SimpleShareMenu } from "@/components/ui/simple-share-menu";
 
 interface ProductInfoProps {
   product: {
@@ -75,7 +77,7 @@ export function ProductInfo({ product }: ProductInfoProps) {
 
   const handlePreview = () => {
     // TODO: Implement preview logic
-    console.log("Preview:", product.id);
+    toast.info("Chức năng xem trước đang được phát triển");
   };
 
   return (
@@ -205,12 +207,13 @@ export function ProductInfo({ product }: ProductInfoProps) {
           size="lg"
         />
         
-        <div className="grid grid-cols-2 gap-3">
+        <div className="grid grid-cols-3 gap-3">
           <Button 
             variant={isInCart ? "default" : "outline"}
             size="lg"
             onClick={handleAddToCart}
             disabled={isInCart}
+            className="col-span-2"
           >
             {isInCart ? (
               <>
@@ -225,15 +228,29 @@ export function ProductInfo({ product }: ProductInfoProps) {
             )}
           </Button>
           
-          <Button 
-            variant="outline" 
-            size="lg"
-            onClick={handlePreview}
+          <SimpleShareMenu 
+            productId={product.id} 
+            productTitle={product.title}
           >
-            <Eye className="h-4 w-4 mr-2" />
-            Xem Trước
-          </Button>
+            <Button 
+              variant="outline" 
+              size="lg"
+              className="w-full"
+            >
+              <Share2 className="h-4 w-4" />
+            </Button>
+          </SimpleShareMenu>
         </div>
+        
+        <Button 
+          variant="outline" 
+          size="lg"
+          onClick={handlePreview}
+          className="w-full"
+        >
+          <Eye className="h-4 w-4 mr-2" />
+          Xem Trước
+        </Button>
       </div>
 
       {/* Features */}

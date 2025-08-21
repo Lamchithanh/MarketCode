@@ -21,20 +21,24 @@ import {
   CreditCard,
   Download,
   Heart,
+  Code,
 } from "lucide-react";
 import Link from "next/link";
 import { LogoutConfirmationModal } from "@/components/ui/confirmation-modal";
 import { toast, toastMessages } from "@/components/ui/toast";
+import { useUser } from "@/hooks/use-user";
 
 export function UserNav() {
   const { data: session } = useSession();
+  const { user: liveUser } = useUser();
   const [showLogoutModal, setShowLogoutModal] = useState(false);
 
   if (!session?.user) {
     return null;
   }
 
-  const user = session.user;
+  // Use live user data if available, fallback to session
+  const user = liveUser || session.user;
   const isAdmin = user.role === "ADMIN";
 
   const handleSignOut = async () => {
@@ -100,6 +104,12 @@ export function UserNav() {
               </Link>
             </DropdownMenuItem>
             <DropdownMenuItem asChild>
+              <Link href="/profile?tab=gitcode">
+                <Code className="mr-2 h-4 w-4" />
+                <span>GitCode</span>
+              </Link>
+            </DropdownMenuItem>
+            <DropdownMenuItem asChild>
               <Link href="/profile?tab=wishlist">
                 <Heart className="mr-2 h-4 w-4" />
                 <span>Yêu thích</span>
@@ -133,7 +143,7 @@ export function UserNav() {
         </DropdownMenuContent>
       </DropdownMenu>
 
-      {/* Logout Confirmation Modal */}
+        {/* Logout Confirmation Modal */}
       <LogoutConfirmationModal
         open={showLogoutModal}
         onOpenChange={setShowLogoutModal}

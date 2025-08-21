@@ -1,7 +1,7 @@
 "use client";
 
-import { useState, useEffect } from "react";
-import { useSearchParams } from "next/navigation";
+import { useState, useEffect, useCallback } from "react";
+import { useSearchParams, useRouter } from "next/navigation";
 import { Header } from "@/components/landing/header";
 import { Footer } from "@/components/landing/footer";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
@@ -28,8 +28,9 @@ interface ProfileClientProps {
 
 export function ProfileClient({ user: initialUser }: ProfileClientProps) {
   const searchParams = useSearchParams();
+  const router = useRouter();
   const defaultTab = searchParams.get('tab') || 'overview';
-  const { user } = useUser();
+  const { user, refreshUser } = useUser();
   
   // Use live user data if available, fallback to initial props
   const profileUser = user || initialUser;
@@ -47,46 +48,60 @@ export function ProfileClient({ user: initialUser }: ProfileClientProps) {
   const [recentOrders, setRecentOrders] = useState([]);
   const [loading, setLoading] = useState(true);
   
-  useEffect(() => {
-    const fetchProfileData = async () => {
-      if (!user?.id) {
-        setLoading(false);
-        return;
+  const fetchProfileData = useCallback(async () => {
+    if (!user?.id) {
+      setLoading(false);
+      return;
+    }
+    
+    try {
+      setLoading(true);
+      
+      // Fetch user stats
+      const [statsResponse, ordersResponse] = await Promise.all([
+        fetch('/api/user/stats'),
+        fetch('/api/orders')
+      ]);
+      
+      if (statsResponse.ok) {
+        const statsResult = await statsResponse.json();
+        if (statsResult.success) {
+          setStats(statsResult.data);
+        }
       }
       
-      try {
-        setLoading(true);
-        
-        // Fetch user stats
-        const [statsResponse, ordersResponse] = await Promise.all([
-          fetch('/api/user/stats'),
-          fetch('/api/orders')
-        ]);
-        
-        if (statsResponse.ok) {
-          const statsResult = await statsResponse.json();
-          if (statsResult.success) {
-            setStats(statsResult.data);
-          }
+      if (ordersResponse.ok) {
+        const ordersResult = await ordersResponse.json();
+        if (ordersResult.success) {
+          // Get only recent orders (last 3)
+          const recent = ordersResult.data.slice(0, 3);
+          setRecentOrders(recent);
         }
-        
-        if (ordersResponse.ok) {
-          const ordersResult = await ordersResponse.json();
-          if (ordersResult.success) {
-            // Get only recent orders (last 3)
-            const recent = ordersResult.data.slice(0, 3);
-            setRecentOrders(recent);
-          }
-        }
-      } catch (error) {
-        console.error('Failed to fetch profile data:', error);
-      } finally {
-        setLoading(false);
       }
-    };
-    
-    fetchProfileData();
+    } catch (error) {
+      console.error('Failed to fetch profile data:', error);
+    } finally {
+      setLoading(false);
+    }
   }, [user?.id]);
+
+  const handleProfileUpdate = async () => {
+    try {
+      // Refresh user data and stats after profile update
+      await refreshUser();
+      await fetchProfileData();
+      
+      // Force refresh the entire page to update NextAuth session
+      // This will update the header and all components that use session
+      router.refresh();
+    } catch (error) {
+      console.error('Error refreshing profile data:', error);
+    }
+  };
+  
+  useEffect(() => {
+    fetchProfileData();
+  }, [user?.id, fetchProfileData]);
 
   if (loading) {
     return (
@@ -115,7 +130,11 @@ export function ProfileClient({ user: initialUser }: ProfileClientProps) {
       <main className="py-8">
         <div className="container">
           <div className="max-w-6xl mx-auto">
-            <ProfileHeader user={profileUser} stats={stats} />
+            <ProfileHeader 
+              user={profileUser} 
+              stats={stats}
+              onUpdateProfile={handleProfileUpdate}
+            />
             <ProfileStats stats={stats} />
 
             <Tabs defaultValue={defaultTab} className="space-y-6">
@@ -132,6 +151,7 @@ export function ProfileClient({ user: initialUser }: ProfileClientProps) {
                 <ProfileOverview 
                   recentOrders={recentOrders}
                   stats={stats}
+                  user={profileUser}
                 />
               </TabsContent>
 

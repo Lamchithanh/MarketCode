@@ -3,7 +3,7 @@
 import { useState } from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
-import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
+import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
@@ -25,15 +25,22 @@ interface UpdateProfileModalProps {
   onProfileUpdate?: (data: UpdateProfileForm) => Promise<void>;
   onAvatarChange?: (avatarUrl: string | null) => Promise<void>;
   disabled?: boolean;
+  open?: boolean;
+  onOpenChange?: (open: boolean) => void;
 }
 
 export function UpdateProfileModal({ 
   user, 
   onProfileUpdate, 
   onAvatarChange, 
-  disabled = false 
+  open: controlledOpen,
+  onOpenChange
 }: UpdateProfileModalProps) {
-  const [open, setOpen] = useState(false);
+  const [internalOpen, setInternalOpen] = useState(false);
+  
+  // Use controlled state if provided, otherwise use internal state
+  const open = controlledOpen !== undefined ? controlledOpen : internalOpen;
+  const setOpen = onOpenChange || setInternalOpen;
 
   const form = useForm<UpdateProfileForm>({
     resolver: zodResolver(updateProfileSchema),
@@ -69,12 +76,6 @@ export function UpdateProfileModal({
 
   return (
     <Dialog open={open} onOpenChange={setOpen}>
-      <DialogTrigger asChild>
-        <Button variant="outline" disabled={disabled}>
-          <Settings className="h-4 w-4 mr-2" />
-          Cập nhật thông tin
-        </Button>
-      </DialogTrigger>
       <DialogContent className="sm:max-w-[500px] max-h-[90vh] overflow-y-auto">
         <DialogHeader>
           <DialogTitle className="flex items-center gap-2">

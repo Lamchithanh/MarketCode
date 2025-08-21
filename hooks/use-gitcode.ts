@@ -1,7 +1,4 @@
-'use client';
-
-import { useState, useEffect, useCallback } from 'react';
-import { toast } from 'sonner';
+import { useState, useCallback, useEffect } from 'react';
 
 export interface GitCodeItem {
   id: string;
@@ -9,14 +6,14 @@ export interface GitCodeItem {
   repo_url: string;
   description: string;
   expire_date: string | null;
-  usage_limit: number | null;
+  usage_limit: number;
   times_used: number;
   is_active: boolean;
   created_at: string;
   updated_at: string;
 }
 
-export interface GitCodeUsageResult {
+interface GitCodeRedeemResult {
   success: boolean;
   message: string;
   data?: {
@@ -26,153 +23,181 @@ export interface GitCodeUsageResult {
   };
 }
 
-// Hook for admin management of gift codes
-export function useGitCodes() {
+interface UseGitCodeRedeemerReturn {
+  redeemGitCode: (code: string) => Promise<GitCodeRedeemResult>;
+  loading: boolean;
+}
+
+interface UseGitCodesReturn {
+  gitCodes: GitCodeItem[];
+  loading: boolean;
+  error: string | null;
+  createGitCode: (gitCode: Omit<GitCodeItem, 'id' | 'created_at' | 'updated_at' | 'times_used'>) => Promise<boolean>;
+  updateGitCode: (id: string, updates: Partial<GitCodeItem>) => Promise<boolean>;
+  deleteGitCode: (id: string) => Promise<boolean>;
+  fetchGitCodes: () => Promise<void>;
+}
+
+export function useGitCodes(): UseGitCodesReturn {
   const [gitCodes, setGitCodes] = useState<GitCodeItem[]>([]);
-  const [loading, setLoading] = useState(true);
+  const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
   const fetchGitCodes = useCallback(async () => {
+    setLoading(true);
+    setError(null);
+    
     try {
-      setLoading(true);
-      setError(null);
-
-      const response = await fetch('/api/gitcode?admin=true');
+      const response = await fetch('/api/admin/gitcode');
       if (!response.ok) {
-        throw new Error('Failed to fetch git codes');
+        throw new Error(`HTTP ${response.status}: ${response.statusText}`);
       }
-
+      
       const result = await response.json();
-      setGitCodes(result.data || []);
+      if (result.success) {
+        setGitCodes(result.data || []);
+      } else {
+        setError(result.error || 'Failed to fetch GitCodes');
+      }
     } catch (err) {
-      console.error('Error fetching git codes:', err);
-      setError(err instanceof Error ? err.message : 'Failed to fetch git codes');
+      console.error('Error fetching GitCodes:', err);
+      setError('Đã xảy ra lỗi khi tải danh sách GitCode');
     } finally {
       setLoading(false);
     }
   }, []);
 
-  useEffect(() => {
-    fetchGitCodes();
-  }, [fetchGitCodes]);
-
-  const createGitCode = useCallback(async (data: {
-    code: string;
-    repo_url: string;
-    description: string;
-    expire_date?: string;
-    usage_limit?: number;
-  }) => {
+  const createGitCode = useCallback(async (gitCode: Omit<GitCodeItem, 'id' | 'created_at' | 'updated_at' | 'times_used'>): Promise<boolean> => {
     try {
-      const response = await fetch('/api/gitcode', {
+      const response = await fetch('/api/admin/gitcode', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(data),
+        body: JSON.stringify(gitCode),
       });
 
       const result = await response.json();
-
-      if (!response.ok) {
-        throw new Error(result.error || 'Failed to create git code');
+      if (result.success) {
+        await fetchGitCodes();
+        return true;
+      } else {
+        setError(result.error || 'Failed to create GitCode');
+        return false;
       }
-
-      toast.success('Mã GitCode đã được tạo thành công!');
-      fetchGitCodes(); // Refresh list
-      return { success: true, data: result.data };
     } catch (err) {
-      const message = err instanceof Error ? err.message : 'Failed to create git code';
-      toast.error(message);
-      return { success: false, error: message };
+      console.error('Error creating GitCode:', err);
+      setError('Đã xảy ra lỗi khi tạo GitCode');
+      return false;
     }
   }, [fetchGitCodes]);
 
-  const updateGitCode = useCallback(async (id: string, data: Partial<GitCodeItem>) => {
+  const updateGitCode = useCallback(async (id: string, updates: Partial<GitCodeItem>): Promise<boolean> => {
     try {
-      const response = await fetch(`/api/gitcode`, {
+      const response = await fetch(`/api/admin/gitcode/${id}`, {
         method: 'PUT',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ id, ...data }),
+        body: JSON.stringify(updates),
       });
 
       const result = await response.json();
-
-      if (!response.ok) {
-        throw new Error(result.error || 'Failed to update git code');
+      if (result.success) {
+        await fetchGitCodes();
+        return true;
+      } else {
+        setError(result.error || 'Failed to update GitCode');
+        return false;
       }
-
-      toast.success('Mã GitCode đã được cập nhật thành công!');
-      fetchGitCodes(); // Refresh list
-      return { success: true, data: result.data };
     } catch (err) {
-      const message = err instanceof Error ? err.message : 'Failed to update git code';
-      toast.error(message);
-      return { success: false, error: message };
+      console.error('Error updating GitCode:', err);
+      setError('Đã xảy ra lỗi khi cập nhật GitCode');
+      return false;
     }
   }, [fetchGitCodes]);
 
-  const deleteGitCode = useCallback(async (id: string) => {
+  const deleteGitCode = useCallback(async (id: string): Promise<boolean> => {
     try {
-      const response = await fetch('/api/gitcode', {
+      const response = await fetch(`/api/admin/gitcode/${id}`, {
         method: 'DELETE',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ id }),
       });
 
       const result = await response.json();
-
-      if (!response.ok) {
-        throw new Error(result.error || 'Failed to delete git code');
+      if (result.success) {
+        await fetchGitCodes();
+        return true;
+      } else {
+        setError(result.error || 'Failed to delete GitCode');
+        return false;
       }
-
-      toast.success('Mã GitCode đã được xóa thành công!');
-      fetchGitCodes(); // Refresh list
-      return { success: true };
     } catch (err) {
-      const message = err instanceof Error ? err.message : 'Failed to delete git code';
-      toast.error(message);
-      return { success: false, error: message };
+      console.error('Error deleting GitCode:', err);
+      setError('Đã xảy ra lỗi khi xóa GitCode');
+      return false;
     }
+  }, [fetchGitCodes]);
+
+  useEffect(() => {
+    fetchGitCodes();
   }, [fetchGitCodes]);
 
   return {
     gitCodes,
     loading,
     error,
-    fetchGitCodes,
     createGitCode,
     updateGitCode,
-    deleteGitCode
+    deleteGitCode,
+    fetchGitCodes,
   };
 }
 
-// Hook for users to redeem gift codes
-export function useGitCodeRedeemer() {
+export function useGitCodeRedeemer(): UseGitCodeRedeemerReturn {
   const [loading, setLoading] = useState(false);
 
-  const redeemGitCode = useCallback(async (code: string): Promise<GitCodeUsageResult> => {
-    try {
-      setLoading(true);
+  const redeemGitCode = useCallback(async (code: string): Promise<GitCodeRedeemResult> => {
+    if (!code.trim()) {
+      return {
+        success: false,
+        message: 'Vui lòng nhập mã GitCode'
+      };
+    }
 
-      const response = await fetch(`/api/gitcode?code=${encodeURIComponent(code)}`);
+    setLoading(true);
+
+    try {
+      const response = await fetch('/api/gitcode/redeem', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ code: code.trim() }),
+      });
+
       const result = await response.json();
 
       if (!response.ok) {
-        return { success: false, message: result.error || 'Mã không hợp lệ' };
+        return {
+          success: false,
+          message: result.error || `HTTP ${response.status}: Không thể xử lý yêu cầu`
+        };
       }
 
-      return {
-        success: true,
-        message: 'Sử dụng mã thành công!',
-        data: {
-          code: result.data.code,
-          repo_url: result.data.repo_url,
-          description: result.data.description
-        }
-      };
-    } catch (err) {
+      if (result.success) {
+        return {
+          success: true,
+          message: result.message || 'Đã sử dụng GitCode thành công!',
+          data: result.data
+        };
+      } else {
+        return {
+          success: false,
+          message: result.error || 'Mã GitCode không hợp lệ'
+        };
+      }
+
+    } catch (error) {
+      console.error('GitCode redeem error:', error);
       return {
         success: false,
-        message: err instanceof Error ? err.message : 'Có lỗi xảy ra khi sử dụng mã'
+        message: 'Đã xảy ra lỗi khi xử lý GitCode. Vui lòng thử lại!'
       };
     } finally {
       setLoading(false);

@@ -3,12 +3,12 @@
 import { useState, useEffect } from "react";
 import Link from "next/link";
 import { Button } from "@/components/ui/button";
-import { Menu, X, Code, ShoppingCart, User, ArrowUp } from "lucide-react";
+import { Menu, X, Code, ShoppingCart, User } from "lucide-react";
 import { NavItem } from "@/types";
 import { useSession } from "next-auth/react";
 import { UserNav } from "@/components/ui/user-nav";
-import { useIsClient } from "@/hooks/use-hydration";
-import { useScrollProgress } from "@/hooks/use-scroll-progress";
+
+import { useUser } from "@/hooks/use-user";
 import { cn } from "@/lib/utils";
 import { AuthNoSSR } from "@/components/ui/no-ssr";
 
@@ -23,9 +23,11 @@ const navItems: NavItem[] = [
 export function Header() {
   const [isOpen, setIsOpen] = useState(false);
   const [scrollY, setScrollY] = useState(0);
-  const isClient = useIsClient();
-  const { data: session, status } = useSession();
-  const { isVisible, scrollProgress, scrollToTop } = useScrollProgress({ threshold: 100 });
+  const { data: session } = useSession();
+  const { user: liveUser } = useUser();
+  
+  // Use live user data if available, fallback to session
+  const displayUser = liveUser || session?.user;
 
   useEffect(() => {
     const handleScroll = () => {
@@ -148,7 +150,7 @@ export function Header() {
                 {session ? (
                   <div className="flex items-center space-x-3 px-4 py-3">
                     <UserNav />
-                    <span className="font-medium">{session.user?.name}</span>
+                    <span className="font-medium">{displayUser?.name}</span>
                   </div>
                 ) : (
                   <>

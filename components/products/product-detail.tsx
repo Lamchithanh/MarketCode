@@ -10,15 +10,14 @@ import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import { Separator } from "@/components/ui/separator";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { ImageLightbox } from "@/components/ui/image-lightbox";
+import { SimpleShareMenu } from "@/components/ui/simple-share-menu";
 import { 
   Star, 
   ShoppingCart, 
-  Download, 
   Eye, 
   Heart, 
   Share2,
   Check,
-  Code,
   Database,
   Shield,
   HelpCircle,
@@ -53,7 +52,7 @@ const renderStars = (rating: number) => {
 };
 
 // Mock data for detailed product info
-const getProductDetails = (id: string) => {
+const getProductDetails = () => {
   const baseDetails = {
     features: [
       "Source code đầy đủ và có thể chỉnh sửa",
@@ -122,7 +121,7 @@ export function ProductDetail({ product }: ProductDetailProps) {
   const [selectedTab, setSelectedTab] = useState("overview");
   const [isWishlisted, setIsWishlisted] = useState(false);
   const [lightboxImage, setLightboxImage] = useState<number | null>(null);
-  const details = getProductDetails(product.id);
+  const details = getProductDetails();
 
   // Generate gallery images
   const galleryImages = product.images && product.images.length > 0 
@@ -229,9 +228,14 @@ export function ProductDetail({ product }: ProductDetailProps) {
                       isWishlisted ? "fill-red-500 text-red-500" : ""
                     )} />
                   </Button>
-                  <Button variant="ghost" size="icon">
-                    <Share2 className="h-4 w-4" />
-                  </Button>
+                  <SimpleShareMenu 
+                    productId={product.id} 
+                    productTitle={product.title}
+                  >
+                    <Button variant="ghost" size="icon" title="Chia sẻ sản phẩm">
+                      <Share2 className="h-4 w-4" />
+                    </Button>
+                  </SimpleShareMenu>
                 </div>
               </div>
               
@@ -276,10 +280,21 @@ export function ProductDetail({ product }: ProductDetailProps) {
                     Mua ngay
                   </Link>
                 </Button>
-                <Button variant="outline" size="lg" className="w-full">
-                  <Eye className="h-4 w-4 mr-2" />
-                  Xem trước
-                </Button>
+                <div className="grid grid-cols-2 gap-2">
+                  <Button variant="outline" size="lg" className="w-full">
+                    <Eye className="h-4 w-4 mr-2" />
+                    Xem trước
+                  </Button>
+                  <SimpleShareMenu 
+                    productId={product.id} 
+                    productTitle={product.title}
+                  >
+                    <Button variant="outline" size="lg" className="w-full">
+                      <Share2 className="h-4 w-4 mr-2" />
+                      Chia sẻ
+                    </Button>
+                  </SimpleShareMenu>
+                </div>
               </div>
 
               <Separator className="my-6" />
@@ -383,22 +398,43 @@ export function ProductDetail({ product }: ProductDetailProps) {
                 </CardHeader>
                 <CardContent>
                   <ul className="space-y-3">
+                    {/* Always show features - use database features if available, otherwise use mock data */}
                     {(product.features && product.features.length > 0 
                       ? product.features 
-                      : details.features.map(f => ({ title: f, description: "" }))
+                      : details.features.map(f => ({ title: f, description: "Tính năng chất lượng cao được tích hợp trong sản phẩm" }))
                     ).map((feature, index) => (
                       <li key={index} className="flex items-start space-x-3">
                         <Check className="h-5 w-5 text-green-500 mt-0.5 flex-shrink-0" />
                         <div>
-                          <div className="font-medium">{typeof feature === 'string' ? feature : feature.title}</div>
+                          <div className="font-medium">
+                            {typeof feature === 'string' ? feature : feature.title}
+                          </div>
                           {typeof feature === 'object' && feature.description && (
                             <div className="text-sm text-muted-foreground mt-1">
                               {feature.description}
                             </div>
                           )}
+                          {typeof feature === 'string' && (
+                            <div className="text-sm text-muted-foreground mt-1">
+                              Tính năng chất lượng cao được tích hợp trong sản phẩm
+                            </div>
+                          )}
                         </div>
                       </li>
                     ))}
+                    
+                    {/* Fallback features if nothing shows */}
+                    {(!product.features || product.features.length === 0) && details.features.length === 0 && (
+                      <li className="flex items-start space-x-3">
+                        <Check className="h-5 w-5 text-green-500 mt-0.5 flex-shrink-0" />
+                        <div>
+                          <div className="font-medium">Source code chất lượng cao</div>
+                          <div className="text-sm text-muted-foreground mt-1">
+                            Mã nguồn được xây dựng theo tiêu chuẩn cao với documentation đầy đủ
+                          </div>
+                        </div>
+                      </li>
+                    )}
                   </ul>
                 </CardContent>
               </Card>
