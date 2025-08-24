@@ -35,7 +35,7 @@ export function ProductGallery({ product }: ProductGalleryProps) {
       console.log("Image error occurred, using fallback:", "/Images/do.jpg");
       return "/Images/do.jpg"; // Local fallback
     }
-    const src = product.thumbnailUrl || product.image || "/Images/do.jpg";
+    const src = product.thumbnailUrl || "/Images/do.jpg";
     console.log("Image source:", src);
     return src;
   };

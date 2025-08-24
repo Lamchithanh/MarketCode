@@ -3,8 +3,8 @@
 import { useState, useEffect } from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { Home, ShoppingCart, User, Package, FileText, Mail, ChevronUp, Code, Settings, Heart, LogOut } from "lucide-react";
-import { Button } from "@/components/ui/button";
+import { Home, ShoppingCart, User, Package, FileText, Mail, ChevronUp, Code, Settings, Heart, LogOut, Download, Shield, CreditCard } from "lucide-react";
+
 import { Badge } from "@/components/ui/badge";
 import { cn } from "@/lib/utils";
 import { useSession, signOut } from "next-auth/react";
@@ -90,18 +90,26 @@ export const FloatingMenu = ({ className }: FloatingMenuProps) => {
     { name: "Contact", path: "/contact", icon: Mail, label: "Liên hệ" },
   ];
 
-  // User dropdown menu items
+  // User dropdown menu items - giống với user-nav
   const userMenuItems = [
-    { name: "Tổng quan", path: "/profile?tab=overview", icon: User },
-    { name: "Đơn hàng", path: "/profile?tab=orders", icon: ShoppingCart },
+    { name: "Hồ sơ", path: "/profile?tab=overview", icon: User },
+    { name: "Đơn hàng", path: "/profile?tab=orders", icon: CreditCard },
+    { name: "Tải xuống", path: "/profile?tab=downloads", icon: Download },
+    { name: "GitCode", path: "/profile?tab=gitcode", icon: Code },
     { name: "Yêu thích", path: "/profile?tab=wishlist", icon: Heart },
     { name: "Cài đặt", path: "/profile?tab=settings", icon: Settings },
   ];
 
+  // Admin menu items
+  const isAdmin = session?.user?.role === "ADMIN";
+  const adminMenuItems = isAdmin ? [
+    { name: "Quản trị", path: "/admin/dashboard", icon: Shield },
+  ] : [];
+
   const isActive = (path: string) => pathname === path;
 
   // Handle navigation
-  const handleNavigation = (path: string) => {
+  const handleNavigation = () => {
     // Close tooltip when navigating
     setShowTooltip(null);
     setShowUserDropdown(false);
@@ -145,7 +153,7 @@ export const FloatingMenu = ({ className }: FloatingMenuProps) => {
 
   return (
     <div className={cn(
-      "fixed left-4 top-1/2 -translate-y-1/2 z-[100] transition-all duration-700 ease-out",
+      "fixed left-4 top-20 z-[100] transition-all duration-700 ease-out",
       // Responsive: hide on very small screens
       "hidden sm:block",
       // Animation states
@@ -175,7 +183,7 @@ export const FloatingMenu = ({ className }: FloatingMenuProps) => {
       )}>
         {/* Logo Icon */}
         <div className="flex items-center justify-center mb-1.5 pb-1.5 border-b border-border/40">
-          <Link href="/" onClick={() => handleNavigation("/")} className="block">
+          <Link href="/" onClick={handleNavigation} className="block">
             <button className={cn(
               "w-9 h-9 bg-primary rounded-xl flex items-center justify-center text-primary-foreground font-bold text-xs",
               "hover:scale-110 active:scale-95 transition-all duration-200",
@@ -191,7 +199,7 @@ export const FloatingMenu = ({ className }: FloatingMenuProps) => {
           const IconComponent = item.icon;
           return (
             <div key={item.path} className="relative group">
-              <Link href={item.path} onClick={() => handleNavigation(item.path)} className="block">
+              <Link href={item.path} onClick={handleNavigation} className="block">
                 <button
                   onMouseEnter={() => setShowTooltip(item.path)}
                   className={cn(
@@ -261,13 +269,14 @@ export const FloatingMenu = ({ className }: FloatingMenuProps) => {
                   <p className="text-xs text-muted-foreground">{session.user.email}</p>
                 </div>
                 <div className="p-1">
+                  {/* User Menu Items */}
                   {userMenuItems.map((item) => {
                     const IconComponent = item.icon;
                     return (
                       <Link
                         key={item.path}
                         href={item.path}
-                        onClick={() => handleNavigation(item.path)}
+                        onClick={handleNavigation}
                         className={cn(
                           "flex items-center gap-3 px-3 py-2 text-sm rounded-md transition-colors",
                           "hover:bg-accent hover:text-accent-foreground"
@@ -278,6 +287,33 @@ export const FloatingMenu = ({ className }: FloatingMenuProps) => {
                       </Link>
                     );
                   })}
+                  
+                  {/* Admin Menu Items */}
+                  {adminMenuItems.length > 0 && (
+                    <>
+                      <div className="border-t border-border mx-1 my-1" />
+                      {adminMenuItems.map((item) => {
+                        const IconComponent = item.icon;
+                        return (
+                          <Link
+                            key={item.path}
+                            href={item.path}
+                            onClick={handleNavigation}
+                            className={cn(
+                              "flex items-center gap-3 px-3 py-2 text-sm rounded-md transition-colors",
+                              "hover:bg-accent hover:text-accent-foreground"
+                            )}
+                          >
+                            <IconComponent className="h-4 w-4" />
+                            {item.name}
+                          </Link>
+                        );
+                      })}
+                    </>
+                  )}
+                  
+                  {/* Separator và Logout */}
+                  <div className="border-t border-border mx-1 my-1" />
                   <button
                     onClick={handleLogout}
                     className={cn(
@@ -310,7 +346,7 @@ export const FloatingMenu = ({ className }: FloatingMenuProps) => {
 
         {/* Cart with Badge */}
         <div className="relative group">
-          <Link href="/cart" onClick={() => handleNavigation("/cart")} className="block">
+          <Link href="/cart" onClick={handleNavigation} className="block">
             <button
               onMouseEnter={() => setShowTooltip("/cart")}
               className={cn(

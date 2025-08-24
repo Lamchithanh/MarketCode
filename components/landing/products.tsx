@@ -17,6 +17,8 @@ interface Category {
 
 
 
+
+
 const renderStars = (rating: number) => {
   return Array.from({ length: 5 }, (_, i) => (
     <Star
@@ -92,7 +94,7 @@ export function Products() {
                   <div className="relative">
                     <div className="aspect-[3/2] overflow-hidden bg-muted relative">
                       <Image 
-                        src={product.thumbnailUrl || product.image || "/Images/do.jpg"} 
+                        src={product.thumbnailUrl || "/Images/do.jpg"}
                         alt={product.title}
                         fill
                         className="object-cover transition-transform duration-300 group-hover:scale-105"

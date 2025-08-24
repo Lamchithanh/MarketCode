@@ -155,10 +155,7 @@ export function ProductTabs({ product, reviews = [], userHasPurchased }: Product
       <TabsContent value="features" className="space-y-6">
         <Card>
           <CardContent className="p-6">
-            <h3 className="text-xl font-semibold mb-4">Tính năng nổi bật</h3>
-            
-
-
+            <h3 className="text-xl font-semibold mb-4">Tính năng nổi bật</h3>       
             {safeFeatures && (safeFeatures.core?.length > 0 || safeFeatures.technical?.length > 0 || safeFeatures.ui?.length > 0) ? (
               <div className="space-y-6">
                 {/* Core Features */}

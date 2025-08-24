@@ -13,12 +13,14 @@ export function useUser() {
   const { data: session, status } = useSession();
   const [user, setUser] = useState<User | null>(null);
   const [isLoading, setIsLoading] = useState(true);
+  const [hasFetched, setHasFetched] = useState(false);
 
   // Function to refresh user data from database
   const refreshUser = useCallback(async () => {
     if (!session?.user?.id) return;
 
     try {
+      setIsLoading(true);
       const response = await fetch('/api/user/profile');
       if (response.ok) {
         const result = await response.json();
@@ -30,6 +32,7 @@ export function useUser() {
             role: result.data.role || 'USER',
             avatar: result.data.avatar,
           });
+          setHasFetched(true);
         }
       }
     } catch (error) {
@@ -43,7 +46,10 @@ export function useUser() {
           role: ((session.user as { role?: string }).role || 'USER') as 'USER' | 'ADMIN',
           avatar: (session.user as { avatar?: string }).avatar,
         });
+        setHasFetched(true);
       }
+    } finally {
+      setIsLoading(false);
     }
   }, [session]);
 
@@ -54,13 +60,18 @@ export function useUser() {
     }
 
     if (status === 'authenticated' && session?.user) {
-      // Fetch fresh data from database instead of just using session
-      refreshUser().finally(() => setIsLoading(false));
+      // Only fetch if we haven't fetched for this user yet
+      if (!hasFetched || user?.id !== session.user.id) {
+        refreshUser();
+      } else {
+        setIsLoading(false);
+      }
     } else if (status === 'unauthenticated') {
       setUser(null);
+      setHasFetched(false);
       setIsLoading(false);
     }
-  }, [session, status, refreshUser]);
+  }, [session?.user?.id, status, hasFetched, user?.id]); // Optimized dependencies
 
   return {
     user,

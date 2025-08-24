@@ -23,12 +23,14 @@ export async function GET() {
       );
     }
 
+
+
     // Transform data để match với interface Project
     const transformedProducts = products?.map(product => ({
       id: product.id.toString(),
       title: product.title,
       description: product.description || '',
-      image: product.thumbnailUrl || '/products/default.jpg',
+      image: product.thumbnailUrl || '/Images/do.jpg',
       technologies: product.technologies || [],
       category: product.Category?.name || 'Khác',
       price: `${parseFloat(product.price).toLocaleString('vi-VN')}đ`,
@@ -40,7 +42,7 @@ export async function GET() {
       viewCount: product.viewCount || 0,
       demoUrl: product.demoUrl,
       githubUrl: product.githubUrl,
-      thumbnailUrl: product.thumbnailUrl
+      thumbnailUrl: product.thumbnailUrl || '/Images/do.jpg'
     })) || [];
 
     return NextResponse.json({

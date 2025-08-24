@@ -54,7 +54,7 @@ export function ProfileOverview({ recentOrders, stats, user }: ProfileOverviewPr
   const [completionStatus, setCompletionStatus] = useState<CompletionStatus | null>(null);
   const [isClaimed, setIsClaimed] = useState(false);
 
-  // Fetch completion status 
+  // Fetch completion status - Simplified for VIP system only
   const fetchCompletionStatus = useCallback(async () => {
     try {
       // Only fetch account progress for now
@@ -63,25 +63,17 @@ export function ProfileOverview({ recentOrders, stats, user }: ProfileOverviewPr
       if (progressResponse.ok) {
         const progressResult = await progressResponse.json();
         if (progressResult.success) {
-          // Check profile completion based on user data
-          const hasBasicProfile = user.name && user.email && user.avatar;
-          if (hasBasicProfile) {
-            setCompletionStatus({
-              percentage: 100,
-              isCompleted: true,
-              reward: {
-                message: "Chúc mừng! Bạn đã hoàn thành hồ sơ cá nhân!",
-                couponCode: "PROFILE10",
-                isClaimed: false
-              }
-            });
-          }
+          // Profile completion is now based on 5-task system, not basic profile
+          setCompletionStatus({
+            percentage: 0,
+            isCompleted: false
+          });
         }
       }
     } catch (error) {
       console.error('Error fetching completion status:', error);
     }
-  }, [user.name, user.email, user.avatar]);
+  }, []);
 
   // Claim reward
   const claimReward = async () => {
@@ -236,9 +228,8 @@ export function ProfileOverview({ recentOrders, stats, user }: ProfileOverviewPr
 
   const accountProgress = calculateAccountProgress();
   
-  // Profile completion for reward system (original logic)
-  const isProfileCompleted = completionStatus?.isCompleted || false;
-  const reward = completionStatus?.reward;
+  // Profile completion for VIP reward system only
+  const isProfileCompleted = accountProgress.percentage === 100;
 
   return (
     <div className="grid lg:grid-cols-2 gap-6">
@@ -407,43 +398,43 @@ export function ProfileOverview({ recentOrders, stats, user }: ProfileOverviewPr
               </div>
             )}
 
-            {/* Profile Completion Reward - Only show if not VIP yet */}
-            {isProfileCompleted && reward && accountProgress.percentage < 100 && (
-              <div className="mt-4 p-4 border border-green-200 rounded-lg bg-green-50/50">
+            {/* Profile Completion Reward - Only show when 100% completed */}
+            {accountProgress.percentage === 100 && (
+              <div className="mt-4 p-4 border border-gold-200 rounded-lg bg-gold-50/50">
                 <div className="flex items-center gap-2 mb-2">
-                  <Gift className="h-5 w-5 text-green-600" />
-                  <h4 className="font-medium text-green-800">🎁 Phần thưởng hồ sơ hoàn thiện!</h4>
+                  <Gift className="h-5 w-5 text-gold-600" />
+                  <h4 className="font-medium text-gold-800">🎁 Phần thưởng VIP!</h4>
                 </div>
                 
-                <p className="text-sm text-green-700 mb-3">
-                  {reward.message}
+                <p className="text-sm text-gold-700 mb-3">
+                  Chúc mừng! Bạn đã hoàn thành tất cả nhiệm vụ và trở thành Thành viên VIP!
                 </p>
 
                 {!isClaimed ? (
                   <Button 
                     onClick={claimReward}
-                    className="w-full bg-green-600 hover:bg-green-700 text-white"
+                    className="w-full bg-gold-600 hover:bg-gold-700 text-white"
                     size="sm"
                   >
                     <Gift className="h-4 w-4 mr-2" />
-                    Nhận ngay mã giảm giá!
+                    Nhận ngay mã giảm giá VIP!
                   </Button>
                 ) : (
                   <div className="space-y-3">
-                    <div className="flex items-center justify-between p-3 bg-white border border-green-200 rounded-md">
+                    <div className="flex items-center justify-between p-3 bg-white border border-gold-200 rounded-md">
                       <div className="flex items-center gap-2">
-                        <code className="text-sm font-mono font-bold text-green-800">
-                          {reward.couponCode}
+                        <code className="text-sm font-mono font-bold text-gold-800">
+                          VIP20
                         </code>
-                        <Badge variant="secondary" className="bg-green-100 text-green-700 text-xs">
-                          10% OFF
+                        <Badge variant="secondary" className="bg-gold-100 text-gold-700 text-xs">
+                          20% OFF
                         </Badge>
                       </div>
                       <Button
                         variant="outline"
                         size="sm"
-                        onClick={() => copyToClipboard(reward.couponCode)}
-                        className="border-green-200 text-green-700 hover:bg-green-50"
+                        onClick={() => copyToClipboard("VIP20")}
+                        className="border-gold-200 text-gold-700 hover:bg-gold-50"
                       >
                         <Copy className="h-3 w-3" />
                       </Button>

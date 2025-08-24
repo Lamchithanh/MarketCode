@@ -47,9 +47,16 @@ export function ProfileClient({ user: initialUser }: ProfileClientProps) {
   });
   const [recentOrders, setRecentOrders] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [dataFetched, setDataFetched] = useState(false);
   
-  const fetchProfileData = useCallback(async () => {
+  const fetchProfileData = useCallback(async (forceRefresh = false) => {
     if (!user?.id) {
+      setLoading(false);
+      return;
+    }
+    
+    // Skip if already fetched unless forced
+    if (dataFetched && !forceRefresh) {
       setLoading(false);
       return;
     }
@@ -78,30 +85,36 @@ export function ProfileClient({ user: initialUser }: ProfileClientProps) {
           setRecentOrders(recent);
         }
       }
+      
+      setDataFetched(true);
     } catch (error) {
       console.error('Failed to fetch profile data:', error);
     } finally {
       setLoading(false);
     }
-  }, [user?.id]);
+  }, [user?.id, dataFetched]);
 
   const handleProfileUpdate = async () => {
     try {
-      // Refresh user data and stats after profile update
+      // Only refresh user data and stats, no need to refresh entire page
       await refreshUser();
-      await fetchProfileData();
-      
-      // Force refresh the entire page to update NextAuth session
-      // This will update the header and all components that use session
-      router.refresh();
+      await fetchProfileData(true); // Force refresh with updated data
     } catch (error) {
       console.error('Error refreshing profile data:', error);
     }
   };
   
   useEffect(() => {
-    fetchProfileData();
-  }, [user?.id, fetchProfileData]);
+    if (user?.id) {
+      if (!dataFetched) {
+        fetchProfileData();
+      }
+    } else {
+      // Reset state when user is not available
+      setDataFetched(false);
+      setLoading(true);
+    }
+  }, [user?.id]); // Only depend on user id, not the function
 
   if (loading) {
     return (

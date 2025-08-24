@@ -101,26 +101,52 @@ export function useProducts(): UseProductsReturn {
         throw new Error(errorData.message || 'Failed to fetch products');
       }
 
-      const data: PaginatedProducts = await response.json();
+      const data = await response.json();
       
       // Debug: Log fetched data
-      if (data.products.length > 0) {
+      if (data.products && data.products.length > 0) {
         const testProduct = data.products.find(p => p.title === 'Test Product with Images');
         if (testProduct) {
           console.log('useProducts - Fetched product data:', {
             title: testProduct.title,
-            images: testProduct.images,
-            githubUrl: testProduct.githubUrl,
-            demoUrl: testProduct.demoUrl
+            category: testProduct.category,
+            author: testProduct.author
           });
         }
       }
       
-      setProducts(data.products);
-      setTotal(data.total);
-      setTotalPages(data.totalPages);
-      setPage(data.page);
-      setLimit(data.limit);
+      // Transform AdminProduct to Product format
+      const transformedProducts: Product[] = (data.products || []).map(adminProduct => ({
+        id: adminProduct.id,
+        userId: '00000000-0000-0000-0000-000000000000', // Placeholder
+        categoryId: '00000000-0000-0000-0000-000000000000', // Placeholder
+        title: adminProduct.title,
+        slug: adminProduct.title.toLowerCase().replace(/\s+/g, '-'),
+        description: adminProduct.description,
+        price: adminProduct.price,
+        thumbnailUrl: undefined,
+        images: [],
+        fileUrl: undefined,
+        demoUrl: undefined,
+        githubUrl: undefined,
+        downloadCount: adminProduct.downloadCount,
+        viewCount: adminProduct.viewCount,
+        isActive: adminProduct.isActive,
+        technologies: [],
+        fileSize: undefined,
+        createdAt: adminProduct.createdAt,
+        updatedAt: adminProduct.updatedAt,
+        deletedAt: undefined,
+        category: { id: '00000000-0000-0000-0000-000000000000', name: adminProduct.category, slug: adminProduct.category.toLowerCase().replace(/\s+/g, '-'), description: undefined, icon: undefined },
+        user: { id: '00000000-0000-0000-0000-000000000000', name: adminProduct.author, email: adminProduct.authorEmail, avatar: undefined },
+        tags: []
+      }));
+      
+      setProducts(transformedProducts);
+      setTotal(data.total || 0);
+      setTotalPages(data.totalPages || 0);
+      setPage(data.page || 1);
+      setLimit(data.limit || 20);
     } catch (error) {
       console.error('Error fetching products:', error);
       const errorMessage = error instanceof Error ? error.message : 'Failed to fetch products';
