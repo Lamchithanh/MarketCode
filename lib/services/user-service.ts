@@ -41,11 +41,12 @@ export interface UserFilters {
 
 export interface UserStats {
   total: number;
-  active: number;
-  inactive: number;
+  verified: number;
+  unverified: number;
   admins: number;
-  users: number;
-  newThisMonth: number;
+  regular: number;
+  recent: number;
+  buyers: number;
 }
 
 export interface PaginatedUsers {
@@ -413,11 +414,12 @@ export class UserService {
 
       return {
         total: total || 0,
-        active: active || 0,
-        inactive: (total || 0) - (active || 0),
+        verified: active || 0, // Using active count as verified (placeholder)
+        unverified: (total || 0) - (active || 0),
         admins: admins || 0,
-        users: (total || 0) - (admins || 0),
-        newThisMonth: newThisMonth || 0
+        regular: (total || 0) - (admins || 0),
+        recent: newThisMonth || 0,
+        buyers: 0 // Placeholder, would need to calculate from orders
       };
     } catch (error) {
       console.error('Error fetching user stats:', error);

@@ -1,17 +1,20 @@
 'use client';
 
-import { useState } from 'react';
-import { RefreshCw, MoreHorizontal, Edit, Eye, Trash2, Database, Plus } from 'lucide-react';
-import { OrdersHeader } from './orders-header';
-import { OrdersStats } from './orders-stats';
-import { OrdersFilters } from './orders-filters';
-import { BulkActions } from './bulk-actions';
-import { OrderActions } from './order-actions';
+import { useState, useEffect } from 'react';
+import { RefreshCw, MoreHorizontal, Edit, Eye, Trash2, Database } from 'lucide-react';
+import { toast } from 'sonner';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Alert, AlertDescription } from '@/components/ui/alert';
-import { Checkbox } from '@/components/ui/checkbox';
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from '@/components/ui/dialog';
 import {
   Table,
   TableBody,
@@ -21,51 +24,117 @@ import {
   TableRow,
 } from '@/components/ui/table';
 import {
-  Pagination,
-  PaginationContent,
-  PaginationItem,
-  PaginationLink,
-  PaginationNext,
-  PaginationPrevious,
-} from '@/components/ui/pagination';
-import { OrderViewDialog } from './order-view-dialog';
-import { OrderFormDialog } from './order-form-dialog';
-import { OrderDeleteDialog } from './order-delete-dialog';
-import { useOrders } from '@/hooks/use-orders';
-import { toast } from 'sonner';
-import { Order } from '@/lib/services/order-service';
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuLabel,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger,
+} from '@/components/ui/dropdown-menu';
 
-export function OrdersManagement() {
-  const {
-    orders,
-    selectedOrder,
-    stats,
-    pagination,
-    filters,
-    loading,
-    statsLoading,
-    actionLoading,
-    error,
-    updateOrder,
-    deleteOrder,
-    setSelectedOrder,
-    updateFilters,
-    resetFilters,
-    clearError,
-    refreshOrders,
-    goToPage,
-    changeLimit,
-  } = useOrders({
-    initialFilters: {
-      page: 1,
-      limit: 10,
-    },
+interface Order {
+  id: string;
+  orderNumber: string;
+  buyerId: string;
+  buyerName: string;
+  buyerEmail: string;
+  totalAmount: number;
+  status: string;
+  paymentStatus: string;
+  paymentMethod: string;
+  itemCount: number;
+  createdAt: string;
+  updatedAt: string;
+}
+
+export function OrdersManagementNew() {
+  const [orders, setOrders] = useState<Order[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+  const [selectedOrder, setSelectedOrder] = useState<Order | null>(null);
+  const [showViewDialog, setShowViewDialog] = useState(false);
+  const [showEditDialog, setShowEditDialog] = useState(false);
+  const [showDeleteDialog, setShowDeleteDialog] = useState(false);
+  const [pagination, setPagination] = useState({
+    page: 1,
+    limit: 20,
+    total: 0,
+    totalPages: 0
   });
 
-  // Dialog states
-  const [isViewDialogOpen, setIsViewDialogOpen] = useState(false);
-  const [isFormDialogOpen, setIsFormDialogOpen] = useState(false);
-  const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
+  // Fetch orders data
+  const fetchOrders = async (page = 1, limit = 20) => {
+    try {
+      setLoading(true);
+      setError(null);
+      
+      const response = await fetch(`/api/admin/orders?page=${page}&limit=${limit}`);
+      
+      if (!response.ok) {
+        throw new Error('Failed to fetch orders');
+      }
+      
+      const data = await response.json();
+      
+      if (data.error) {
+        throw new Error(data.error);
+      }
+      
+      setOrders(data.orders || []);
+      setPagination({
+        page: data.page || 1,
+        limit: data.limit || 20,
+        total: data.total || 0,
+        totalPages: data.totalPages || 0
+      });
+    } catch (err) {
+      console.error('Error fetching orders:', err);
+      setError(err instanceof Error ? err.message : 'An error occurred');
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  // Action handlers
+  const handleViewOrder = (order: Order) => {
+    setSelectedOrder(order);
+    setShowViewDialog(true);
+  };
+
+  const handleEditOrder = (order: Order) => {
+    setSelectedOrder(order);
+    setShowEditDialog(true);
+  };
+
+  const handleDeleteOrder = (order: Order) => {
+    setSelectedOrder(order);
+    setShowDeleteDialog(true);
+  };
+
+  const confirmDeleteOrder = async () => {
+    if (!selectedOrder) return;
+    
+    try {
+      const response = await fetch(`/api/admin/orders?id=${selectedOrder.id}`, {
+        method: 'DELETE',
+      });
+      
+      if (response.ok) {
+        await fetchOrders(); // Refresh list
+        setShowDeleteDialog(false);
+        setSelectedOrder(null);
+      } else {
+        throw new Error('Failed to delete order');
+      }
+    } catch (err) {
+      console.error('Error deleting order:', err);
+    }
+  };
+
+  // Initial data fetch
+  useEffect(() => {
+    fetchOrders();
+  }, []);
 
   // Format currency
   const formatCurrency = (amount: number) => {
@@ -120,103 +189,62 @@ export function OrdersManagement() {
     );
   };
 
-  // Handle actions
-  const handleAddOrder = () => {
-    setSelectedOrder(null);
-    setIsFormDialogOpen(true);
+  // Get status text (without badge)
+  const getStatusText = (status: string) => {
+    const statusConfig = {
+      PENDING: 'Chờ xử lý',
+      PROCESSING: 'Đang xử lý',
+      COMPLETED: 'Hoàn thành',
+      CANCELLED: 'Đã hủy'
+    };
+    return statusConfig[status as keyof typeof statusConfig] || status;
   };
 
-  const handleEditOrder = (order: Order) => {
-    setSelectedOrder(order);
-    setIsFormDialogOpen(true);
+  // Get payment status text (without badge)
+  const getPaymentStatusText = (status: string) => {
+    const statusConfig = {
+      PENDING: 'Chờ thanh toán',
+      PAID: 'Đã thanh toán',
+      FAILED: 'Thất bại',
+      CANCELLED: 'Đã hủy'
+    };
+    return statusConfig[status as keyof typeof statusConfig] || status;
   };
 
-  const handleDeleteOrder = (order: Order) => {
-    setSelectedOrder(order);
-    setIsDeleteDialogOpen(true);
-  };
-
-  const handleViewOrder = (order: Order) => {
-    setSelectedOrder(order);
-    setIsViewDialogOpen(true);
-  };
-
-  const handleSaveOrder = async (orderData: any) => {
-    try {
-      if (orderData.id) {
-        // Update existing order
-        await updateOrder(orderData.id, {
-          status: orderData.status,
-          paymentStatus: orderData.paymentStatus,
-          paymentMethod: orderData.paymentMethod,
-          notes: orderData.notes,
-        });
-        toast.success('Cập nhật đơn hàng thành công');
-      }
-      setSelectedOrder(null);
-      setIsFormDialogOpen(false);
-    } catch (error) {
-      console.error('Error saving order:', error);
-      toast.error('Lỗi khi lưu đơn hàng');
-    }
-  };
-
-  const handleConfirmDelete = async (orderToDelete: Order) => {
-    try {
-      await deleteOrder(orderToDelete.id);
-      toast.success('Xóa đơn hàng thành công');
-      setSelectedOrder(null);
-      setIsDeleteDialogOpen(false);
-    } catch (error) {
-      console.error('Error deleting order:', error);
-      toast.error('Lỗi khi xóa đơn hàng');
-    }
-  };
-
-  // Handle search and filters
-  const handleSearch = (searchTerm: string) => {
-    updateFilters({ search: searchTerm });
-  };
-
-  const handleFilterChange = (filterType: string, value: string) => {
-    updateFilters({ [filterType]: value });
-  };
-
+  // Handle refresh
   const handleRefresh = () => {
-    refreshOrders();
+    fetchOrders(pagination.page, pagination.limit);
     toast.success('Dữ liệu đã được làm mới');
   };
 
-  return (
-    <div className="space-y-6">
-      <OrdersHeader onAddOrder={handleAddOrder} />
-      
-      {error && (
+  // Handle pagination
+  const goToPage = (page: number) => {
+    if (page >= 1 && page <= pagination.totalPages) {
+      fetchOrders(page, pagination.limit);
+    }
+  };
+
+  if (error) {
+    return (
+      <div className="space-y-6">
         <Alert variant="destructive">
           <AlertDescription>
             {error}
-            <Button variant="ghost" size="sm" onClick={clearError} className="ml-2">
-              Đóng
+            <Button variant="ghost" size="sm" onClick={handleRefresh} className="ml-2">
+              Thử lại
             </Button>
           </AlertDescription>
         </Alert>
-      )}
+      </div>
+    );
+  }
 
-      <OrdersStats 
-        stats={stats} 
-        loading={statsLoading} 
-      />
-
-      <OrdersSearch
-        onSearch={handleSearch}
-        onFilterChange={handleFilterChange}
-        onReset={resetFilters}
-        filters={filters}
-      />
-
+  return (
+    <div className="space-y-6">
       <Card>
         <CardHeader className="flex flex-row items-center justify-between">
-          <CardTitle className="text-xl font-semibold">
+          <CardTitle className="text-xl font-semibold flex items-center">
+            <Database className="h-5 w-5 mr-2" />
             Danh sách đơn hàng ({pagination.total})
           </CardTitle>
           <div className="flex items-center gap-2">
@@ -228,17 +256,6 @@ export function OrdersManagement() {
             >
               <RefreshCw className={`h-4 w-4 ${loading ? 'animate-spin' : ''}`} />
               Làm mới
-            </Button>
-            <Button
-              variant="outline"
-              size="sm"
-              onClick={() => {
-                // TODO: Export functionality
-                toast.info('Chức năng xuất dữ liệu sẽ được thêm sau');
-              }}
-            >
-              <Database className="h-4 w-4 mr-2" />
-              Xuất dữ liệu
             </Button>
           </div>
         </CardHeader>
@@ -305,7 +322,7 @@ export function OrdersManagement() {
                             <Button 
                               variant="ghost" 
                               className="h-8 w-8 p-0"
-                              disabled={actionLoading}
+                              disabled={loading}
                             >
                               <span className="sr-only">Mở menu</span>
                               <MoreHorizontal className="h-4 w-4" />
@@ -391,26 +408,83 @@ export function OrdersManagement() {
         </CardContent>
       </Card>
 
-      {/* Dialogs */}
-      <OrderViewDialog
-        open={isViewDialogOpen}
-        onOpenChange={setIsViewDialogOpen}
-        order={selectedOrder}
-      />
+      {/* View Order Dialog */}
+      <Dialog open={showViewDialog} onOpenChange={setShowViewDialog}>
+        <DialogContent className="max-w-2xl">
+          <DialogHeader>
+            <DialogTitle>Chi tiết đơn hàng</DialogTitle>
+            <DialogDescription>
+              Thông tin chi tiết của đơn hàng #{selectedOrder?.orderNumber}
+            </DialogDescription>
+          </DialogHeader>
+          {selectedOrder && (
+            <div className="space-y-4">
+              <div className="grid grid-cols-2 gap-4">
+                <div>
+                  <label className="text-sm font-medium">Mã đơn hàng</label>
+                  <p>{selectedOrder.orderNumber}</p>
+                </div>
+                <div>
+                  <label className="text-sm font-medium">Tổng tiền</label>
+                  <p>{selectedOrder.totalAmount.toLocaleString('vi-VN')} ₫</p>
+                </div>
+                <div>
+                  <label className="text-sm font-medium">Trạng thái</label>
+                  <p>{getStatusText(selectedOrder.status)}</p>
+                </div>
+                <div>
+                  <label className="text-sm font-medium">Thanh toán</label>
+                  <p>{getPaymentStatusText(selectedOrder.paymentStatus)}</p>
+                </div>
+                <div>
+                  <label className="text-sm font-medium">Người mua</label>
+                  <p>{selectedOrder.buyerName}</p>
+                </div>
+                <div>
+                  <label className="text-sm font-medium">Email</label>
+                  <p>{selectedOrder.buyerEmail}</p>
+                </div>
+              </div>
+            </div>
+          )}
+        </DialogContent>
+      </Dialog>
 
-      <OrderFormDialog
-        open={isFormDialogOpen}
-        onOpenChange={setIsFormDialogOpen}
-        order={selectedOrder}
-        onSave={handleSaveOrder}
-      />
+      {/* Edit Order Dialog */}
+      <Dialog open={showEditDialog} onOpenChange={setShowEditDialog}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Chỉnh sửa đơn hàng</DialogTitle>
+            <DialogDescription>
+              Chỉnh sửa thông tin đơn hàng #{selectedOrder?.orderNumber}
+            </DialogDescription>
+          </DialogHeader>
+          <div className="text-center py-8">
+            <p>Chức năng chỉnh sửa đang được phát triển...</p>
+          </div>
+        </DialogContent>
+      </Dialog>
 
-      <OrderDeleteDialog
-        open={isDeleteDialogOpen}
-        onOpenChange={setIsDeleteDialogOpen}
-        order={selectedOrder}
-        onConfirm={handleConfirmDelete}
-      />
+      {/* Delete Confirmation Dialog */}
+      <Dialog open={showDeleteDialog} onOpenChange={setShowDeleteDialog}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Xác nhận xóa</DialogTitle>
+            <DialogDescription>
+              Bạn có chắc chắn muốn xóa đơn hàng #{selectedOrder?.orderNumber}?
+              Hành động này không thể hoàn tác.
+            </DialogDescription>
+          </DialogHeader>
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setShowDeleteDialog(false)}>
+              Hủy
+            </Button>
+            <Button variant="destructive" onClick={confirmDeleteOrder}>
+              Xóa
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }

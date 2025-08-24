@@ -319,7 +319,7 @@ export default function SettingsConfiguration() {
   }
 
   // Show message if no settings loaded
-  const totalSettings = settings.general.length + settings.branding.length + settings.system.length;
+  const totalSettings = (settings?.general?.length || 0) + (settings?.branding?.length || 0) + (settings?.system?.length || 0);
   if (totalSettings === 0 && !loading) {
     return (
       <div className="flex items-center justify-center h-64">

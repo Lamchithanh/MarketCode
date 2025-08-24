@@ -23,7 +23,8 @@ export async function POST(
       );
     }
 
-    const productId = params.id;
+    // Await params for Next.js 15
+    const { id: productId } = await params;
     const body = await request.json();
     const { platform } = body;
 

@@ -1,7 +1,7 @@
 'use client';
 
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Users, Shield, Activity, Mail, TrendingUp } from 'lucide-react';
+import { Users, Shield, Mail, TrendingUp } from 'lucide-react';
 import { UserStats } from '@/lib/services/user-service';
 
 interface UsersStatsProps {
@@ -57,29 +57,29 @@ export function UsersStats({ stats, loading = false }: UsersStatsProps) {
       title: 'Total Users',
       value: stats.total,
       icon: Users,
-      bgColor: 'bg-stone-100',
-      iconColor: 'text-stone-600',
+      bgColor: 'bg-blue-100',
+      iconColor: 'text-blue-600',
     },
     {
       title: 'Admin Users',
       value: stats.admins,
       icon: Shield,
-      bgColor: 'bg-stone-100',
-      iconColor: 'text-stone-600',
+      bgColor: 'bg-purple-100',
+      iconColor: 'text-purple-600',
     },
     {
-      title: 'Active Users',
-      value: stats.active,
-      icon: Activity,
-      bgColor: 'bg-stone-100',
-      iconColor: 'text-stone-600',
+      title: 'Verified Users',
+      value: stats.verified,
+      icon: Mail,
+      bgColor: 'bg-green-100',
+      iconColor: 'text-green-600',
     },
     {
-      title: 'New This Month',
-      value: stats.newThisMonth,
+      title: 'Recent Users',
+      value: stats.recent,
       icon: TrendingUp,
-      bgColor: 'bg-stone-100',
-      iconColor: 'text-stone-600',
+      bgColor: 'bg-orange-100',
+      iconColor: 'text-orange-600',
     },
   ];
 
@@ -100,7 +100,7 @@ export function UsersStats({ stats, loading = false }: UsersStatsProps) {
             <CardContent>
               <div className="text-2xl font-bold text-foreground">{stat.value}</div>
               <p className="text-xs text-stone-600">
-                {stat.title === 'New This Month' ? 'This month' : 'Total count'}
+                {stat.title === 'Recent Users' ? 'Last 30 days' : 'Total count'}
               </p>
             </CardContent>
           </Card>

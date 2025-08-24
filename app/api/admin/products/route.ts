@@ -10,6 +10,12 @@ interface AdminProduct {
   category: string;
   author: string;
   authorEmail: string;
+  tags: Array<{
+    id: string;
+    name: string;
+    color: string;
+    slug: string;
+  }>;
   createdAt: string;
   updatedAt: string;
   downloadCount: number;
@@ -29,14 +35,14 @@ export async function GET(request: NextRequest) {
 
     const offset = (page - 1) * limit;
 
-    // Build query
+    // Build query without tags first
     let query = supabaseServiceRole
       .from('Product')
       .select(`
         *,
         Category!inner(name),
         User!inner(name, email)
-      `)
+      `, { count: 'exact' })
       .order('createdAt', { ascending: false });
 
     // Apply filters
@@ -73,23 +79,58 @@ export async function GET(request: NextRequest) {
       );
     }
 
-    // Transform data
-    const transformedProducts: AdminProduct[] = products?.map(product => ({
-      id: product.id?.toString() || '',
-      title: product.title || '',
-      description: product.description || '',
-      price: parseFloat(product.price || '0'),
-      isActive: product.isActive ?? true,
-      category: product.Category?.name || 'Khác',
-      author: product.User?.name || 'Unknown',
-      authorEmail: product.User?.email || '',
-      createdAt: product.createdAt || new Date().toISOString(),
-      updatedAt: product.updatedAt || new Date().toISOString(),
-      downloadCount: product.downloadCount || 0,
-      viewCount: product.viewCount || 0,
-      averageRating: parseFloat(product.averageRating || '0') || 0,
-      totalReviews: product.totalReviews || 0
-    })) || [];
+    // Transform data with tags loaded separately  
+    const transformedProducts: AdminProduct[] = await Promise.all(
+      (products || []).map(async (product) => {
+        // Load tags for this product using raw query
+        const { data: productTags, error: tagsError } = await supabaseServiceRole
+          .rpc('get_product_tags', { product_id: product.id });
+
+        // Fallback to direct query if RPC doesn't exist
+        let tags = [];
+        if (tagsError) {
+          const { data: fallbackTags } = await supabaseServiceRole
+            .from('ProductTag')
+            .select('tagId')
+            .eq('productId', product.id);
+
+          if (fallbackTags && fallbackTags.length > 0) {
+            const tagIds = fallbackTags.map(pt => pt.tagId);
+            const { data: tagData } = await supabaseServiceRole
+              .from('Tag')
+              .select('id, name, color, slug')
+              .in('id', tagIds);
+            
+            tags = tagData || [];
+          }
+        } else {
+          tags = productTags || [];
+        }
+
+        return {
+          id: product.id?.toString() || '',
+          title: product.title || '',
+          description: product.description || '',
+          price: parseFloat(product.price || '0'),
+          isActive: product.isActive ?? true,
+          category: product.Category?.name || 'Khác',
+          author: product.User?.name || 'Unknown',
+          authorEmail: product.User?.email || '',
+          tags: tags.map((tag: any) => ({
+            id: tag.id || '',
+            name: tag.name || '',
+            color: tag.color || '#6B7280',
+            slug: tag.slug || ''
+          })),
+          createdAt: product.createdAt || new Date().toISOString(),
+          updatedAt: product.updatedAt || new Date().toISOString(),
+          downloadCount: product.downloadCount || 0,
+          viewCount: product.viewCount || 0,
+          averageRating: parseFloat(product.averageRating || '0') || 0,
+          totalReviews: product.totalReviews || 0
+        };
+      })
+    );
 
     return NextResponse.json({
       success: true,

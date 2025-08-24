@@ -117,29 +117,40 @@ export function useProducts(): UseProductsReturn {
       
       // Transform AdminProduct to Product format
       const transformedProducts: Product[] = (data.products || []).map(adminProduct => ({
-        id: adminProduct.id,
+        id: adminProduct.id || '',
         userId: '00000000-0000-0000-0000-000000000000', // Placeholder
         categoryId: '00000000-0000-0000-0000-000000000000', // Placeholder
-        title: adminProduct.title,
-        slug: adminProduct.title.toLowerCase().replace(/\s+/g, '-'),
-        description: adminProduct.description,
-        price: adminProduct.price,
+        title: adminProduct.title || '',
+        slug: (adminProduct.title || '').toLowerCase().replace(/\s+/g, '-'),
+        description: adminProduct.description || '',
+        price: adminProduct.price || 0,
         thumbnailUrl: undefined,
         images: [],
         fileUrl: undefined,
         demoUrl: undefined,
         githubUrl: undefined,
-        downloadCount: adminProduct.downloadCount,
-        viewCount: adminProduct.viewCount,
-        isActive: adminProduct.isActive,
+        downloadCount: adminProduct.downloadCount || 0,
+        viewCount: adminProduct.viewCount || 0,
+        isActive: adminProduct.isActive ?? true,
         technologies: [],
         fileSize: undefined,
-        createdAt: adminProduct.createdAt,
-        updatedAt: adminProduct.updatedAt,
+        createdAt: adminProduct.createdAt || new Date().toISOString(),
+        updatedAt: adminProduct.updatedAt || new Date().toISOString(),
         deletedAt: undefined,
-        category: { id: '00000000-0000-0000-0000-000000000000', name: adminProduct.category, slug: adminProduct.category.toLowerCase().replace(/\s+/g, '-'), description: undefined, icon: undefined },
-        user: { id: '00000000-0000-0000-0000-000000000000', name: adminProduct.author, email: adminProduct.authorEmail, avatar: undefined },
-        tags: []
+        category: { 
+          id: '00000000-0000-0000-0000-000000000000', 
+          name: adminProduct.category || 'Unknown', 
+          slug: (adminProduct.category || 'unknown').toLowerCase().replace(/\s+/g, '-'), 
+          description: undefined, 
+          icon: undefined 
+        },
+        user: { 
+          id: '00000000-0000-0000-0000-000000000000', 
+          name: adminProduct.author || 'Unknown', 
+          email: adminProduct.authorEmail || '', 
+          avatar: undefined 
+        },
+        tags: adminProduct.tags || [] // Use tags from API response
       }));
       
       setProducts(transformedProducts);

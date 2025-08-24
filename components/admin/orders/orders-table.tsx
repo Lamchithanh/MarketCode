@@ -1,4 +1,4 @@
-import { OrdersManagementNew } from './orders-management-complete';
+import { OrdersManagementNew } from './orders-simple';
 
 export function OrdersTable() {
   return <OrdersManagementNew />;

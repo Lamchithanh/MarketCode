@@ -92,11 +92,11 @@ export function ProductsManagement() {
   useEffect(() => {
     if (products) {
       const filtered = products.map(product => ({
-        id: product.id,
-        title: product.title,
-        slug: product.slug,
+        id: product.id || '',
+        title: product.title || '',
+        slug: product.slug || '',
         description: product.description || '',
-        price: product.price,
+        price: product.price || 0,
         thumbnailUrl: product.thumbnailUrl,
         images: product.images || [],
         githubUrl: product.githubUrl || '',
@@ -107,12 +107,12 @@ export function ProductsManagement() {
         category: product.category?.name || 'Unknown Category',
         tags: product.tags || [],
         technologies: product.technologies || [],
-        createdAt: product.createdAt,
-        updatedAt: product.updatedAt
+        createdAt: product.createdAt || new Date().toISOString(),
+        updatedAt: product.updatedAt || new Date().toISOString()
       })).filter(product =>
-        product.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        product.description.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        product.slug.toLowerCase().includes(searchTerm.toLowerCase())
+        (product.title || '').toLowerCase().includes(searchTerm.toLowerCase()) ||
+        (product.description || '').toLowerCase().includes(searchTerm.toLowerCase()) ||
+        (product.slug || '').toLowerCase().includes(searchTerm.toLowerCase())
       );
       setFilteredProducts(filtered);
     }

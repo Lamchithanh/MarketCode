@@ -6,6 +6,7 @@ export interface Category {
   slug: string;
   description?: string;
   icon?: string;
+  productCount?: number;
   createdAt: string;
   updatedAt: string;
   deletedAt?: string;

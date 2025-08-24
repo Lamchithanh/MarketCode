@@ -15,6 +15,14 @@ import { useAllTags } from '@/hooks/use-all-tags';
 import { Tag } from '@/lib/services/product-service';
 import Image from 'next/image';
 
+// Default thumbnail image
+const DEFAULT_THUMBNAIL = '/Images/do.jpg';
+
+// Get the default thumbnail
+const getDefaultThumbnail = () => {
+  return DEFAULT_THUMBNAIL;
+};
+
 interface ProductItem {
   id: string;
   title: string;
@@ -89,8 +97,8 @@ export function ProductFormDialog({ open, onOpenChange, product, onSave }: Produ
 
   const [selectedTags, setSelectedTags] = useState<Tag[]>([]);
   const [selectedImages, setSelectedImages] = useState<string[]>([]);
-  const [thumbnailFile, setThumbnailFile] = useState<File | null>(null);
   const [thumbnailPreview, setThumbnailPreview] = useState<string | null>(null);
+  const [thumbnailUploading, setThumbnailUploading] = useState(false);
   const [categories, setCategories] = useState<Category[]>([]);
   const [loading, setLoading] = useState(false);
   const [categoriesLoading, setCategoriesLoading] = useState(false);
@@ -172,7 +180,6 @@ export function ProductFormDialog({ open, onOpenChange, product, onSave }: Produ
         } else {
           setThumbnailPreview(null);
         }
-        setThumbnailFile(null);
       } else {
         setFormData({
           title: '',
@@ -190,7 +197,6 @@ export function ProductFormDialog({ open, onOpenChange, product, onSave }: Produ
         // Clear selected tags and images
         setSelectedTags([]);
         setSelectedImages([]);
-        setThumbnailFile(null);
         setThumbnailPreview(null);
       }
       
@@ -238,17 +244,50 @@ export function ProductFormDialog({ open, onOpenChange, product, onSave }: Produ
     return Object.keys(newErrors).length === 0;
   };
 
+  const validateFile = (file: File): string | null => {
+    // Check file type
+    const allowedTypes = [
+      'image/jpeg',
+      'image/jpg',
+      'image/png', 
+      'image/webp',
+      'image/gif',
+      'image/bmp'
+    ];
+    
+    if (!allowedTypes.includes(file.type)) {
+      return 'Invalid file type. Only JPG, PNG, WEBP, GIF, and BMP images are allowed.';
+    }
+
+    // Check file size (5MB limit)
+    if (file.size > 5 * 1024 * 1024) {
+      return 'File size too large. Maximum size is 5MB.';
+    }
+
+    return null;
+  };
+
   const handleThumbnailUpload = async (file: File) => {
     try {
-      setThumbnailFile(file);
+      // Validate file first
+      const validationError = validateFile(file);
+      if (validationError) {
+        toast.error(validationError);
+        return;
+      }
+
+      setThumbnailUploading(true); // Start uploading state
       
       // Create preview URL
       const previewUrl = URL.createObjectURL(file);
       setThumbnailPreview(previewUrl);
       
+      toast.info('Uploading thumbnail...'); // Show uploading message
+      
       // Upload file to server
       const formData = new FormData();
       formData.append('file', file);
+      formData.append('folder', 'thumbnails'); // Specify folder for better organization
       
       const response = await fetch('/api/upload', {
         method: 'POST',
@@ -257,24 +296,33 @@ export function ProductFormDialog({ open, onOpenChange, product, onSave }: Produ
       
       if (response.ok) {
         const result = await response.json();
-        if (result.success && result.urls && result.urls.length > 0) {
-          handleInputChange('thumbnailUrl', result.urls[0]);
+        console.log('Upload response:', result); // Debug log
+        
+        // Check the actual API response structure
+        if (result.success && result.url) {
+          handleInputChange('thumbnailUrl', result.url);
           toast.success('Thumbnail uploaded successfully');
         } else {
-          throw new Error('Upload failed');
+          throw new Error(result.error || 'Upload failed - no URL returned');
         }
       } else {
-        throw new Error('Upload failed');
+        const errorText = await response.text();
+        console.error('Upload failed with status:', response.status, errorText);
+        throw new Error(`Upload failed: ${response.status} - ${errorText}`);
       }
     } catch (error) {
       console.error('Error uploading thumbnail:', error);
-      toast.error('Failed to upload thumbnail');
+      toast.error(`Failed to upload thumbnail: ${error instanceof Error ? error.message : 'Unknown error'}`);
+      // Reset preview on error
+      setThumbnailPreview(null);
+    } finally {
+      setThumbnailUploading(false); // End uploading state
     }
   };
 
   const removeThumbnail = () => {
-    setThumbnailFile(null);
     setThumbnailPreview(null);
+    setThumbnailUploading(false);
     handleInputChange('thumbnailUrl', '');
   };
 
@@ -287,8 +335,16 @@ export function ProductFormDialog({ open, onOpenChange, product, onSave }: Produ
         console.log('Form save - selectedImages:', selectedImages);
         console.log('Form save - selectedTags:', selectedTags);
         
+        // Set default thumbnail if none provided
+        let finalThumbnailUrl = formData.thumbnailUrl;
+        if (!finalThumbnailUrl || finalThumbnailUrl.trim() === '') {
+          finalThumbnailUrl = getDefaultThumbnail();
+          console.log('Using default thumbnail:', finalThumbnailUrl);
+        }
+        
         const productData: ProductFormData = {
           ...formData,
+          thumbnailUrl: finalThumbnailUrl, // Use final thumbnail URL
           ...(isEditMode && product ? { id: product.id } : {}),
           images: selectedImages,
           tags: selectedTags.map(tag => tag.id), // Use tag IDs
@@ -316,7 +372,6 @@ export function ProductFormDialog({ open, onOpenChange, product, onSave }: Produ
           });
           setSelectedTags([]);
           setSelectedImages([]);
-          setThumbnailFile(null);
           setThumbnailPreview(null);
         }
         
@@ -469,37 +524,95 @@ export function ProductFormDialog({ open, onOpenChange, product, onSave }: Produ
                     height={128}
                     className="w-32 h-32 object-cover rounded-lg border"
                   />
+                  {thumbnailUploading && (
+                    <div className="absolute inset-0 bg-black bg-opacity-50 rounded-lg flex items-center justify-center">
+                      <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-white"></div>
+                    </div>
+                  )}
                   <button
                     type="button"
                     onClick={removeThumbnail}
-                    className="absolute -top-2 -right-2 bg-red-500 text-white rounded-full w-6 h-6 flex items-center justify-center hover:bg-red-600"
+                    disabled={thumbnailUploading}
+                    className="absolute -top-2 -right-2 bg-red-500 text-white rounded-full w-6 h-6 flex items-center justify-center hover:bg-red-600 disabled:opacity-50 disabled:cursor-not-allowed"
                   >
                     ×
                   </button>
                 </div>
               ) : (
-                <div className="border-2 border-dashed border-gray-300 rounded-lg p-6 text-center hover:border-gray-400 transition-colors">
-                  <input
-                    type="file"
-                    accept="image/*"
-                    onChange={(e) => {
-                      const file = e.target.files?.[0];
-                      if (file) {
-                        handleThumbnailUpload(file);
-                      }
-                    }}
-                    className="hidden"
-                    id="thumbnail-upload"
-                  />
-                  <label htmlFor="thumbnail-upload" className="cursor-pointer">
-                    <div className="text-gray-500">
-                      <svg className="w-8 h-8 mx-auto mb-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 6v6m0 0v6m0-6h6m-6 0H6" />
-                      </svg>
-                      <p className="text-sm">Click to upload thumbnail</p>
-                      <p className="text-xs text-gray-400 mt-1">PNG, JPG, GIF up to 5MB</p>
+                <div className="space-y-4">
+                  {/* Upload Option */}
+                  <div className="border-2 border-dashed border-gray-300 rounded-lg p-6 text-center hover:border-gray-400 transition-colors">
+                    <input
+                      type="file"
+                      accept="image/*"
+                      onChange={(e) => {
+                        const file = e.target.files?.[0];
+                        if (file) {
+                          handleThumbnailUpload(file);
+                        }
+                      }}
+                      disabled={thumbnailUploading}
+                      className="hidden"
+                      id="thumbnail-upload"
+                    />
+                    <label htmlFor="thumbnail-upload" className={`cursor-pointer ${thumbnailUploading ? 'cursor-not-allowed opacity-50' : ''}`}>
+                      <div className="text-gray-500">
+                        {thumbnailUploading ? (
+                          <div className="flex flex-col items-center">
+                            <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-gray-400 mb-2"></div>
+                            <p className="text-sm">Uploading...</p>
+                          </div>
+                        ) : (
+                          <>
+                            <svg className="w-8 h-8 mx-auto mb-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 6v6m0 0v6m0-6h6m-6 0H6" />
+                            </svg>
+                            <p className="text-sm">Click to upload thumbnail</p>
+                            <p className="text-xs text-gray-400 mt-1">PNG, JPG, WEBP, GIF up to 5MB</p>
+                          </>
+                        )}
+                      </div>
+                    </label>
+                  </div>
+
+                  {/* Default Images Option */}
+                  <div className="space-y-2">
+                    <div className="flex items-center justify-between">
+                      <p className="text-sm text-gray-600">Or use the default thumbnail:</p>
                     </div>
-                  </label>
+                    <div className="flex justify-center">
+                      <button
+                        type="button"
+                        onClick={() => {
+                          setFormData({ ...formData, thumbnailUrl: DEFAULT_THUMBNAIL });
+                          setThumbnailPreview(DEFAULT_THUMBNAIL);
+                          toast.success('Default thumbnail selected!');
+                        }}
+                        className={`relative group ${
+                          formData.thumbnailUrl === DEFAULT_THUMBNAIL 
+                            ? 'ring-2 ring-blue-500' 
+                            : ''
+                        }`}
+                      >
+                        <Image
+                          src={DEFAULT_THUMBNAIL}
+                          alt="Default thumbnail"
+                          width={64}
+                          height={64}
+                          className="w-16 h-16 object-cover rounded-lg border-2 border-gray-200 hover:border-blue-500 transition-colors"
+                        />
+                        <div className="absolute inset-0 bg-black bg-opacity-0 group-hover:bg-opacity-10 rounded-lg transition-opacity"></div>
+                        {formData.thumbnailUrl === DEFAULT_THUMBNAIL && (
+                          <div className="absolute -top-1 -right-1 bg-blue-500 text-white rounded-full w-5 h-5 flex items-center justify-center text-xs">
+                            ✓
+                          </div>
+                        )}
+                      </button>
+                    </div>
+                    <p className="text-xs text-gray-400">
+                      Don&apos;t worry! If you skip uploading a thumbnail, we&apos;ll automatically assign one when you save.
+                    </p>
+                  </div>
                 </div>
               )}
             </div>

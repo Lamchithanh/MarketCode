@@ -80,7 +80,7 @@ export function CategoriesManagement() {
         slug: category.slug,
         description: category.description,
         icon: category.icon,
-        productCount: 0, // We'll need to fetch this separately or modify the API
+        productCount: category.productCount || 0, // Use productCount from API
         isActive: true, // Default to true since Category interface doesn't have this
         createdAt: category.createdAt,
         updatedAt: category.updatedAt

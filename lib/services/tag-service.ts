@@ -5,6 +5,7 @@ export interface Tag {
   name: string;
   slug: string;
   color?: string;
+  usageCount?: number;
   createdAt: string;
   updatedAt: string;
   deletedAt?: string;

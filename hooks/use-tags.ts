@@ -55,9 +55,12 @@ export function useTags(): UseTagsReturn {
       setLoading(true);
       setError(null);
       
+      const currentPage = filters.page || page || 1;
+      const currentLimit = filters.limit || limit || 20;
+      
       const queryParams = new URLSearchParams({
-        page: filters.page?.toString() || page.toString(),
-        limit: filters.limit?.toString() || limit.toString(),
+        page: currentPage.toString(),
+        limit: currentLimit.toString(),
       });
       
       if (filters.search) {

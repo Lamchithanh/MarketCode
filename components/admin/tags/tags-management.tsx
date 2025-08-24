@@ -75,7 +75,7 @@ export function TagsManagement() {
         name: tag.name,
         slug: tag.slug,
         color: tag.color || '#000000',
-        productCount: 0, // We'll need to fetch this separately or modify the API
+        productCount: tag.usageCount || 0, // Use usageCount from API
         createdAt: tag.createdAt,
         updatedAt: tag.updatedAt
       })).filter(tag =>
