@@ -12,6 +12,7 @@ export async function GET(request: NextRequest) {
     const search = searchParams.get('search') || '';
     const status = searchParams.get('status');
     const paymentStatus = searchParams.get('paymentStatus');
+    const paymentMethod = searchParams.get('paymentMethod');
     
     const supabase = createClient(supabaseUrl, supabaseServiceKey);
     
@@ -21,9 +22,9 @@ export async function GET(request: NextRequest) {
         *
       `);
     
-    // Apply filters
-    if (search) {
-      query = query.or(`orderNumber.ilike.%${search}%,user.name.ilike.%${search}%,user.email.ilike.%${search}%`);
+    // Apply filters - only search by order number
+    if (search && search.trim()) {
+      query = query.ilike('orderNumber', `%${search}%`);
     }
     
     if (status) {
@@ -33,20 +34,27 @@ export async function GET(request: NextRequest) {
     if (paymentStatus) {
       query = query.eq('paymentStatus', paymentStatus);
     }
+
+    if (paymentMethod) {
+      query = query.eq('paymentMethod', paymentMethod);
+    }
     
     // Get total count first
     let countQuery = supabase
       .from('Order')
       .select('*', { count: 'exact', head: true });
     
-    if (search) {
-      countQuery = countQuery.or(`orderNumber.ilike.%${search}%`);
+    if (search && search.trim()) {
+      countQuery = countQuery.ilike('orderNumber', `%${search}%`);
     }
     if (status) {
       countQuery = countQuery.eq('status', status);
     }
     if (paymentStatus) {
       countQuery = countQuery.eq('paymentStatus', paymentStatus);
+    }
+    if (paymentMethod) {
+      countQuery = countQuery.eq('paymentMethod', paymentMethod);
     }
     
     const { count } = await countQuery;
@@ -68,7 +76,7 @@ export async function GET(request: NextRequest) {
     }
     
     const totalPages = Math.ceil((count || 0) / limit);
-    
+
     return NextResponse.json({
       orders: orders || [],
       total: count || 0,

@@ -17,28 +17,44 @@ export async function GET() {
     }
 
     // Get completed orders count (status enum: PENDING, PROCESSING, COMPLETED, CANCELLED)
-    const { count: completedOrders, error: completedOrdersError } = await supabaseServiceRole
+    const { count: completedOrders } = await supabaseServiceRole
       .from('Order')
       .select('*', { count: 'exact', head: true })
       .eq('status', 'COMPLETED');
 
     // Get pending orders count
-    const { count: pendingOrders, error: pendingOrdersError } = await supabaseServiceRole
+    const { count: pendingOrders } = await supabaseServiceRole
       .from('Order')
       .select('*', { count: 'exact', head: true })
       .eq('status', 'PENDING');
 
     // Get processing orders count
-    const { count: processingOrders, error: processingOrdersError } = await supabaseServiceRole
+    const { count: processingOrders } = await supabaseServiceRole
       .from('Order')
       .select('*', { count: 'exact', head: true })
       .eq('status', 'PROCESSING');
 
     // Get cancelled orders count
-    const { count: cancelledOrders, error: cancelledOrdersError } = await supabaseServiceRole
+    const { count: cancelledOrders } = await supabaseServiceRole
       .from('Order')
       .select('*', { count: 'exact', head: true })
       .eq('status', 'CANCELLED');
+
+    // Get total revenue from completed orders
+    const { data: revenueData } = await supabaseServiceRole
+      .from('Order')
+      .select('totalAmount')
+      .eq('status', 'COMPLETED');
+
+    const totalRevenue = revenueData?.reduce((sum, order) => sum + (order.totalAmount || 0), 0) || 0;
+
+    // Get today's orders count
+    const today = new Date();
+    today.setHours(0, 0, 0, 0);
+    const { count: todayOrders } = await supabaseServiceRole
+      .from('Order')
+      .select('*', { count: 'exact', head: true })
+      .gte('createdAt', today.toISOString());
 
     return NextResponse.json({
       success: true,
@@ -47,7 +63,9 @@ export async function GET() {
         completed: completedOrders || 0,
         pending: pendingOrders || 0,
         processing: processingOrders || 0,
-        cancelled: cancelledOrders || 0
+        cancelled: cancelledOrders || 0,
+        totalRevenue: totalRevenue,
+        todayOrders: todayOrders || 0
       }
     });
 
