@@ -31,7 +31,6 @@ import {
   Mail,
   MessageSquare,
   Settings,
-  Activity,
   Code,
   Shield,
   LogOut,
@@ -85,14 +84,6 @@ export function AdminSidebar() {
                     <Link href="/admin/dashboard">
                       <BarChart3 className="w-4 h-4" />
                       <span>Tổng quan</span>
-                    </Link>
-                  </SidebarMenuButton>
-                </SidebarMenuItem>
-                <SidebarMenuItem>
-                  <SidebarMenuButton asChild isActive={pathname === "/admin/performance"}>
-                    <Link href="/admin/performance">
-                      <Activity className="w-4 h-4" />
-                      <span>Hiệu suất</span>
                     </Link>
                   </SidebarMenuButton>
                 </SidebarMenuItem>

@@ -13,6 +13,7 @@ import { OrdersTable } from './orders-table-component';
 import { OrdersPagination } from './orders-pagination';
 import { OrderStatsCards } from './order-stats-cards';
 import { OrderFilters, type OrderFilters as OrderFiltersType } from './order-filters';
+import { useOrderStats } from '@/hooks/use-order-stats';
 import { Order } from '@/lib/services/order-service';
 
 export function OrdersManagementNew() {
@@ -23,15 +24,16 @@ export function OrdersManagementNew() {
   const [showViewDialog, setShowViewDialog] = useState(false);
   const [showEditDialog, setShowEditDialog] = useState(false);
   const [showDeleteDialog, setShowDeleteDialog] = useState(false);
-  const [stats, setStats] = useState({
-    total: 0,
-    pending: 0,
-    processing: 0,
-    completed: 0,
-    cancelled: 0,
-    totalRevenue: 0,
-    todayOrders: 0,
-  });
+  
+  // Sử dụng custom hook cho stats management
+  const {
+    stats,
+    loading: statsLoading,
+    fetchStats,
+    refreshStats,
+    optimisticUpdateStatus,
+    revertOptimisticUpdate
+  } = useOrderStats();
   const [filters, setFilters] = useState<OrderFiltersType>({});
   const [pagination, setPagination] = useState({
     page: 1,
@@ -44,23 +46,22 @@ export function OrdersManagementNew() {
   useEffect(() => {
     const initialFetch = async () => {
       await fetchOrders();
-      await fetchStats();
+      await fetchStats(); // ✅ Sử dụng fetchStats từ hook
     };
     initialFetch();
   }, []); // eslint-disable-line react-hooks/exhaustive-deps
 
-  // Fetch order statistics
-  const fetchStats = async () => {
-    try {
-      const response = await fetch('/api/admin/orders/stats');
-      if (response.ok) {
-        const data = await response.json();
-        setStats(data);
-      }
-    } catch (err) {
-      console.error('Error fetching order stats:', err);
+  // Auto-refresh stats khi có thay đổi pagination hoặc filters
+  useEffect(() => {
+    // Chỉ refresh stats khi không phải lần load đầu tiên
+    if (orders.length > 0) {
+      const debounceTimer = setTimeout(() => {
+        fetchStats(); // ✅ Sử dụng fetchStats từ hook
+      }, 500);
+
+      return () => clearTimeout(debounceTimer);
     }
-  };
+  }, [pagination.page, JSON.stringify(filters)]); // eslint-disable-line react-hooks/exhaustive-deps
 
   // Fetch orders data with filters
   const fetchOrders = async (page = 1, limit = 20, appliedFilters = filters) => {
@@ -131,6 +132,14 @@ export function OrdersManagementNew() {
 
   // Handle status updates
   const handleUpdateStatus = async (orderId: string, status: string) => {
+    // Tìm order cần update
+    const orderToUpdate = orders.find(o => o.id === orderId);
+    if (!orderToUpdate) return;
+
+    // Optimistically update stats using custom hook
+    const oldStatus = orderToUpdate.status;
+    optimisticUpdateStatus(oldStatus, status);
+
     try {
       const response = await fetch('/api/admin/orders', {
         method: 'PUT',
@@ -144,13 +153,20 @@ export function OrdersManagementNew() {
       });
 
       if (!response.ok) {
+        // Revert optimistic update nếu có lỗi
+        revertOptimisticUpdate();
         throw new Error('Failed to update order status');
       }
 
-      // Refresh the orders list
-      await fetchOrders(pagination.page, pagination.limit);
+      // Refresh both orders list and stats để đảm bảo chính xác
+      await Promise.all([
+        fetchOrders(pagination.page, pagination.limit),
+        refreshStats()
+      ]);
       toast.success('Trạng thái đơn hàng đã được cập nhật');
     } catch (error) {
+      // Revert optimistic update nếu có lỗi
+      revertOptimisticUpdate();
       console.error('Error updating order status:', error);
       toast.error('Không thể cập nhật trạng thái đơn hàng');
       throw error;
@@ -174,8 +190,9 @@ export function OrdersManagementNew() {
         throw new Error('Failed to update payment status');
       }
 
-      // Refresh the orders list
+      // Refresh both orders list and stats
       await fetchOrders(pagination.page, pagination.limit);
+      await refreshStats(); // ✅ Sử dụng refreshStats từ hook
       toast.success('Trạng thái thanh toán đã được cập nhật');
     } catch (error) {
       console.error('Error updating payment status:', error);
@@ -185,10 +202,23 @@ export function OrdersManagementNew() {
   };
 
   // Handle refresh
-  const handleRefresh = () => {
-    fetchOrders(pagination.page, pagination.limit);
-    fetchStats();
-    toast.success('Dữ liệu đã được làm mới');
+  const handleRefresh = async () => {
+    // Hiển thị loading state trên stats cards
+    setLoading(true);
+    
+    try {
+      // Fetch cả orders và stats song song để nhanh hơn
+      await Promise.all([
+        fetchOrders(pagination.page, pagination.limit),
+        refreshStats() // ✅ Sử dụng refreshStats từ hook
+      ]);
+      toast.success('Dữ liệu đã được làm mới');
+    } catch (error) {
+      console.error('Error refreshing data:', error);
+      toast.error('Không thể làm mới dữ liệu');
+    } finally {
+      setLoading(false);
+    }
   };
 
   // Handle filters change
@@ -222,7 +252,7 @@ export function OrdersManagementNew() {
   return (
     <div className="space-y-6">
       {/* Order Statistics */}
-      <OrderStatsCards stats={stats} loading={loading} />
+      <OrderStatsCards stats={stats} loading={statsLoading} />
 
       {/* Filters */}
       <OrderFilters onFiltersChange={handleFiltersChange} />
@@ -296,14 +326,20 @@ export function OrdersManagementNew() {
         open={showEditDialog}
         onOpenChange={setShowEditDialog}
         order={selectedOrder}
-        onOrderUpdated={() => fetchOrders(pagination.page, pagination.limit)}
+        onOrderUpdated={async () => {
+          await fetchOrders(pagination.page, pagination.limit);
+          await fetchStats(); // ✅ Cập nhật stats khi order được update
+        }}
       />
 
       <OrderDeleteDialog 
         open={showDeleteDialog}
         onOpenChange={setShowDeleteDialog}
         order={selectedOrder}
-        onOrderDeleted={() => fetchOrders(pagination.page, pagination.limit)}
+        onOrderDeleted={async () => {
+          await fetchOrders(pagination.page, pagination.limit);
+          await fetchStats(); // ✅ Cập nhật stats khi order được delete
+        }}
       />
     </div>
   );

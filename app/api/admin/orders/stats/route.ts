@@ -40,11 +40,12 @@ export async function GET() {
       .select('*', { count: 'exact', head: true })
       .eq('status', 'CANCELLED');
 
-    // Get total revenue from completed orders
+    // Get total revenue from completed and paid orders
     const { data: revenueData } = await supabaseServiceRole
       .from('Order')
       .select('totalAmount')
-      .eq('status', 'COMPLETED');
+      .eq('status', 'COMPLETED')
+      .eq('paymentStatus', 'PAID');
 
     const totalRevenue = revenueData?.reduce((sum, order) => sum + (order.totalAmount || 0), 0) || 0;
 

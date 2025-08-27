@@ -15,7 +15,6 @@ import {
   AlertDialogFooter,
   AlertDialogHeader,
   AlertDialogTitle,
-  AlertDialogTrigger,
 } from '@/components/ui/alert-dialog';
 import { useDownloads } from '@/hooks/use-downloads';
 import Image from 'next/image';
@@ -179,40 +178,53 @@ export default function DownloadsManagement() {
                     <tr key={download.id} className="border-b hover:bg-gray-50">
                       <td className="p-2">
                         <div>
-                          <div className="font-medium">{download.userName}</div>
-                          <div className="text-gray-500">{download.userEmail}</div>
+                          <div className="font-medium">{download.userName || 'Unknown User'}</div>
+                          <div className="text-gray-500">{download.userEmail || 'No Email'}</div>
                         </div>
                       </td>
                       <td className="p-2">
                         <div className="flex items-center space-x-2">
                           <Image 
-                            src={download.productThumbnail} 
-                            alt={download.productName}
+                            src={download.productThumbnail || '/placeholder-image.jpg'} 
+                            alt={`Thumbnail của sản phẩm ${download.productName || 'Unknown Product'}`}
                             width={32}
                             height={32}
                             className="rounded object-cover"
                           />
-                          <span>{download.productName}</span>
+                          <span>{download.productName || 'Unknown Product'}</span>
                         </div>
                       </td>
                       <td className="p-2">
                         <div className="text-sm">
-                          {new Date(download.downloadDate).toLocaleString('vi-VN')}
+                          {download.downloadDate && download.downloadDate !== 'Invalid Date' 
+                            ? new Date(download.downloadDate).toLocaleString('vi-VN', {
+                                year: 'numeric',
+                                month: '2-digit',
+                                day: '2-digit',
+                                hour: '2-digit',
+                                minute: '2-digit'
+                              })
+                            : 'Không xác định'
+                          }
                         </div>
                       </td>
                       <td className="p-2">
-                        <Badge variant="outline">{download.ipAddress}</Badge>
+                        <Badge variant="outline">{download.ipAddress || '---'}</Badge>
                       </td>
                       <td className="p-2">
-                        <a 
-                          href={download.githubUrl} 
-                          target="_blank" 
-                          rel="noopener noreferrer"
-                          className="text-blue-600 hover:underline flex items-center space-x-1"
-                        >
-                          <span>GitHub Repository</span>
-                          <ExternalLink className="h-3 w-3" />
-                        </a>
+                        {download.githubUrl && download.githubUrl !== '#' ? (
+                          <a 
+                            href={download.githubUrl} 
+                            target="_blank" 
+                            rel="noopener noreferrer"
+                            className="text-blue-600 hover:underline flex items-center space-x-1"
+                          >
+                            <span>GitHub Repository</span>
+                            <ExternalLink className="h-3 w-3" />
+                          </a>
+                        ) : (
+                          <span className="text-gray-400">Không có</span>
+                        )}
                       </td>
                       <td className="p-2">
                         <Button 

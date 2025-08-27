@@ -30,48 +30,59 @@ export function OrderStatsCards({ stats, loading = false }: OrderStatsProps) {
       currency: 'VND',
       notation: 'compact',
       maximumFractionDigits: 1
-    }).format(amount);
+    }).format(amount || 0);
+  };
+
+  // Validate stats data and provide fallbacks
+  const safeStats = {
+    total: stats?.total || 0,
+    pending: stats?.pending || 0,
+    processing: stats?.processing || 0,
+    completed: stats?.completed || 0,
+    cancelled: stats?.cancelled || 0,
+    totalRevenue: stats?.totalRevenue || 0,
+    todayOrders: stats?.todayOrders || 0
   };
 
   const statsData = [
     {
       title: 'Tổng đơn hàng',
-      value: stats?.total || 0,
+      value: safeStats.total,
       icon: ShoppingCart,
       color: 'text-blue-600',
       bgColor: 'bg-blue-100',
     },
     {
       title: 'Chờ xử lý',
-      value: stats?.pending || 0,
+      value: safeStats.pending,
       icon: Clock,
       color: 'text-yellow-600',
       bgColor: 'bg-yellow-100',
     },
     {
       title: 'Đang xử lý',
-      value: stats?.processing || 0,
+      value: safeStats.processing,
       icon: TrendingUp,
       color: 'text-purple-600',
       bgColor: 'bg-purple-100',
     },
     {
       title: 'Hoàn thành',
-      value: stats?.completed || 0,
+      value: safeStats.completed,
       icon: CheckCircle,
       color: 'text-green-600',
       bgColor: 'bg-green-100',
     },
     {
       title: 'Đã hủy',
-      value: stats?.cancelled || 0,
+      value: safeStats.cancelled,
       icon: XCircle,
       color: 'text-red-600',
       bgColor: 'bg-red-100',
     },
     {
       title: 'Doanh thu',
-      value: formatCurrency(stats?.totalRevenue || 0),
+      value: formatCurrency(safeStats.totalRevenue),
       icon: DollarSign,
       color: 'text-emerald-600',
       bgColor: 'bg-emerald-100',
@@ -117,9 +128,9 @@ export function OrderStatsCards({ stats, loading = false }: OrderStatsProps) {
               <div className="text-2xl font-bold">
                 {stat.isRevenue ? stat.value : (stat.value || 0).toLocaleString('vi-VN')}
               </div>
-              {stat.title === 'Tổng đơn hàng' && stats?.todayOrders && stats.todayOrders > 0 && (
+              {stat.title === 'Tổng đơn hàng' && safeStats.todayOrders && safeStats.todayOrders > 0 && (
                 <p className="text-xs text-muted-foreground">
-                  +{stats?.todayOrders || 0} hôm nay
+                  +{safeStats.todayOrders} hôm nay
                 </p>
               )}
             </CardContent>

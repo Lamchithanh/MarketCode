@@ -1,8 +1,9 @@
-export { SettingsTable } from './settings-table';
-export { SettingsManagement } from './settings-management';
-export { SettingsHeader } from './settings-header';
-export { SettingsStats } from './settings-stats';
-export { SettingsSearch } from './settings-search';
-export { SettingViewDialog } from './setting-view-dialog';
-export { SettingEditDialog } from './setting-edit-dialog';
-export { SettingDeleteDialog } from './setting-delete-dialog';
+export { SettingsTabs } from './settings-tabs';
+export { BasicInfoTab } from './tabs/basic-info-tab';
+export { ContactTab } from './tabs/contact-tab';
+export { EmailTab } from './tabs/email-tab';
+export { SystemTab } from './tabs/system-tab';
+export { BrandingTab } from './tabs/branding-tab';
+export { RewardsTab } from './tabs/rewards-tab';
+export { PaymentTab } from './tabs/payment-tab';
+export { SettingField } from './shared/setting-field';

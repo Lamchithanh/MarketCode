@@ -36,14 +36,21 @@ export function useDownloads() {
 
       const response = await fetch('/api/admin/downloads');
       if (!response.ok) {
-        throw new Error('Failed to fetch downloads');
+        throw new Error(`HTTP error! status: ${response.status}`);
       }
 
       const result = await response.json();
-      setDownloads(result.data || []);
+      
+      if (result.success && result.data) {
+        setDownloads(result.data);
+      } else {
+        console.error('API response:', result);
+        throw new Error(result.error || 'Invalid response format');
+      }
     } catch (err) {
       console.error('Error fetching downloads:', err);
       setError(err instanceof Error ? err.message : 'Failed to fetch downloads');
+      setDownloads([]); // Set empty array on error
     } finally {
       setLoading(false);
     }
@@ -92,12 +99,20 @@ export function useDownloads() {
   const stats: DownloadStats = {
     totalDownloads: downloads.length,
     uniqueUsers: new Set(downloads.map(d => d.userId)).size,
-    recentDownloads: downloads.filter(d => 
-      new Date(d.downloadDate) >= new Date(Date.now() - 7 * 24 * 60 * 60 * 1000)
-    ).length,
+    recentDownloads: downloads.filter(d => {
+      try {
+        const downloadDate = new Date(d.downloadDate);
+        const oneWeekAgo = new Date(Date.now() - 7 * 24 * 60 * 60 * 1000);
+        return downloadDate >= oneWeekAgo;
+      } catch {
+        return false; // Invalid date
+      }
+    }).length,
     topProducts: Object.entries(
       downloads.reduce((acc, d) => {
-        acc[d.productName] = (acc[d.productName] || 0) + 1;
+        if (d.productName && d.productName !== 'Unknown Product') {
+          acc[d.productName] = (acc[d.productName] || 0) + 1;
+        }
         return acc;
       }, {} as Record<string, number>)
     )
