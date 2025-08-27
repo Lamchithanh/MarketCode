@@ -56,6 +56,7 @@ export function UsersStats({ stats, loading = false }: UsersStatsProps) {
     {
       title: 'Total Users',
       value: stats.total,
+      secondaryValue: `${stats.deletedUsers || 0} đã xóa`,
       icon: Users,
       bgColor: 'bg-blue-100',
       iconColor: 'text-blue-600',
@@ -99,6 +100,9 @@ export function UsersStats({ stats, loading = false }: UsersStatsProps) {
             </CardHeader>
             <CardContent>
               <div className="text-2xl font-bold text-foreground">{stat.value}</div>
+              {stat.secondaryValue && (
+                <p className="text-sm text-red-600 mt-1">{stat.secondaryValue}</p>
+              )}
               <p className="text-xs text-stone-600">
                 {stat.title === 'Recent Users' ? 'Last 30 days' : 'Total count'}
               </p>

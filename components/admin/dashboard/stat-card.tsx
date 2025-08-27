@@ -5,6 +5,7 @@ import { useState, useEffect } from "react";
 interface StatCardProps {
   title: string;
   value: string | number;
+  secondaryValue?: string;
   icon: LucideIcon;
   bgColor?: string;
   iconColor?: string;
@@ -19,6 +20,7 @@ interface StatCardProps {
 export function StatCard({ 
   title, 
   value, 
+  secondaryValue,
   icon: Icon, 
   bgColor = "bg-stone-100", 
   iconColor = "text-stone-600",
@@ -70,12 +72,17 @@ export function StatCard({
             </span>
           )}
         </div>
-        {trend && (
+        {secondaryValue && (
+          <p className={`text-sm mt-1 transition-colors duration-300 ${showHighlight ? 'text-red-500' : 'text-red-600'}`}>
+            {secondaryValue}
+          </p>
+        )}
+        {trend && !secondaryValue && (
           <p className={`text-xs mt-1 ${trend.isPositive ? 'text-green-600' : 'text-red-600'}`}>
             {trend.value}
           </p>
         )}
-        {!trend && (
+        {!trend && !secondaryValue && (
           <p className={`text-xs mt-1 transition-colors duration-300 ${showHighlight ? 'text-blue-600' : 'text-stone-600'}`}>
             {showHighlight ? 'Vừa cập nhật' : 'Cập nhật gần đây'}
           </p>

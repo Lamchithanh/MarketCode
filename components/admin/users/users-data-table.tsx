@@ -67,6 +67,16 @@ export function UsersDataTable({
   };
 
   const getStatusBadge = (user: User) => {
+    // Kiểm tra nếu tài khoản bị xóa (soft delete)
+    if (user.deletedAt) {
+      return (
+        <Badge variant="destructive" className="bg-red-100 text-red-800 flex items-center gap-1">
+          <XCircle className="w-3 h-3" />
+          Deleted
+        </Badge>
+      );
+    }
+    
     if (user.isActive) {
       return (
         <Badge variant="default" className="bg-green-100 text-green-800 flex items-center gap-1">
@@ -76,7 +86,7 @@ export function UsersDataTable({
       );
     } else {
       return (
-        <Badge variant="secondary" className="bg-red-100 text-red-800 flex items-center gap-1">
+        <Badge variant="secondary" className="bg-yellow-100 text-yellow-800 flex items-center gap-1">
           <XCircle className="w-3 h-3" />
           Inactive
         </Badge>
@@ -143,13 +153,27 @@ export function UsersDataTable({
                   <div className="flex items-center space-x-3">
                     <Avatar className="w-10 h-10">
                       <AvatarImage src={user.avatar} alt={user.name} />
-                      <AvatarFallback className="bg-gradient-to-br from-primary to-accent text-white">
+                      <AvatarFallback className={`
+                        ${user.deletedAt 
+                          ? 'bg-gray-400 text-gray-600' 
+                          : 'bg-gradient-to-br from-primary to-accent text-white'
+                        }
+                      `}>
                         {user.name.charAt(0).toUpperCase()}
                       </AvatarFallback>
                     </Avatar>
                     <div>
-                      <p className="font-medium text-foreground">{user.name}</p>
-                      <p className="text-sm text-muted-foreground">{user.email}</p>
+                      <p className={`font-medium ${user.deletedAt ? 'text-gray-500 line-through' : 'text-foreground'}`}>
+                        {user.name}
+                      </p>
+                      <p className={`text-sm ${user.deletedAt ? 'text-gray-400 line-through' : 'text-muted-foreground'}`}>
+                        {user.email}
+                      </p>
+                      {user.deletedAt && (
+                        <p className="text-xs text-red-500 mt-1">
+                          Deleted: {formatDate(user.deletedAt)}
+                        </p>
+                      )}
                     </div>
                   </div>
                 </TableCell>

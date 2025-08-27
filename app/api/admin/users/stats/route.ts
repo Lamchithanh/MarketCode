@@ -43,6 +43,18 @@ export async function GET() {
       .select('buyerId', { head: false })
       .not('buyerId', 'is', null);
 
+    // Get deleted users count
+    const { count: deletedUsers, error: deletedUsersError } = await supabaseServiceRole
+      .from('User')
+      .select('id', { count: 'exact', head: true })
+      .not('deletedAt', 'is', null);
+
+    if (deletedUsersError) {
+      console.error('Error fetching deleted users count:', deletedUsersError);
+    }
+
+    console.log('🔍 Deleted users count from API:', deletedUsers);
+
     let uniqueBuyers = 0;
     if (!buyingUsersError && buyingUsers) {
       const uniqueBuyerIds = new Set(buyingUsers.map(o => o.buyerId));
@@ -56,7 +68,8 @@ export async function GET() {
       admins: adminUsers || 0,
       regular: (totalUsers || 0) - (adminUsers || 0),
       recent: recentUsers || 0,
-      buyers: uniqueBuyers
+      buyers: uniqueBuyers,
+      deletedUsers: deletedUsers || 0
     });
 
   } catch (error) {

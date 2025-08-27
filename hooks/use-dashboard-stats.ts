@@ -2,6 +2,7 @@ import { useState, useEffect, useRef, useCallback } from 'react';
 
 interface DashboardStats {
   totalUsers: number;
+  deletedUsers: number;
   totalProducts: number;
   totalOrders: number;
   totalDownloads: number;
@@ -22,6 +23,7 @@ interface RecentActivity {
 export function useDashboardStats() {
   const [stats, setStats] = useState<DashboardStats>({
     totalUsers: 0,
+    deletedUsers: 0,
     totalProducts: 0,
     totalOrders: 0,
     totalDownloads: 0,
@@ -84,6 +86,7 @@ export function useDashboardStats() {
       // Fallback data if API fails
       setStats({
         totalUsers: 1234,
+        deletedUsers: 100,
         totalProducts: 567,
         totalOrders: 89,
         totalDownloads: 45678,

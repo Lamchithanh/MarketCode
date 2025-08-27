@@ -10,6 +10,7 @@ export async function GET() {
     // Simulate occasional changes for demo purposes
     const baseStats = {
       totalUsers: 6,
+      deletedUsers: 3,
       totalProducts: 4, 
       totalOrders: 7,
       totalDownloads: 6,
@@ -29,6 +30,8 @@ export async function GET() {
       baseStats.totalOrders += 1;
       baseStats.totalRevenue += Math.random() * 20;
     }
+
+    console.log('API returning stats:', baseStats);
 
     const recentActivities = [
       {

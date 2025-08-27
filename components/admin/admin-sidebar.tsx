@@ -2,9 +2,11 @@
 
 import { usePathname } from "next/navigation";
 import Link from "next/link";
+import Image from "next/image";
 import { useSession, signOut } from "next-auth/react";
 import { useState } from "react";
 import { cn } from "@/lib/utils";
+import { useSystemSettings } from "@/hooks/use-system-settings";
 import { LogoutConfirmationModal } from "@/components/ui/confirmation-modal";
 import { toast, toastMessages } from "@/components/ui/toast";
 import {
@@ -40,6 +42,7 @@ import {
 export function AdminSidebar() {
   const pathname = usePathname();
   const { data: session } = useSession();
+  const { settings: systemSettings } = useSystemSettings();
   const [showLogoutModal, setShowLogoutModal] = useState(false);
 
   // Handle logout
@@ -62,11 +65,23 @@ export function AdminSidebar() {
             className="flex items-center gap-3 px-3 py-4 hover:bg-accent/20 transition-colors rounded-md group"
             title="Về trang chủ"
           >
-            <div className="w-10 h-10 bg-gradient-to-br from-primary to-accent rounded-lg flex items-center justify-center group-hover:scale-105 transition-transform">
-              <Shield className="w-6 h-6 text-white" />
-            </div>
+            {systemSettings.logoUrl ? (
+              <div className="w-10 h-10 rounded-lg overflow-hidden group-hover:scale-105 transition-transform bg-white relative">
+                <Image 
+                  src={systemSettings.logoUrl} 
+                  alt={`${systemSettings.siteName} Logo`}
+                  className="object-contain"
+                  fill
+                  sizes="40px"
+                />
+              </div>
+            ) : (
+              <div className="w-10 h-10 bg-gradient-to-br from-primary to-accent rounded-lg flex items-center justify-center group-hover:scale-105 transition-transform">
+                <Shield className="w-6 h-6 text-white" />
+              </div>
+            )}
             <div>
-              <h2 className="font-bold text-lg text-foreground">MarketCode</h2>
+              <h2 className="font-bold text-lg text-foreground">{systemSettings.siteName}</h2>
               <p className="text-xs text-muted-foreground">Admin Panel</p>
             </div>
           </Link>

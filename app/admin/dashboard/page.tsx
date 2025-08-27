@@ -5,17 +5,20 @@ import { useRouter } from "next/navigation";
 import { useEffect } from "react";
 import { Users, Package, ShoppingCart, DollarSign, Activity } from "lucide-react";
 import { PageLoader } from "@/components/ui/loader";
-import { useDashboardStats } from "@/hooks/use-dashboard-stats";
+import { useRealtimeDashboardStats } from "@/hooks/use-realtime-dashboard-stats";
 import { StatCard } from "@/components/admin/dashboard/stat-card";
 import { QuickActions } from "@/components/admin/dashboard/quick-actions";
 import { RecentActivities } from "@/components/admin/dashboard/recent-activities";
 import { SystemOverview } from "@/components/admin/dashboard/system-overview";
-import { DashboardHeader } from "@/components/admin/dashboard/dashboard-header";
 
 const AdminDashboard = () => {
   const { data: session, status } = useSession();
   const router = useRouter();
-  const { stats, recentActivities, loading, error, updatedFields, refetch } = useDashboardStats();
+  const { stats, recentActivities, loading, error, updatedFields, refetch } = useRealtimeDashboardStats();
+
+  // Debug log to check if deletedUsers is being received
+  console.log('Dashboard stats:', stats);
+  console.log('Deleted users:', stats.deletedUsers);
 
   useEffect(() => {
     if (status === "loading") return;
@@ -36,10 +39,11 @@ const AdminDashboard = () => {
     {
       title: "Tổng người dùng",
       value: stats.totalUsers,
+      secondaryValue: `${stats.deletedUsers} đã xóa`,
       icon: Users,
       bgColor: "bg-stone-100",
       iconColor: "text-stone-600",
-      isUpdated: updatedFields.has('totalUsers'),
+      isUpdated: updatedFields.has('totalUsers') || updatedFields.has('deletedUsers'),
     },
     {
       title: "Tổng sản phẩm",
@@ -120,7 +124,7 @@ const AdminDashboard = () => {
             {loading ? '⏳ Đang tải...' : '🔄 Làm mới'}
           </button>
           <p className="text-sm text-muted-foreground">
-            Cập nhật cuối: {new Date().toLocaleTimeString('vi-VN')}
+            🔴 Realtime • Cập nhật cuối: {new Date().toLocaleTimeString('vi-VN')}
           </p>
           <Activity className="h-4 w-4 text-muted-foreground" />
         </div>

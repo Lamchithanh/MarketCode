@@ -54,6 +54,7 @@ export async function GET(request: Request) {
       isActive: user.isActive ?? true,
       lastLoginAt: user.lastLoginAt || null,
       emailVerified: user.emailVerified || null,
+      deletedAt: user.deletedAt || null, // Include deletedAt field
       orderCount: 0, // We'll calculate this separately if needed
       createdAt: user.createdAt || new Date().toISOString(),
       updatedAt: user.updatedAt || new Date().toISOString()

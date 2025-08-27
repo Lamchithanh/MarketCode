@@ -47,6 +47,7 @@ export interface UserStats {
   regular: number;
   recent: number;
   buyers: number;
+  deletedUsers: number;
 }
 
 export interface PaginatedUsers {
@@ -412,6 +413,15 @@ export class UserService {
         .is('deletedAt', null)
         .gte('createdAt', startOfMonth.toISOString());
 
+      // Get deleted users count (users where deletedAt is not null)
+      const deletedResult = await supabaseServiceRole
+        .from('User')
+        .select('id', { count: 'exact', head: true })
+        .neq('deletedAt', null);
+        
+      console.log('🔍 Deleted users query result:', deletedResult);
+      const deletedUsers = deletedResult.count;
+
       return {
         total: total || 0,
         verified: active || 0, // Using active count as verified (placeholder)
@@ -419,7 +429,8 @@ export class UserService {
         admins: admins || 0,
         regular: (total || 0) - (admins || 0),
         recent: newThisMonth || 0,
-        buyers: 0 // Placeholder, would need to calculate from orders
+        buyers: 0, // Placeholder, would need to calculate from orders
+        deletedUsers: deletedUsers || 0
       };
     } catch (error) {
       console.error('Error fetching user stats:', error);
