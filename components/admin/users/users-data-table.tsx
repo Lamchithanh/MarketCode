@@ -15,6 +15,7 @@ import { Shield, User as UserIcon, Database, CheckCircle, XCircle } from 'lucide
 import { UserActions } from './user-actions';
 import { User } from '@/lib/services/user-service';
 import { Button } from '@/components/ui/button';
+import { TwoFactorManager } from '@/components/ui/two-factor-manager';
 
 interface PaginationInfo {
   page: number;
@@ -141,6 +142,7 @@ export function UsersDataTable({
               <TableHead>User</TableHead>
               <TableHead>Role</TableHead>
               <TableHead>Status</TableHead>
+              <TableHead>2FA</TableHead>
               <TableHead>Last Login</TableHead>
               <TableHead>Created</TableHead>
               <TableHead className="text-right">Actions</TableHead>
@@ -188,6 +190,17 @@ export function UsersDataTable({
                 </TableCell>
                 <TableCell>
                   {getStatusBadge(user)}
+                </TableCell>
+                <TableCell>
+                  {user.role === 'ADMIN' ? (
+                    <TwoFactorManager 
+                      userId={user.id}
+                      userRole={user.role}
+                      isAdmin={true}
+                    />
+                  ) : (
+                    <span className="text-sm text-muted-foreground">N/A</span>
+                  )}
                 </TableCell>
                 <TableCell>
                   {user.lastLoginAt ? formatDate(user.lastLoginAt) : 'Never'}

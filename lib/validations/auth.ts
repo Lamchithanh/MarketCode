@@ -8,6 +8,14 @@ export const loginSchema = z.object({
     .min(6, "Mật khẩu phải có ít nhất 6 ký tự"),
 });
 
+export const twoFactorSchema = z.object({
+  code: z
+    .string()
+    .min(6, "Mã 2FA phải có 6 chữ số")
+    .max(6, "Mã 2FA phải có 6 chữ số")
+    .regex(/^\d{6}$/, "Mã 2FA phải là 6 chữ số"),
+});
+
 export const registerSchema = z
   .object({
     firstName: z

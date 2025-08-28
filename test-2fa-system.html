@@ -1,0 +1,322 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>2FA System Test</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 20px;
+            background-color: #f5f5f5;
+        }
+        .container {
+            background: white;
+            padding: 30px;
+            border-radius: 10px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+        .section {
+            margin-bottom: 30px;
+            padding: 20px;
+            border: 1px solid #ddd;
+            border-radius: 8px;
+        }
+        .section h3 {
+            margin-top: 0;
+            color: #333;
+        }
+        button {
+            background: #007bff;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 5px;
+            cursor: pointer;
+            margin: 5px;
+        }
+        button:hover {
+            background: #0056b3;
+        }
+        button:disabled {
+            background: #ccc;
+            cursor: not-allowed;
+        }
+        input {
+            padding: 8px 12px;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            margin: 5px;
+        }
+        .result {
+            margin-top: 15px;
+            padding: 10px;
+            border-radius: 4px;
+            font-family: monospace;
+            font-size: 14px;
+            white-space: pre-wrap;
+        }
+        .success {
+            background-color: #d4edda;
+            color: #155724;
+            border: 1px solid #c3e6cb;
+        }
+        .error {
+            background-color: #f8d7da;
+            color: #721c24;
+            border: 1px solid #f5c6cb;
+        }
+        .info {
+            background-color: #d1ecf1;
+            color: #0c5460;
+            border: 1px solid #bee5eb;
+        }
+        .qr-code {
+            margin: 10px 0;
+        }
+        .qr-code img {
+            max-width: 200px;
+            height: auto;
+        }
+        .backup-codes {
+            background: #f8f9fa;
+            padding: 10px;
+            border: 1px solid #dee2e6;
+            border-radius: 4px;
+            margin: 10px 0;
+        }
+        .backup-codes ul {
+            list-style: none;
+            padding: 0;
+            margin: 0;
+            columns: 2;
+        }
+        .backup-codes li {
+            font-family: monospace;
+            padding: 2px 0;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🔐 2FA System Test</h1>
+        <p>Test the Two-Factor Authentication system for both Admin and User roles</p>
+        
+        <!-- User Settings Test -->
+        <div class="section">
+            <h3>👤 User Settings API Test</h3>
+            <button onclick="getUserSettings()">Get User Settings</button>
+            <button onclick="updateUserSettings()">Update 2FA Setting</button>
+            <div id="user-settings-result" class="result" style="display: none;"></div>
+        </div>
+
+        <!-- User 2FA Setup Test -->
+        <div class="section">
+            <h3>🔒 User 2FA Setup Test</h3>
+            <input type="password" id="user-password" placeholder="Enter password" value="123456">
+            <button onclick="userSetup2FA()">Setup 2FA (User)</button>
+            <button onclick="userGet2FAStatus()">Get Status (User)</button>
+            <div id="user-2fa-result" class="result" style="display: none;"></div>
+        </div>
+
+        <!-- User 2FA Verification Test -->
+        <div class="section">
+            <h3>✅ User 2FA Verification Test</h3>
+            <input type="text" id="user-verification-code" placeholder="Enter 6-digit code" maxlength="6">
+            <button onclick="userVerify2FA()">Verify Code (User)</button>
+            <button onclick="userDisable2FA()">Disable 2FA (User)</button>
+            <div id="user-verify-result" class="result" style="display: none;"></div>
+        </div>
+
+        <!-- Admin 2FA Test -->
+        <div class="section">
+            <h3>👑 Admin 2FA Test</h3>
+            <input type="password" id="admin-password" placeholder="Enter admin password" value="admin123">
+            <button onclick="adminSetup2FA()">Setup 2FA (Admin)</button>
+            <button onclick="adminGet2FAStatus()">Get Status (Admin)</button>
+            <div id="admin-2fa-result" class="result" style="display: none;"></div>
+        </div>
+
+        <!-- System Settings Test -->
+        <div class="section">
+            <h3>⚙️ System Settings Test</h3>
+            <button onclick="getSystemSettings()">Get System Settings</button>
+            <button onclick="testEmailService()">Test Email Service</button>
+            <div id="system-settings-result" class="result" style="display: none;"></div>
+        </div>
+    </div>
+
+    <script>
+        // Helper function to make API calls
+        async function apiCall(endpoint, options = {}) {
+            try {
+                const response = await fetch(`http://localhost:3000${endpoint}`, {
+                    headers: {
+                        'Content-Type': 'application/json',
+                        ...options.headers
+                    },
+                    ...options
+                });
+                
+                const data = await response.json();
+                return {
+                    status: response.status,
+                    ok: response.ok,
+                    data: data
+                };
+            } catch (error) {
+                return {
+                    status: 0,
+                    ok: false,
+                    error: error.message
+                };
+            }
+        }
+
+        function displayResult(elementId, result, type = 'info') {
+            const element = document.getElementById(elementId);
+            element.className = `result ${type}`;
+            element.style.display = 'block';
+            element.textContent = JSON.stringify(result, null, 2);
+        }
+
+        // User Settings Tests
+        async function getUserSettings() {
+            const result = await apiCall('/api/user/settings');
+            displayResult('user-settings-result', result, result.ok ? 'success' : 'error');
+        }
+
+        async function updateUserSettings() {
+            const result = await apiCall('/api/user/settings', {
+                method: 'PUT',
+                body: JSON.stringify({
+                    settings: {
+                        twoFactorEnabled: true,
+                        notifications: true
+                    }
+                })
+            });
+            displayResult('user-settings-result', result, result.ok ? 'success' : 'error');
+        }
+
+        // User 2FA Tests
+        async function userGet2FAStatus() {
+            const result = await apiCall('/api/user/two-factor/setup');
+            displayResult('user-2fa-result', result, result.ok ? 'success' : 'error');
+        }
+
+        async function userSetup2FA() {
+            const password = document.getElementById('user-password').value;
+            const result = await apiCall('/api/user/two-factor/setup', {
+                method: 'POST',
+                body: JSON.stringify({ password })
+            });
+            
+            if (result.ok && result.data.qrCodeUrl) {
+                // Add QR code to result display
+                const element = document.getElementById('user-2fa-result');
+                element.className = 'result success';
+                element.style.display = 'block';
+                element.innerHTML = `
+                    <div>Setup successful!</div>
+                    <div class="qr-code">
+                        <strong>QR Code:</strong><br>
+                        <img src="${result.data.qrCodeUrl}" alt="QR Code">
+                    </div>
+                    <div><strong>Manual Entry Key:</strong> ${result.data.manualEntryKey}</div>
+                    <div class="backup-codes">
+                        <strong>Backup Codes:</strong>
+                        <ul>
+                            ${result.data.backupCodes.map(code => `<li>${code}</li>`).join('')}
+                        </ul>
+                    </div>
+                    <pre>${JSON.stringify(result, null, 2)}</pre>
+                `;
+            } else {
+                displayResult('user-2fa-result', result, result.ok ? 'success' : 'error');
+            }
+        }
+
+        async function userVerify2FA() {
+            const code = document.getElementById('user-verification-code').value;
+            const result = await apiCall('/api/user/two-factor/verify', {
+                method: 'POST',
+                body: JSON.stringify({ code })
+            });
+            displayResult('user-verify-result', result, result.ok ? 'success' : 'error');
+        }
+
+        async function userDisable2FA() {
+            const result = await apiCall('/api/user/two-factor/disable', {
+                method: 'POST'
+            });
+            displayResult('user-verify-result', result, result.ok ? 'success' : 'error');
+        }
+
+        // Admin 2FA Tests
+        async function adminGet2FAStatus() {
+            const result = await apiCall('/api/admin/two-factor/setup');
+            displayResult('admin-2fa-result', result, result.ok ? 'success' : 'error');
+        }
+
+        async function adminSetup2FA() {
+            const password = document.getElementById('admin-password').value;
+            const result = await apiCall('/api/admin/two-factor/setup', {
+                method: 'POST',
+                body: JSON.stringify({ password })
+            });
+            
+            if (result.ok && result.data.qrCodeUrl) {
+                // Add QR code to result display
+                const element = document.getElementById('admin-2fa-result');
+                element.className = 'result success';
+                element.style.display = 'block';
+                element.innerHTML = `
+                    <div>Admin setup successful!</div>
+                    <div class="qr-code">
+                        <strong>QR Code:</strong><br>
+                        <img src="${result.data.qrCodeUrl}" alt="Admin QR Code">
+                    </div>
+                    <div><strong>Manual Entry Key:</strong> ${result.data.manualEntryKey}</div>
+                    <div class="backup-codes">
+                        <strong>Backup Codes:</strong>
+                        <ul>
+                            ${result.data.backupCodes.map(code => `<li>${code}</li>`).join('')}
+                        </ul>
+                    </div>
+                    <pre>${JSON.stringify(result, null, 2)}</pre>
+                `;
+            } else {
+                displayResult('admin-2fa-result', result, result.ok ? 'success' : 'error');
+            }
+        }
+
+        // System Settings Tests
+        async function getSystemSettings() {
+            const result = await apiCall('/api/admin/system-settings');
+            displayResult('system-settings-result', result, result.ok ? 'success' : 'error');
+        }
+
+        async function testEmailService() {
+            const result = await apiCall('/api/admin/email/test', {
+                method: 'POST',
+                body: JSON.stringify({
+                    to: 'test@example.com',
+                    subject: '2FA Test Email',
+                    text: 'This is a test email from the 2FA system.'
+                })
+            });
+            displayResult('system-settings-result', result, result.ok ? 'success' : 'error');
+        }
+
+        // Auto-refresh status every 30 seconds
+        setInterval(() => {
+            console.log('Auto-refreshing 2FA status...');
+            // Uncomment to enable auto-refresh
+            // userGet2FAStatus();
+        }, 30000);
+    </script>
+</body>
+</html>

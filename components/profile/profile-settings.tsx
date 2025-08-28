@@ -5,6 +5,7 @@ import { Separator } from "@/components/ui/separator";
 import { ChangePasswordModal } from "./change-password-modal";
 import { ProfileInfoCard } from "./profile-info-card";
 import { ProfileStatsCard } from "./profile-stats-card";
+import { TwoFactorSwitch } from "./two-factor-switch";
 import { 
   type ChangePasswordForm
 } from "@/lib/validations/profile";
@@ -12,6 +13,7 @@ import { toast } from "sonner";
 
 interface ProfileSettingsProps {
   user: {
+    id: string;
     name?: string | null;
     email?: string | null;
     role?: string;
@@ -82,10 +84,19 @@ export function ProfileSettings({
           {/* Security Settings */}
           <div className="space-y-4">
             <h4 className="font-medium text-lg">Bảo mật tài khoản</h4>
-            <div className="flex gap-4 flex-wrap">
-              <ChangePasswordModal 
-                onPasswordChange={handlePasswordChange}
+            <div className="space-y-4">
+              {/* Two-Factor Authentication */}
+              <TwoFactorSwitch 
+                userId={initialUser.id}
+                userRole={initialUser.role}
               />
+              
+              {/* Change Password */}
+              <div className="flex gap-4 flex-wrap">
+                <ChangePasswordModal 
+                  onPasswordChange={handlePasswordChange}
+                />
+              </div>
             </div>
           </div>
         </div>
