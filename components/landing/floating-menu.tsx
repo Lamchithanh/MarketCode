@@ -2,12 +2,14 @@
 
 import { useState, useEffect } from "react";
 import Link from "next/link";
+import Image from "next/image";
 import { usePathname } from "next/navigation";
 import { Home, ShoppingCart, User, Package, FileText, Mail, ChevronUp, Code, Settings, Heart, LogOut, Download, Shield, CreditCard } from "lucide-react";
 
 import { Badge } from "@/components/ui/badge";
 import { cn } from "@/lib/utils";
 import { useSession, signOut } from "next-auth/react";
+import { useSystemSettings } from "@/hooks/use-system-settings";
 
 /**
  * FLOATING MENU COMPONENT
@@ -39,6 +41,7 @@ export const FloatingMenu = ({ className }: FloatingMenuProps) => {
   const [isScrollingUp, setIsScrollingUp] = useState(false);
   const pathname = usePathname();
   const { data: session } = useSession();
+  const { settings } = useSystemSettings();
 
   // Ẩn floating menu khi ở trong admin panel
   const isAdminPanel = pathname.startsWith('/admin');
@@ -182,16 +185,45 @@ export const FloatingMenu = ({ className }: FloatingMenuProps) => {
         "hover:shadow-2xl"
       )}>
         {/* Logo Icon */}
-        <div className="flex items-center justify-center mb-1.5 pb-1.5 border-b border-border/40">
+        <div className="flex items-center justify-center mb-1.5 pb-1.5 border-b border-border/40 relative group">
           <Link href="/" onClick={handleNavigation} className="block">
-            <button className={cn(
-              "w-9 h-9 bg-primary rounded-xl flex items-center justify-center text-primary-foreground font-bold text-xs",
-              "hover:scale-110 active:scale-95 transition-all duration-200",
-              "shadow-lg hover:shadow-primary/20"
-            )}>
-              <Code className="h-4 w-4" />
+            <button 
+              onMouseEnter={() => setShowTooltip("/home")}
+              className={cn(
+                "w-9 h-9 rounded-xl flex items-center justify-center relative overflow-hidden",
+                "hover:scale-110 active:scale-95 transition-all duration-200",
+                "hover:bg-accent/10"
+              )}
+            >
+              {settings?.faviconUrl ? (
+                <Image 
+                  src={settings.faviconUrl} 
+                  alt={settings?.siteName || 'MarketCode'} 
+                  width={28}
+                  height={28}
+                  className="object-contain rounded-sm"
+                  unoptimized
+                />
+              ) : (
+                <div className="w-7 h-7 bg-primary rounded-lg flex items-center justify-center text-primary-foreground">
+                  <Code className="h-4 w-4" />
+                </div>
+              )}
             </button>
           </Link>
+
+          {/* Logo Tooltip */}
+          {showTooltip === "/home" && (
+            <div className={cn(
+              "absolute left-12 top-1/2 -translate-y-1/2 px-2.5 py-1.5 z-10",
+              "bg-popover text-popover-foreground text-sm rounded-lg backdrop-blur-sm border border-border shadow-lg",
+              "whitespace-nowrap font-medium",
+              "animate-in fade-in-0 slide-in-from-left-2 duration-200"
+            )}>
+              {settings?.siteName || 'MarketCode'}
+              <div className="absolute right-full top-1/2 -translate-y-1/2 border-4 border-transparent border-r-popover" />
+            </div>
+          )}
         </div>
 
         {/* Navigation Icons */}

@@ -1,7 +1,30 @@
+"use client";
+
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Mail, Phone, MapPin, Clock, Headphones, CheckCircle } from "lucide-react";
+import { useSystemSettings } from "@/hooks/use-system-settings";
+import { Skeleton } from "@/components/ui/skeleton";
 
 export function ContactInfo() {
+  const { settings, loading } = useSystemSettings();
+
+  if (loading) {
+    return (
+      <div className="space-y-6">
+        <Card className="border-0 shadow-lg">
+          <CardHeader>
+            <Skeleton className="h-6 w-32" />
+            <Skeleton className="h-4 w-48" />
+          </CardHeader>
+          <CardContent className="space-y-4">
+            <Skeleton className="h-16 w-full" />
+            <Skeleton className="h-16 w-full" />
+            <Skeleton className="h-16 w-full" />
+          </CardContent>
+        </Card>
+      </div>
+    );
+  }
   return (
     <div className="space-y-6">
       <Card className="border-0 shadow-lg">
@@ -21,8 +44,12 @@ export function ContactInfo() {
             </div>
             <div>
               <p className="font-medium">Email</p>
-              <p className="text-muted-foreground">support@codemarket.vn</p>
-              <p className="text-muted-foreground">sales@codemarket.vn</p>
+              {settings?.supportEmail && (
+                <p className="text-muted-foreground">{settings.supportEmail}</p>
+              )}
+              {settings?.contactEmail && (
+                <p className="text-muted-foreground">{settings.contactEmail}</p>
+              )}
             </div>
           </div>
           
@@ -32,8 +59,9 @@ export function ContactInfo() {
             </div>
             <div>
               <p className="font-medium">Điện thoại</p>
-              <p className="text-muted-foreground">+84 123 456 789</p>
-              <p className="text-muted-foreground">+84 987 654 321</p>
+              {settings?.supportPhone && (
+                <p className="text-muted-foreground">{settings.supportPhone}</p>
+              )}
             </div>
           </div>
           
@@ -44,8 +72,7 @@ export function ContactInfo() {
             <div>
               <p className="font-medium">Địa chỉ</p>
               <p className="text-muted-foreground">
-                123 Đường ABC, Quận 1<br />
-                Thành phố Hồ Chí Minh, Việt Nam
+                {settings?.companyAddress || "123 Đường ABC, Quận 1\nThành phố Hồ Chí Minh, Việt Nam"}
               </p>
             </div>
           </div>
@@ -57,9 +84,7 @@ export function ContactInfo() {
             <div>
               <p className="font-medium">Giờ làm việc</p>
               <p className="text-muted-foreground">
-                Thứ 2 - Thứ 6: 8:00 - 18:00<br />
-                Thứ 7: 8:00 - 12:00<br />
-                Chủ nhật: Nghỉ
+                {settings?.supportHours || "Thứ 2 - Thứ 6: 8:00 - 18:00\nThứ 7: 8:00 - 12:00\nChủ nhật: Nghỉ"}
               </p>
             </div>
           </div>

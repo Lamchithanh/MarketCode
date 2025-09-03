@@ -2,6 +2,7 @@
 
 import { useState, useEffect } from "react";
 import Link from "next/link";
+import Image from "next/image";
 import { Button } from "@/components/ui/button";
 import { Menu, X, Code, ShoppingCart, User } from "lucide-react";
 import { NavItem } from "@/types";
@@ -9,6 +10,8 @@ import { useSession } from "next-auth/react";
 import { UserNav } from "@/components/ui/user-nav";
 
 import { useUser } from "@/hooks/use-user";
+import { useSystemSettings } from "@/hooks/use-system-settings";
+import { useNavigation } from "@/hooks/use-navigation";
 import { cn } from "@/lib/utils";
 import { AuthNoSSR } from "@/components/ui/no-ssr";
 
@@ -25,6 +28,8 @@ export function Header() {
   const [scrollY, setScrollY] = useState(0);
   const { data: session } = useSession();
   const { user: liveUser } = useUser();
+  const { settings } = useSystemSettings();
+  const { navigateToLogin, navigateToRegister } = useNavigation();
   
   // Use live user data if available, fallback to session
   const displayUser = liveUser || session?.user;
@@ -51,10 +56,20 @@ export function Header() {
       <div className="container flex items-center justify-between h-16">
         {/* Logo */}
         <Link href="/" className="flex items-center space-x-2">
-          <div className="flex items-center justify-center rounded-lg bg-primary text-primary-foreground h-8 w-8">
-            <Code className="h-4 w-4" />
-          </div>
-          <span className="font-bold text-xl">CodeMarket</span>
+          {settings?.logoUrl ? (
+            <Image 
+              src={settings.logoUrl} 
+              alt={settings?.siteName || 'MarketCode'} 
+              width={32}
+              height={32}
+              className="object-contain rounded-lg"
+            />
+          ) : (
+            <div className="flex items-center justify-center rounded-lg bg-primary text-primary-foreground h-8 w-8">
+              <Code className="h-4 w-4" />
+            </div>
+          )}
+          <span className="font-bold text-xl">{settings?.siteName || 'MarketCode'}</span>
         </Link>
 
         {/* Desktop Navigation */}
@@ -91,20 +106,16 @@ export function Header() {
                 <Button 
                   variant="ghost" 
                   size="default"
-                  asChild
+                  onClick={navigateToLogin}
                 >
-                  <Link href="/login">
-                    <User className="h-4 w-4 mr-2" />
-                    Đăng nhập
-                  </Link>
+                  <User className="h-4 w-4 mr-2" />
+                  Đăng nhập
                 </Button>
                 <Button 
                   size="default"
-                  asChild
+                  onClick={navigateToRegister}
                 >
-                  <Link href="/register">
-                    Đăng ký
-                  </Link>
+                  Đăng ký
                 </Button>
               </>
             )}
@@ -154,22 +165,26 @@ export function Header() {
                   </div>
                 ) : (
                   <>
-                    <Link
-                      href="/login"
-                      className="flex items-center space-x-3 px-4 py-3 rounded-lg transition-colors hover:bg-accent hover:text-accent-foreground"
-                      onClick={() => setIsOpen(false)}
+                    <button
+                      onClick={() => {
+                        navigateToLogin();
+                        setIsOpen(false);
+                      }}
+                      className="flex items-center space-x-3 px-4 py-3 rounded-lg transition-colors hover:bg-accent hover:text-accent-foreground w-full text-left"
                     >
                       <User className="h-5 w-5" />
                       <span className="font-medium">Đăng nhập</span>
-                    </Link>
-                    <Link
-                      href="/register"
-                      className="flex items-center space-x-3 px-4 py-3 rounded-lg transition-colors hover:bg-accent hover:text-accent-foreground"
-                      onClick={() => setIsOpen(false)}
+                    </button>
+                    <button
+                      onClick={() => {
+                        navigateToRegister();
+                        setIsOpen(false);
+                      }}
+                      className="flex items-center space-x-3 px-4 py-3 rounded-lg transition-colors hover:bg-accent hover:text-accent-foreground w-full text-left"
                     >
                       <User className="h-5 w-5" />
                       <span className="font-medium">Đăng ký</span>
-                    </Link>
+                    </button>
                   </>
                 )}
               </AuthNoSSR>
