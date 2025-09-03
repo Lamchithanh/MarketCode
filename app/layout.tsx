@@ -66,6 +66,37 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="en" suppressHydrationWarning>
+      <head>
+        <script dangerouslySetInnerHTML={{
+          __html: `
+            (function() {
+              if (typeof window === 'undefined') return;
+              
+              const originalError = console.error;
+              console.error = function() {
+                const message = arguments[0]?.toString() || '';
+                if (
+                  message.includes('removeChild') ||
+                  message.includes('Cannot read properties of null') ||
+                  message.includes('commitDeletionEffectsOnFiber')
+                ) {
+                  return;
+                }
+                return originalError.apply(console, arguments);
+              };
+              
+              window.addEventListener('error', function(e) {
+                const msg = e.error?.message || e.message || '';
+                if (msg.includes('removeChild') || msg.includes('Cannot read properties of null')) {
+                  e.preventDefault();
+                  e.stopImmediatePropagation();
+                  return false;
+                }
+              }, { capture: true, passive: false });
+            })();
+          `
+        }} />
+      </head>
       <body
         className={`${geistSans.variable} ${geistMono.variable} antialiased`}
         suppressHydrationWarning

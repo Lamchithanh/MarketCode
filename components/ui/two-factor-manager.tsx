@@ -238,7 +238,17 @@ export function TwoFactorManager({
     a.download = `marketcode-2fa-backup-codes-${Date.now()}.txt`;
     document.body.appendChild(a);
     a.click();
-    document.body.removeChild(a);
+    
+    // Safe removeChild
+    try {
+      if (a && a.parentNode) {
+        a.parentNode.removeChild(a);
+      }
+    } catch (error) {
+      // Ignore removeChild errors
+      console.debug('Safe removeChild handled:', error);
+    }
+    
     URL.revokeObjectURL(url);
     toast.success('Backup codes downloaded!');
   };

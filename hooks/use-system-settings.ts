@@ -35,7 +35,7 @@ export function useSystemSettings() {
     siteName: 'MarketCode',
     siteTitle: 'MarketCode - Premium Source Code Platform',
     siteDescription: 'Nền tảng mua bán mã nguồn chất lượng cao',
-    logoUrl: '/logo.png',
+    logoUrl: '/placeholder-image.svg',
     faviconUrl: '/favicon.ico',
     contactEmail: 'contact@marketcode.com',
     supportEmail: 'support@marketcode.com',

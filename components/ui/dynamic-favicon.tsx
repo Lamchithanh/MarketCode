@@ -21,32 +21,43 @@ export function DynamicFavicon() {
 
     console.log('Updating favicon to:', settings.faviconUrl);
 
-    // Remove all existing favicon-related links
-    const existingIcons = document.querySelectorAll("link[rel*='icon'], link[rel*='shortcut']");
-    existingIcons.forEach(icon => icon.remove());
+    try {
+      // Remove all existing favicon-related links safely
+      const existingIcons = document.querySelectorAll("link[rel*='icon'], link[rel*='shortcut']");
+      existingIcons.forEach(icon => {
+        if (icon && icon.parentNode) {
+          icon.parentNode.removeChild(icon);
+        }
+      });
 
-    // Create new favicon links with cache buster
-    const cacheBuster = new Date().getTime();
-    const faviconLinks = [
-      { rel: 'icon', type: 'image/x-icon', href: `${settings.faviconUrl}?v=${cacheBuster}` },
-      { rel: 'shortcut icon', type: 'image/x-icon', href: `${settings.faviconUrl}?v=${cacheBuster}` },
-      { rel: 'apple-touch-icon', href: `${settings.faviconUrl}?v=${cacheBuster}` },
-    ];
+      // Create new favicon links with cache buster
+      const cacheBuster = new Date().getTime();
+      const faviconLinks = [
+        { rel: 'icon', type: 'image/x-icon', href: `${settings.faviconUrl}?v=${cacheBuster}` },
+        { rel: 'shortcut icon', type: 'image/x-icon', href: `${settings.faviconUrl}?v=${cacheBuster}` },
+        { rel: 'apple-touch-icon', href: `${settings.faviconUrl}?v=${cacheBuster}` },
+      ];
 
-    faviconLinks.forEach(linkData => {
-      const link = document.createElement('link');
-      link.rel = linkData.rel;
-      link.href = linkData.href;
-      if (linkData.type) link.type = linkData.type;
-      document.head.appendChild(link);
-    });
+      faviconLinks.forEach(linkData => {
+        const link = document.createElement('link');
+        link.rel = linkData.rel;
+        link.href = linkData.href;
+        if (linkData.type) link.type = linkData.type;
+        if (document.head) {
+          document.head.appendChild(link);
+        }
+      });
 
-    // Update title if needed
-    if (settings.siteTitle && document.title !== settings.siteTitle) {
-      document.title = settings.siteTitle;
+      // Update title if needed
+      if (settings.siteTitle && document.title !== settings.siteTitle) {
+        document.title = settings.siteTitle;
+      }
+
+      console.log('Dynamic favicon updated successfully');
+    } catch (error) {
+      console.error('Error updating favicon:', error);
+      // Don't throw error to prevent app crash
     }
-
-    console.log('Dynamic favicon updated successfully');
   }, [settings, loading]);
 
   return null; // This component doesn't render anything

@@ -61,7 +61,7 @@ export async function GET() {
       siteName: settingsObj.site_name || 'MarketCode',
       siteTitle: settingsObj.site_title || 'MarketCode - Premium Source Code Platform',
       siteDescription: settingsObj.site_description || 'Nền tảng mua bán mã nguồn chất lượng cao',
-      logoUrl: settingsObj.logo_url || '/logo.png',
+      logoUrl: settingsObj.logo_url || '/placeholder-image.svg',
       faviconUrl: settingsObj.logo_url || '/favicon.ico', // Sử dụng chung logo_url cho favicon
       
       // Contact Information
@@ -111,7 +111,7 @@ export async function GET() {
       siteName: 'MarketCode',
       siteTitle: 'MarketCode - Premium Source Code Platform',
       siteDescription: 'Nền tảng mua bán mã nguồn chất lượng cao',
-      logoUrl: '/logo.png',
+      logoUrl: '/placeholder-image.svg',
       faviconUrl: '/favicon.ico',
       contactEmail: 'contact@marketcode.com',
       supportEmail: 'support@marketcode.com',
