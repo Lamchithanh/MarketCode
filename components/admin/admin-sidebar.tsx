@@ -30,13 +30,14 @@ import {
   ReceiptCent,
   Star,
   Download,
-  Mail,
   MessageSquare,
   Settings,
   Code,
   Shield,
   LogOut,
   Github,
+  Briefcase,
+  Wrench,
 } from "lucide-react";
 
 export function AdminSidebar() {
@@ -230,15 +231,33 @@ export function AdminSidebar() {
 
           <SidebarGroup>
             <SidebarGroupLabel className="text-xs font-semibold text-muted-foreground uppercase tracking-wider">
+              Quản lý dịch vụ
+            </SidebarGroupLabel>
+            <SidebarGroupContent>
+              <SidebarMenu>
+                <SidebarMenuItem>
+                  <SidebarMenuButton asChild isActive={pathname.startsWith("/admin/services")}>
+                    <Link href="/admin/services">
+                      <Briefcase className="w-4 h-4" />
+                      <span>Dịch vụ</span>
+                    </Link>
+                  </SidebarMenuButton>
+                </SidebarMenuItem>
+              </SidebarMenu>
+            </SidebarGroupContent>
+          </SidebarGroup>
+
+          <SidebarGroup>
+            <SidebarGroupLabel className="text-xs font-semibold text-muted-foreground uppercase tracking-wider">
               Giao tiếp
             </SidebarGroupLabel>
             <SidebarGroupContent>
               <SidebarMenu>
                 <SidebarMenuItem>
-                  <SidebarMenuButton asChild isActive={pathname.startsWith("/admin/newsletter")}>
-                    <Link href="/admin/newsletter">
-                      <Mail className="w-4 h-4" />
-                      <span>Newsletter</span>
+                  <SidebarMenuButton asChild isActive={pathname.startsWith("/admin/service-requests")}>
+                    <Link href="/admin/service-requests">
+                      <Wrench className="w-4 h-4" />
+                      <span>Yêu cầu dịch vụ</span>
                     </Link>
                   </SidebarMenuButton>
                 </SidebarMenuItem>
