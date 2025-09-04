@@ -9,9 +9,9 @@ import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Badge } from "@/components/ui/badge";
+import toast from "react-hot-toast";
 import { 
   Send, 
-  Calendar, 
   DollarSign, 
   Clock,
   CheckCircle,
@@ -20,12 +20,13 @@ import {
 
 interface ServiceOrderFormProps {
   serviceId: string;
+  serviceType: string;
   serviceName: string;
   servicePrice: string;
   serviceDuration: string;
 }
 
-export function ServiceOrderForm({ serviceId, serviceName, servicePrice, serviceDuration }: ServiceOrderFormProps) {
+export function ServiceOrderForm({ serviceId, serviceType, serviceName, servicePrice, serviceDuration }: ServiceOrderFormProps) {
   const [formData, setFormData] = useState({
     name: "",
     email: "",
@@ -49,18 +50,86 @@ export function ServiceOrderForm({ serviceId, serviceName, servicePrice, service
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    
+    if (!formData.agreeToTerms) {
+      toast.error("Vui lòng đồng ý với điều khoản dịch vụ");
+      return;
+    }
+    
     setIsSubmitting(true);
     
-    // Simulate API call
-    await new Promise(resolve => setTimeout(resolve, 2000));
+    // Show loading toast
+    const loadingToast = toast.loading("Đang gửi yêu cầu dịch vụ...");
     
-    console.log("Order submitted:", {
-      service: { serviceId, serviceName, servicePrice, serviceDuration },
-      customer: formData
-    });
-    
-    setIsSubmitting(false);
-    // Reset form hoặc redirect
+    try {
+      const serviceRequestData = {
+        name: formData.name,
+        email: formData.email,
+        phone: formData.phone,
+        company: formData.company,
+        service_type: serviceType, // Use serviceType instead of serviceId
+        service_name: serviceName,
+        title: `Yêu cầu dịch vụ: ${serviceName}`,
+        description: formData.projectDescription,
+        budget_range: formData.budget,
+        timeline: formData.timeline,
+        priority: 'medium',
+        requirements: {
+          specific_requirements: formData.requirements,
+          price_info: servicePrice,
+          duration_info: serviceDuration
+        }
+      };
+
+      console.log('Submitting service request:', serviceRequestData);
+
+      const response = await fetch('/api/service-requests', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(serviceRequestData),
+      });
+
+      const responseData = await response.json();
+      
+      if (!response.ok) {
+        console.error('Server error:', responseData);
+        throw new Error(responseData.error || `Server error: ${response.status}`);
+      }
+
+      // Dismiss loading toast and show success
+      toast.dismiss(loadingToast);
+      toast.success("🎉 Yêu cầu dịch vụ đã được gửi thành công! Chúng tôi sẽ liên hệ với bạn sớm nhất có thể.", {
+        duration: 5000,
+      });
+      
+      // Reset form
+      setFormData({
+        name: "",
+        email: "",
+        phone: "",
+        company: "",
+        projectDescription: "",
+        budget: "",
+        timeline: "",
+        requirements: "",
+        agreeToTerms: false
+      });
+      
+    } catch (error) {
+      console.error('Error submitting service request:', error);
+      
+      // Dismiss loading toast and show error
+      toast.dismiss(loadingToast);
+      
+      const errorMessage = error instanceof Error ? error.message : "Có lỗi xảy ra khi gửi yêu cầu";
+      toast.error(`❌ ${errorMessage}. Vui lòng thử lại sau.`, {
+        duration: 6000,
+      });
+    } finally {
+      setIsSubmitting(false);
+    }
   };
 
   return (

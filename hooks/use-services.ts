@@ -154,6 +154,7 @@ export function useServices(): UseServicesReturn {
   };
 
   const deleteService = async (serviceId: string) => {
+    setUpdating(true);
     try {
       const response = await fetch(`/api/services/${serviceId}`, {
         method: 'DELETE',
@@ -163,12 +164,17 @@ export function useServices(): UseServicesReturn {
         throw new Error('Failed to delete service');
       }
 
+      // Refresh services data to remove deleted service immediately
+      await fetchServices();
+
       toast.success('Đã xóa dịch vụ thành công');
       return true;
     } catch (error) {
       console.error('Error deleting service:', error);
       toast.error('Không thể xóa dịch vụ');
       throw error;
+    } finally {
+      setUpdating(false);
     }
   };
 

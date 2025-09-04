@@ -14,6 +14,7 @@ export default function ServicesManagementPage() {
     services,
     stats,
     loading,
+    updating,
     createService,
     updateService,
     deleteService
@@ -133,9 +134,9 @@ export default function ServicesManagementPage() {
     
     try {
       await deleteService(selectedService.id);
-      toast.success(`Đã xóa dịch vụ ${selectedService.name}`);
       setIsDeleteDialogOpen(false);
       setSelectedService(null);
+      // Note: toast and refresh are handled in the hook
     } catch {
       toast.error('Không thể xóa dịch vụ');
     }
@@ -190,7 +191,7 @@ export default function ServicesManagementPage() {
         isCreateDialogOpen={isCreateDialogOpen}
         isEditDialogOpen={isEditDialogOpen}
         isDeleteDialogOpen={isDeleteDialogOpen}
-        isLoading={loading}
+        isLoading={loading || updating}
         totalServices={stats.total}
         setIsViewDialogOpen={setIsViewDialogOpen}
         setIsCreateDialogOpen={setIsCreateDialogOpen}

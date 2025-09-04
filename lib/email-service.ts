@@ -176,33 +176,45 @@ export class EmailService {
     return {
       subject: 'MarketCode - Mã xác thực 2FA',
       html: `
-        <div style="max-width: 600px; margin: 0 auto; padding: 20px; font-family: Arial, sans-serif;">
-          <div style="text-align: center; margin-bottom: 30px;">
-            <h1 style="color: #333; margin: 0;">MarketCode</h1>
-            <p style="color: #666; margin-top: 5px;">Mã xác thực hai yếu tố</p>
+        <div style="max-width: 600px; margin: 0 auto; padding: 20px; font-family: Arial, sans-serif; background: #ffffff;">
+          <!-- Header -->
+          <div style="text-align: center; margin-bottom: 30px; padding-bottom: 20px; border-bottom: 1px solid #e5e5e5;">
+            <h1 style="color: #333333; margin: 0; font-size: 24px; font-weight: 600;">MarketCode</h1>
+            <p style="color: #666666; margin: 5px 0 0 0; font-size: 14px;">Mã xác thực hai yếu tố</p>
           </div>
           
-          <div style="background: #f8f9fa; padding: 30px; border-radius: 8px; text-align: center;">
-            <h2 style="color: #333; margin: 0 0 20px 0;">Chào ${userName},</h2>
-            <p style="color: #666; margin-bottom: 30px;">
-              Mã xác thực 2FA của bạn là:
-            </p>
+          <!-- Main Content -->
+          <div style="background: #ffffff; padding: 30px; border-radius: 8px; text-align: center; border: 1px solid #e5e5e5; border-left: 4px solid #8b4513;">
+            <div style="margin-bottom: 20px;">
+              <div style="width: 48px; height: 48px; background: #8b4513; border-radius: 50%; margin: 0 auto 16px; display: flex; align-items: center; justify-content: center;">
+                <span style="color: #ffffff; font-size: 24px;">🔐</span>
+              </div>
+              <h2 style="color: #333333; margin: 0 0 8px 0; font-size: 18px; font-weight: 600;">Chào ${userName}</h2>
+              <p style="color: #666666; margin: 0; font-size: 14px;">
+                Mã xác thực 2FA của bạn là:
+              </p>
+            </div>
             
-            <div style="background: white; padding: 20px; border-radius: 6px; margin: 20px 0;">
-              <span style="font-size: 32px; font-weight: bold; letter-spacing: 8px; color: #007bff;">
+            <div style="background: #f5f5f5; padding: 20px; border-radius: 6px; margin: 20px 0; border: 1px solid #e5e5e5;">
+              <span style="font-size: 32px; font-weight: bold; letter-spacing: 8px; color: #8b4513; font-family: monospace;">
                 ${code}
               </span>
             </div>
             
-            <p style="color: #999; font-size: 14px; margin-top: 20px;">
-              Mã này có hiệu lực trong <strong>5 phút</strong>.<br>
-              Nếu bạn không yêu cầu mã này, vui lòng bỏ qua email này.
-            </p>
+            <div style="background: #f5f5f5; padding: 16px; border-radius: 6px; margin-top: 20px;">
+              <p style="color: #666666; font-size: 12px; margin: 0; line-height: 1.5;">
+                Mã này có hiệu lực trong <strong style="color: #333333;">5 phút</strong><br>
+                Nếu bạn không yêu cầu mã này, vui lòng bỏ qua email này
+              </p>
+            </div>
           </div>
           
-          <div style="text-align: center; margin-top: 30px; color: #999; font-size: 12px;">
-            <p>MarketCode - Nền tảng chia sẻ source code</p>
-            <p>Email này được gửi tự động, vui lòng không phản hồi.</p>
+          <!-- Footer -->
+          <div style="text-align: center; margin-top: 30px; padding-top: 20px; border-top: 1px solid #e5e5e5;">
+            <p style="color: #666666; font-size: 12px; margin: 0;">
+              MarketCode - Nền tảng chia sẻ source code<br>
+              Email này được gửi tự động, vui lòng không phản hồi
+            </p>
           </div>
         </div>
       `
@@ -216,33 +228,50 @@ export class EmailService {
     return {
       subject: 'Chào mừng bạn đến với MarketCode!',
       html: `
-        <div style="max-width: 600px; margin: 0 auto; padding: 20px; font-family: Arial, sans-serif;">
-          <div style="text-align: center; margin-bottom: 30px;">
-            <h1 style="color: #333; margin: 0;">MarketCode</h1>
-            <p style="color: #666; margin-top: 5px;">Nền tảng chia sẻ source code</p>
+        <div style="max-width: 600px; margin: 0 auto; padding: 20px; font-family: Arial, sans-serif; background: #ffffff;">
+          <!-- Header -->
+          <div style="text-align: center; margin-bottom: 30px; padding-bottom: 20px; border-bottom: 1px solid #e5e5e5;">
+            <h1 style="color: #333333; margin: 0; font-size: 24px; font-weight: 600;">MarketCode</h1>
+            <p style="color: #666666; margin: 5px 0 0 0; font-size: 14px;">Nền tảng chia sẻ source code</p>
           </div>
           
-          <div style="background: #f8f9fa; padding: 30px; border-radius: 8px;">
-            <h2 style="color: #333; margin: 0 0 20px 0;">Chào mừng ${userName}!</h2>
-            <p style="color: #666; margin-bottom: 20px;">
-              Cảm ơn bạn đã đăng ký tài khoản MarketCode. Chúng tôi rất vui mừng có bạn trong cộng đồng!
-            </p>
+          <!-- Welcome Message -->
+          <div style="background: #ffffff; padding: 30px; border-radius: 8px; border: 1px solid #e5e5e5; border-left: 4px solid #8b4513;">
+            <div style="text-align: center; margin-bottom: 20px;">
+              <div style="width: 56px; height: 56px; background: #8b4513; border-radius: 50%; margin: 0 auto 16px; display: flex; align-items: center; justify-content: center;">
+                <span style="color: white; font-size: 28px;">✓</span>
+              </div>
+              <h2 style="color: #333333; margin: 0 0 8px 0; font-size: 20px; font-weight: 600;">Chào mừng ${userName}!</h2>
+            </div>
             
+            <div style="background: #f5f5f5; padding: 20px; border-radius: 6px; margin-bottom: 20px;">
+              <p style="color: #333333; margin: 0; line-height: 1.6; text-align: center;">
+                Cảm ơn bạn đã đăng ký tài khoản MarketCode<br>
+                Chúng tôi rất vui mừng có bạn trong cộng đồng!
+              </p>
+            </div>
+            
+            <!-- Action Button -->
             <div style="text-align: center; margin: 30px 0;">
               <a href="${process.env.NEXTAUTH_URL || 'http://localhost:3000'}" 
-                 style="background: #007bff; color: white; padding: 12px 30px; text-decoration: none; border-radius: 6px; display: inline-block;">
+                 style="background: #8b4513; color: #ffffff; padding: 12px 30px; text-decoration: none; border-radius: 6px; display: inline-block; font-weight: 500; box-shadow: 0 2px 4px rgba(0,0,0,0.1);">
                 Bắt đầu khám phá
               </a>
             </div>
             
-            <p style="color: #666; font-size: 14px;">
-              Nếu bạn có bất kỳ câu hỏi nào, đừng ngần ngại liên hệ với chúng tôi.
-            </p>
+            <div style="text-align: center;">
+              <p style="color: #666666; font-size: 14px; margin: 0;">
+                Nếu bạn có bất kỳ câu hỏi nào, đừng ngần ngại liên hệ với chúng tôi
+              </p>
+            </div>
           </div>
           
-          <div style="text-align: center; margin-top: 30px; color: #999; font-size: 12px;">
-            <p>MarketCode Team</p>
-            <p>Email: thanhlc.dev@gmail.com</p>
+          <!-- Footer -->
+          <div style="text-align: center; margin-top: 30px; padding-top: 20px; border-top: 1px solid #e5e5e5;">
+            <p style="color: #666666; font-size: 12px; margin: 0;">
+              MarketCode Team<br>
+              Email: thanhlc.dev@gmail.com
+            </p>
           </div>
         </div>
       `
@@ -256,34 +285,49 @@ export class EmailService {
     return {
       subject: 'MarketCode - Đặt lại mật khẩu',
       html: `
-        <div style="max-width: 600px; margin: 0 auto; padding: 20px; font-family: Arial, sans-serif;">
-          <div style="text-align: center; margin-bottom: 30px;">
-            <h1 style="color: #333; margin: 0;">MarketCode</h1>
-            <p style="color: #666; margin-top: 5px;">Đặt lại mật khẩu</p>
+        <div style="max-width: 600px; margin: 0 auto; padding: 20px; font-family: ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif; background: #ffffff;">
+          <!-- Header -->
+          <div style="text-align: center; margin-bottom: 30px; padding-bottom: 20px; border-bottom: 1px solid hsl(var(--border, 0 0% 89.8%));">
+            <h1 style="color: hsl(var(--foreground, 0 0% 3.9%)); margin: 0; font-size: 24px; font-weight: 600;">MarketCode</h1>
+            <p style="color: hsl(var(--muted-foreground, 0 0% 45.1%)); margin: 5px 0 0 0; font-size: 14px;">Đặt lại mật khẩu</p>
           </div>
           
-          <div style="background: #f8f9fa; padding: 30px; border-radius: 8px;">
-            <h2 style="color: #333; margin: 0 0 20px 0;">Chào ${userName},</h2>
-            <p style="color: #666; margin-bottom: 20px;">
-              Chúng tôi nhận được yêu cầu đặt lại mật khẩu cho tài khoản của bạn.
-            </p>
+          <!-- Main Content -->
+          <div style="background: hsl(var(--card, 0 0% 100%)); padding: 30px; border-radius: 8px; border: 1px solid hsl(var(--border)); border-left: 4px solid #ef4444;">
+            <div style="text-align: center; margin-bottom: 20px;">
+              <div style="width: 48px; height: 48px; background: linear-gradient(135deg, #ef4444, #dc2626); border-radius: 50%; margin: 0 auto 16px; display: flex; align-items: center; justify-content: center;">
+                <span style="color: white; font-size: 24px;">🔑</span>
+              </div>
+              <h2 style="color: hsl(var(--foreground)); margin: 0 0 8px 0; font-size: 18px; font-weight: 600;">Chào ${userName}</h2>
+            </div>
+            
+            <div style="background: hsl(var(--muted, 0 0% 96.1%)); padding: 20px; border-radius: 6px; margin-bottom: 20px;">
+              <p style="color: hsl(var(--foreground)); margin: 0; line-height: 1.6; text-align: center;">
+                🔐 Chúng tôi nhận được yêu cầu đặt lại mật khẩu cho tài khoản của bạn
+              </p>
+            </div>
             
             <div style="text-align: center; margin: 30px 0;">
               <a href="${resetLink}" 
-                 style="background: #dc3545; color: white; padding: 12px 30px; text-decoration: none; border-radius: 6px; display: inline-block;">
-                Đặt lại mật khẩu
+                 style="background: #ef4444; color: white; padding: 12px 30px; text-decoration: none; border-radius: 6px; display: inline-block; font-weight: 500; box-shadow: 0 2px 4px rgba(0,0,0,0.1);">
+                🔓 Đặt lại mật khẩu
               </a>
             </div>
             
-            <p style="color: #666; font-size: 14px;">
-              Link này có hiệu lực trong <strong>1 giờ</strong>.<br>
-              Nếu bạn không yêu cầu đặt lại mật khẩu, vui lòng bỏ qua email này.
-            </p>
+            <div style="background: #fef2f2; padding: 16px; border-radius: 6px; border-left: 3px solid #ef4444;">
+              <p style="color: hsl(var(--muted-foreground)); font-size: 12px; margin: 0; line-height: 1.5;">
+                ⏰ Link này có hiệu lực trong <strong style="color: hsl(var(--foreground));">1 giờ</strong><br>
+                🛡️ Nếu bạn không yêu cầu đặt lại mật khẩu, vui lòng bỏ qua email này
+              </p>
+            </div>
           </div>
           
-          <div style="text-align: center; margin-top: 30px; color: #999; font-size: 12px;">
-            <p>MarketCode Team</p>
-            <p>Vì lý do bảo mật, link sẽ hết hạn sau 1 giờ.</p>
+          <!-- Footer -->
+          <div style="text-align: center; margin-top: 30px; padding-top: 20px; border-top: 1px solid hsl(var(--border));">
+            <p style="color: hsl(var(--muted-foreground)); font-size: 12px; margin: 0;">
+              MarketCode Team<br>
+              🔒 Vì lý do bảo mật, link sẽ hết hạn sau 1 giờ
+            </p>
           </div>
         </div>
       `

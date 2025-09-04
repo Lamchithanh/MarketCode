@@ -254,12 +254,13 @@ export function ServiceDialogs({
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>
-            <AlertDialogCancel>Hủy</AlertDialogCancel>
+            <AlertDialogCancel disabled={isLoading}>Hủy</AlertDialogCancel>
             <AlertDialogAction 
               onClick={onConfirmDelete}
+              disabled={isLoading}
               className="bg-red-600 hover:bg-red-700"
             >
-              Xóa
+              {isLoading ? 'Đang xóa...' : 'Xóa'}
             </AlertDialogAction>
           </AlertDialogFooter>
         </AlertDialogContent>

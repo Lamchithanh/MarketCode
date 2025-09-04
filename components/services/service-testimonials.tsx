@@ -2,83 +2,79 @@
 
 import { Card, CardContent } from "@/components/ui/card";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
-import { Star, Quote } from "lucide-react";
-
-interface Testimonial {
-  id: string;
-  name: string;
-  role: string;
-  company: string;
-  content: string;
-  rating: number;
-  avatar: string;
-  service: string;
-}
-
-const testimonials: Testimonial[] = [
-  {
-    id: "1",
-    name: "Nguyễn Văn An",
-    role: "CEO",
-    company: "TechStart Vietnam",
-    content: "Đội ngũ CodeMarket đã giúp chúng tôi xây dựng hệ thống e-commerce hoàn chỉnh trong vòng 6 tuần. Code chất lượng cao, giao diện đẹp và hỗ trợ nhiệt tình. Rất hài lòng với kết quả!",
-    rating: 5,
-    avatar: "/api/placeholder/40/40",
-    service: "Phát triển dự án theo yêu cầu"
-  },
-  {
-    id: "2",
-    name: "Trần Thị Bình",
-    role: "Product Manager",
-    company: "Digital Solutions",
-    content: "Dịch vụ bảo trì website của CodeMarket rất chuyên nghiệp. Họ luôn phản hồi nhanh chóng khi có vấn đề và thường xuyên cập nhật bảo mật. Giá cả hợp lý, chất lượng tốt.",
-    rating: 5,
-    avatar: "/api/placeholder/40/40",
-    service: "Bảo trì & Hỗ trợ"
-  },
-  {
-    id: "3",
-    name: "Lê Minh Cường",
-    role: "Founder",
-    company: "EduTech Pro",
-    content: "Tôi đã thuê CodeMarket thiết kế lại giao diện cho platform học online. Thiết kế rất hiện đại, UX/UI tuyệt vời và tăng conversion rate lên 40%. Definitely recommended!",
-    rating: 5,
-    avatar: "/api/placeholder/40/40",
-    service: "Thiết kế lại giao diện"
-  },
-  {
-    id: "4",
-    name: "Phạm Thanh Hà",
-    role: "CTO",
-    company: "InnovateLab",
-    content: "Dịch vụ tư vấn kỹ thuật của CodeMarket giúp team mình cải thiện architecture và performance đáng kể. Kiến thức sâu rộng, tư vấn chính xác và practical.",
-    rating: 5,
-    avatar: "/api/placeholder/40/40",
-    service: "Tư vấn kỹ thuật"
-  },
-  {
-    id: "5",
-    name: "Hoàng Đức Minh",
-    role: "Business Owner",
-    company: "SmartRetail",
-    content: "CodeMarket đã customize lại hệ thống POS cho chuỗi cửa hàng của tôi. Công việc được thực hiện nhanh chóng, chính xác và phù hợp với nhu cầu kinh doanh. Tuyệt vời!",
-    rating: 5,
-    avatar: "/api/placeholder/40/40",
-    service: "Chỉnh sửa dự án có sẵn"
-  },
-  {
-    id: "6",
-    name: "Vũ Thị Lan",
-    role: "Marketing Director",
-    company: "GrowthHub",
-    content: "Website của chúng tôi được tối ưu hiệu suất bởi CodeMarket. Tốc độ tải trang cải thiện 60%, SEO ranking tăng rõ rệt. Đầu tư xứng đáng cho long-term growth!",
-    rating: 5,
-    avatar: "/api/placeholder/40/40",
-    service: "Tối ưu hiệu suất"
-  }
-];
+import { Star, Quote, Loader2, RefreshCw } from "lucide-react";
+import { useTestimonials } from "@/hooks/use-testimonials";
+import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
 
 export function ServiceTestimonials() {
+  const { testimonials, stats, loading, error, refresh } = useTestimonials({
+    limit: 6,
+    featured: false // Get all published testimonials, not just featured ones
+  });
+
+  // Loading state
+  if (loading) {
+    return (
+      <section className="py-20 px-4 sm:px-6 lg:px-8 bg-background">
+        <div className="max-w-7xl mx-auto">
+          <div className="text-center mb-16">
+            <h2 className="text-3xl md:text-4xl font-bold text-foreground mb-4">
+              Khách hàng nói gì về chúng tôi?
+            </h2>
+            <p className="text-xl text-muted-foreground max-w-3xl mx-auto">
+              Đang tải testimonials...
+            </p>
+          </div>
+          <div className="flex items-center justify-center min-h-[300px]">
+            <Loader2 className="h-8 w-8 animate-spin text-primary" />
+            <span className="ml-2 text-muted-foreground">Đang tải...</span>
+          </div>
+        </div>
+      </section>
+    );
+  }
+
+  // Error state
+  if (error) {
+    return (
+      <section className="py-20 px-4 sm:px-6 lg:px-8 bg-background">
+        <div className="max-w-7xl mx-auto">
+          <div className="text-center mb-16">
+            <h2 className="text-3xl md:text-4xl font-bold text-foreground mb-4">
+              Khách hàng nói gì về chúng tôi?
+            </h2>
+            <div className="text-center py-12">
+              <p className="text-red-500 mb-4">Có lỗi khi tải testimonials: {error}</p>
+              <Button onClick={refresh} variant="outline">
+                <RefreshCw className="h-4 w-4 mr-2" />
+                Thử lại
+              </Button>
+            </div>
+          </div>
+        </div>
+      </section>
+    );
+  }
+
+  // No testimonials state
+  if (!testimonials || testimonials.length === 0) {
+    return (
+      <section className="py-20 px-4 sm:px-6 lg:px-8 bg-background">
+        <div className="max-w-7xl mx-auto">
+          <div className="text-center mb-16">
+            <h2 className="text-3xl md:text-4xl font-bold text-foreground mb-4">
+              Khách hàng nói gì về chúng tôi?
+            </h2>
+            <p className="text-xl text-muted-foreground max-w-3xl mx-auto">
+              Chưa có testimonials nào được công bố
+            </p>
+          </div>
+        </div>
+      </section>
+    );
+  }
+
   return (
     <section className="py-20 px-4 sm:px-6 lg:px-8 bg-background">
       <div className="max-w-7xl mx-auto">
@@ -87,15 +83,34 @@ export function ServiceTestimonials() {
             Khách hàng nói gì về chúng tôi?
           </h2>
           <p className="text-xl text-muted-foreground max-w-3xl mx-auto">
-            Hơn 100+ khách hàng đã tin tưởng và hài lòng với chất lượng dịch vụ của chúng tôi
+            {stats.total}+ khách hàng đã tin tưởng và hài lòng với chất lượng dịch vụ của chúng tôi
           </p>
+          
+          {/* Stats Display */}
+          <div className="flex flex-wrap justify-center gap-4 mt-6">
+            <Badge variant="secondary" className="px-4 py-2">
+              <Star className="h-4 w-4 mr-1 text-yellow-400 fill-current" />
+              {stats.average_rating}/5.0 điểm trung bình
+            </Badge>
+            <Badge variant="secondary" className="px-4 py-2">
+              {stats.five_star_count} đánh giá 5 sao
+            </Badge>
+            <Badge variant="secondary" className="px-4 py-2">
+              {stats.total} khách hàng đã đánh giá
+            </Badge>
+          </div>
         </div>
 
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
           {testimonials.map((testimonial) => (
-            <Card key={testimonial.id} className="h-full hover:shadow-lg transition-shadow duration-300">
+            <Card key={testimonial.id} className="h-full hover:shadow-lg transition-shadow duration-300 relative">
+              {testimonial.is_featured && (
+                <Badge className="absolute -top-2 -right-2 bg-yellow-500 text-white">
+                  Nổi bật
+                </Badge>
+              )}
               <CardContent className="p-6">
-                                <div className="flex items-center mb-4">
+                <div className="flex items-center mb-4">
                   <Quote className="h-6 w-6 text-primary mr-2" />
                   <div className="flex">
                     {[...Array(testimonial.rating)].map((_, i) => (
@@ -110,7 +125,10 @@ export function ServiceTestimonials() {
                 
                 <div className="flex items-center">
                   <Avatar className="h-12 w-12 mr-4">
-                    <AvatarImage src={testimonial.avatar} alt={testimonial.name} />
+                    <AvatarImage 
+                      src={testimonial.avatar || "/api/placeholder/40/40"} 
+                      alt={testimonial.name} 
+                    />
                     <AvatarFallback className="bg-primary/10 text-primary">
                       {testimonial.name.charAt(0)}
                     </AvatarFallback>
@@ -120,8 +138,8 @@ export function ServiceTestimonials() {
                     <div className="text-sm text-muted-foreground">
                       {testimonial.role} tại {testimonial.company}
                     </div>
-                    <div className="text-xs text-primary mt-1 font-medium">
-                      Dịch vụ: {testimonial.service}
+                    <div className="text-xs text-muted-foreground mt-1">
+                      {new Date(testimonial.created_at).toLocaleDateString('vi-VN')}
                     </div>
                   </div>
                 </div>

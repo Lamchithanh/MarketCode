@@ -3,60 +3,90 @@ import { notFound } from "next/navigation";
 import { Header } from "@/components/landing/header";
 import { Footer } from "@/components/landing/footer";
 import { ServiceDetail } from "@/components/services/service-detail";
+import { supabaseServiceRole } from "@/lib/supabase-server";
 
 interface ServiceDetailPageProps {
-  params: {
+  params: Promise<{
     slug: string;
-  };
+  }>;
 }
 
-// Danh sách các service slugs hợp lệ
-const validSlugs = [
-  'custom-development',
-  'project-customization', 
-  'maintenance',
-  'ui-redesign',
-  'performance-optimization',
-  'consultation'
-];
+// Fetch service data for metadata generation
+async function getServiceBySlug(slug: string) {
+  try {
+    const { data: service, error } = await supabaseServiceRole
+      .from('Service')
+      .select('id, name, slug, description, meta_title, meta_description, is_active')
+      .eq('slug', slug)
+      .eq('is_active', true)
+      .single();
+
+    if (error && error.code === 'PGRST116') {
+      return null;
+    }
+
+    if (error) {
+      console.error('Error fetching service for metadata:', error);
+      return null;
+    }
+
+    return service;
+  } catch (error) {
+    console.error('Error in getServiceBySlug:', error);
+    return null;
+  }
+}
 
 export async function generateStaticParams() {
-  return validSlugs.map((slug) => ({
-    slug,
-  }));
+  try {
+    const { data: services, error } = await supabaseServiceRole
+      .from('Service')
+      .select('slug')
+      .eq('is_active', true);
+
+    if (error) {
+      console.error('Error generating static params:', error);
+      return [];
+    }
+
+    return services.map((service) => ({
+      slug: service.slug,
+    }));
+  } catch (error) {
+    console.error('Error in generateStaticParams:', error);
+    return [];
+  }
 }
 
 export async function generateMetadata({ params }: ServiceDetailPageProps): Promise<Metadata> {
-  const { slug } = params;
+  const { slug } = await params;
   
-  if (!validSlugs.includes(slug)) {
+  const service = await getServiceBySlug(slug);
+  
+  if (!service) {
     return {
-      title: 'Dịch vụ không tồn tại | CodeMarket'
+      title: 'Dịch vụ không tồn tại | CodeMarket',
+      description: 'Dịch vụ bạn đang tìm kiếm không tồn tại hoặc đã bị xóa.'
     };
   }
 
-  const serviceTitles: Record<string, string> = {
-    'custom-development': 'Phát triển dự án theo yêu cầu',
-    'project-customization': 'Chỉnh sửa dự án có sẵn',
-    'maintenance': 'Bảo trì & Hỗ trợ',
-    'ui-redesign': 'Thiết kế lại giao diện',
-    'performance-optimization': 'Tối ưu hiệu suất',
-    'consultation': 'Tư vấn kỹ thuật'
-  };
-
-  const title = serviceTitles[slug];
+  const title = service.meta_title || service.name;
+  const description = service.meta_description || service.description;
   
   return {
     title: `${title} | CodeMarket`,
-    description: `Chi tiết dịch vụ ${title.toLowerCase()} - Giải pháp phát triển web chuyên nghiệp`,
-    keywords: `${title.toLowerCase()}, dịch vụ web, phát triển web, codemarket`
+    description,
+    keywords: `${service.name.toLowerCase()}, dịch vụ web, phát triển web, codemarket`
   };
 }
 
-export default function ServiceDetailPage({ params }: ServiceDetailPageProps) {
-  const { slug } = params;
+export default async function ServiceDetailPage({ params }: ServiceDetailPageProps) {
+  const { slug } = await params;
   
-  if (!validSlugs.includes(slug)) {
+  // Verify service exists
+  const service = await getServiceBySlug(slug);
+  
+  if (!service) {
     notFound();
   }
 

@@ -1,0 +1,127 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Test Service Request</title>
+</head>
+<body>
+    <h1>Test Service Request Submission</h1>
+    <form id="testForm">
+        <div>
+            <label>Name: <input type="text" id="name" value="Test User" required></label>
+        </div>
+        <div>
+            <label>Email: <input type="email" id="email" value="test@example.com" required></label>
+        </div>
+        <div>
+            <label>Phone: <input type="tel" id="phone" value="0123456789"></label>
+        </div>
+        <div>
+            <label>Company: <input type="text" id="company" value="Test Company"></label>
+        </div>
+        <div>
+            <label>Service Type: 
+                <select id="serviceType" required>
+                    <option value="custom-development">Custom Development</option>
+                    <option value="project-customization">Project Customization</option>
+                    <option value="ui-redesign">UI Redesign</option>
+                    <option value="maintenance">Maintenance</option>
+                    <option value="performance-optimization">Performance Optimization</option>
+                    <option value="consultation">Consultation</option>
+                </select>
+            </label>
+        </div>
+        <div>
+            <label>Service Name: <input type="text" id="serviceName" value="Phát triển ứng dụng tùy chỉnh" required></label>
+        </div>
+        <div>
+            <label>Title: <input type="text" id="title" value="Yêu cầu phát triển website thương mại điện tử" required></label>
+        </div>
+        <div>
+            <label>Description: 
+                <textarea id="description" required>Tôi cần phát triển một website thương mại điện tử hoàn chỉnh với các tính năng: quản lý sản phẩm, giỏ hàng, thanh toán online, quản lý đơn hàng.</textarea>
+            </label>
+        </div>
+        <div>
+            <label>Budget Range: <input type="text" id="budgetRange" value="10-20 triệu VNĐ"></label>
+        </div>
+        <div>
+            <label>Timeline: <input type="text" id="timeline" value="2-3 tháng"></label>
+        </div>
+        <div>
+            <label>Priority: 
+                <select id="priority">
+                    <option value="low">Low</option>
+                    <option value="medium" selected>Medium</option>
+                    <option value="high">High</option>
+                    <option value="urgent">Urgent</option>
+                </select>
+            </label>
+        </div>
+        <button type="submit">Submit Test Request</button>
+    </form>
+
+    <div id="result"></div>
+
+    <script>
+        document.getElementById('testForm').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            
+            const formData = {
+                name: document.getElementById('name').value,
+                email: document.getElementById('email').value,
+                phone: document.getElementById('phone').value,
+                company: document.getElementById('company').value,
+                service_type: document.getElementById('serviceType').value,
+                service_name: document.getElementById('serviceName').value,
+                title: document.getElementById('title').value,
+                description: document.getElementById('description').value,
+                budget_range: document.getElementById('budgetRange').value,
+                timeline: document.getElementById('timeline').value,
+                priority: document.getElementById('priority').value,
+                requirements: {
+                    test: true,
+                    created_via: 'test_form'
+                }
+            };
+
+            try {
+                const response = await fetch('/api/service-requests', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify(formData),
+                });
+
+                const result = await response.json();
+                
+                if (response.ok) {
+                    document.getElementById('result').innerHTML = `
+                        <div style="color: green;">
+                            <h3>Success!</h3>
+                            <p>Service request created with ID: ${result.request.id}</p>
+                            <pre>${JSON.stringify(result, null, 2)}</pre>
+                        </div>
+                    `;
+                } else {
+                    document.getElementById('result').innerHTML = `
+                        <div style="color: red;">
+                            <h3>Error!</h3>
+                            <pre>${JSON.stringify(result, null, 2)}</pre>
+                        </div>
+                    `;
+                }
+            } catch (error) {
+                document.getElementById('result').innerHTML = `
+                    <div style="color: red;">
+                        <h3>Network Error!</h3>
+                        <p>${error.message}</p>
+                    </div>
+                `;
+            }
+        });
+    </script>
+</body>
+</html>

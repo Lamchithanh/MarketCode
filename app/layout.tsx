@@ -6,6 +6,7 @@ import { BackToTop } from "@/components/ui/back-to-top";
 import { FloatingMenu } from "@/components/landing";
 import { NoSSR } from "@/components/ui/no-ssr";
 import { Toaster } from "@/components/ui/sonner";
+import { Toaster as HotToaster } from "react-hot-toast";
 import { Chatbox } from "@/components/ui/chatbox";
 import { DynamicFavicon } from "@/components/ui/dynamic-favicon";
 
@@ -112,6 +113,30 @@ export default function RootLayout({
             <Chatbox dailyLimit={50} />
           </NoSSR>
           <Toaster />
+          <HotToaster 
+            position="top-right"
+            toastOptions={{
+              duration: 4000,
+              style: {
+                background: '#363636',
+                color: '#fff',
+              },
+              success: {
+                duration: 5000,
+                iconTheme: {
+                  primary: '#4ade80',
+                  secondary: '#fff',
+                },
+              },
+              error: {
+                duration: 6000,
+                iconTheme: {
+                  primary: '#ef4444',
+                  secondary: '#fff',
+                },
+              },
+            }}
+          />
         </AuthProvider>
       </body>
     </html>
