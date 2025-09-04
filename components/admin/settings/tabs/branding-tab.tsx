@@ -4,7 +4,6 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Badge } from '@/components/ui/badge';
-import { Separator } from '@/components/ui/separator';
 import { Image, Upload, Loader2, CheckCircle2 } from 'lucide-react';
 import { toast } from 'sonner';
 
@@ -196,25 +195,13 @@ export function BrandingTab({ settingsData, editedSettings, onSettingChange }: B
       <CardContent>
         <div className="space-y-8">
           <FileUploadField
-            label="Logo website"
+            label="Logo website/Favicon"
             settingKey="logo_url"
             currentValue={getCurrentValue('logo_url')}
             hasChanged={hasChanged('logo_url')}
             onSettingChange={onSettingChange}
             accept="image/png,image/jpg,image/jpeg,image/svg+xml,image/webp"
             description="Logo hiển thị trên header và các trang chính. Khuyến nghị kích thước: 200x60px"
-          />
-
-          <Separator />
-
-          <FileUploadField
-            label="Favicon"
-            settingKey="favicon_url"
-            currentValue={getCurrentValue('favicon_url')}
-            hasChanged={hasChanged('favicon_url')}
-            onSettingChange={onSettingChange}
-            accept="image/x-icon,image/png,image/ico"
-            description="Icon nhỏ hiển thị trên tab trình duyệt. Khuyến nghị kích thước: 32x32px hoặc 16x16px"
           />
         </div>
       </CardContent>
