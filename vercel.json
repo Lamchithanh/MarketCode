@@ -4,11 +4,10 @@
   "framework": "nextjs",
   "functions": {
     "app/api/**/*.ts": {
-      "maxDuration": 30
+      "maxDuration": 10
     }
   },
   "env": {
     "NODE_ENV": "production"
-  },
-  "regions": ["iad1", "sin1"]
+  }
 }

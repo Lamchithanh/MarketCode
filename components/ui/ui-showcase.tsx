@@ -13,6 +13,8 @@ import {
   InlineLoader,
   LoadingButton,
   LoadingWrapper,
+  TableLoadingWrapper,
+  CardLoadingWrapper,
   SkeletonLoader,
   SkeletonPatterns
 } from "./loading-states";

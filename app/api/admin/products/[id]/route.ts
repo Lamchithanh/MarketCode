@@ -70,26 +70,64 @@ export async function PUT(
     const body = await request.json();
     const { 
       title, 
+      slug,
       description, 
       price, 
-      discountPrice, 
       categoryId, 
-      isActive, 
+      isActive,
+      thumbnailUrl,
+      fileUrl,
+      demoUrl,
+      githubUrl,
+      technologies,
+      fileSize,
+      images,
+      features,
       tagIds = [] 
     } = body;
 
-    // Update the product
+    // Update the product - only include fields that exist in database
+    const updateData: Partial<{
+      title: string;
+      slug: string;
+      description: string;
+      price: number;
+      categoryId: string;
+      isActive: boolean;
+      thumbnailUrl: string;
+      fileUrl: string;
+      demoUrl: string;
+      githubUrl: string;
+      technologies: string[];
+      fileSize: number;
+      images: unknown;
+      features: unknown;
+      updatedAt: string;
+    }> = {
+      updatedAt: new Date().toISOString()
+    };
+
+    // Only add fields if they are provided
+    if (title !== undefined) updateData.title = title;
+    if (slug !== undefined) updateData.slug = slug;
+    if (description !== undefined) updateData.description = description;
+    if (price !== undefined) updateData.price = price;
+    if (categoryId !== undefined) updateData.categoryId = categoryId;
+    if (isActive !== undefined) updateData.isActive = isActive;
+    if (thumbnailUrl !== undefined) updateData.thumbnailUrl = thumbnailUrl;
+    if (fileUrl !== undefined) updateData.fileUrl = fileUrl;
+    if (demoUrl !== undefined) updateData.demoUrl = demoUrl;
+    if (githubUrl !== undefined) updateData.githubUrl = githubUrl;
+    if (technologies !== undefined) updateData.technologies = technologies;
+    if (fileSize !== undefined) updateData.fileSize = fileSize;
+    if (images !== undefined) updateData.images = images;
+    if (features !== undefined) updateData.features = features;
+
+    console.log('Updating product with data:', updateData);
+
     const { data: updatedProduct, error: updateError } = await supabaseServiceRole
       .from('Product')
-      .update({
-        title,
-        description,
-        price,
-        discountPrice,
-        categoryId,
-        isActive,
-        updatedAt: new Date().toISOString()
-      })
+      .update(updateData)
       .eq('id', id)
       .select()
       .single();

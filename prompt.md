@@ -30,6 +30,10 @@ Your task is to read and understand this entire project in depth, including:
      - Guide how to extend or add new features.
      - Suggest improvements for codebase, theme, or configuration.
      - Answer in-depth questions about any file in the repository.
+7. **Environment & Database**
+   - The agent must read the .env or environment configuration to extract the Supabase Project ID / URL / Key.
+      - Use the MCP tool (Model Context Protocol) to connect to Supabase and inspect the database schema (tables, views, policies, triggers).
+      - Integrate the database analysis into the overall project architecture.
 
 Read the entire project (code, configuration, documentation) and build a detailed internal knowledge model of it.  
 When I ask questions, respond as a **domain expert who fully understands this project**, capable of providing explanations and actionable suggestions.
