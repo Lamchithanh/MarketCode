@@ -38,6 +38,7 @@ import {
   Github,
   Briefcase,
   Wrench,
+  UserCheck,
 } from "lucide-react";
 
 export function AdminSidebar() {
@@ -118,6 +119,24 @@ export function AdminSidebar() {
                     <Link href="/admin/users">
                       <Users className="w-4 h-4" />
                       <span>Người dùng</span>
+                    </Link>
+                  </SidebarMenuButton>
+                </SidebarMenuItem>
+              </SidebarMenu>
+            </SidebarGroupContent>
+          </SidebarGroup>
+
+          <SidebarGroup>
+            <SidebarGroupLabel className="text-xs font-semibold text-muted-foreground uppercase tracking-wider">
+              Quản lý đội ngũ
+            </SidebarGroupLabel>
+            <SidebarGroupContent>
+              <SidebarMenu>
+                <SidebarMenuItem>
+                  <SidebarMenuButton asChild isActive={pathname.startsWith("/admin/team")}>
+                    <Link href="/admin/team">
+                      <UserCheck className="w-4 h-4" />
+                      <span>Đội ngũ</span>
                     </Link>
                   </SidebarMenuButton>
                 </SidebarMenuItem>
@@ -318,8 +337,8 @@ export function AdminSidebar() {
 
             {/* Version Info */}
             <div className="text-xs text-muted-foreground text-center pt-2">
-              <p className="font-medium">MarketCode Admin</p>
-              <p className="text-xs">Phiên bản 1.0.0</p>
+              <p className="font-medium">{systemSettings.siteName} Admin</p>
+              <p className="text-xs">v{systemSettings.version}</p>
             </div>
           </div>
         </SidebarFooter>

@@ -7,6 +7,7 @@ import { ShoppingCart, Trophy, CheckCircle2, Clock, Gift, Copy, Star, Heart, Awa
 import { formatCurrency } from "@/lib/utils";
 import { toast } from "sonner";
 import Link from "next/link";
+import { useSystemSettings } from "@/hooks/use-system-settings";
 
 interface ProfileOverviewProps {
   recentOrders: Array<{
@@ -53,6 +54,7 @@ interface CompletionStatus {
 export function ProfileOverview({ recentOrders, stats, user }: ProfileOverviewProps) {
   const [completionStatus, setCompletionStatus] = useState<CompletionStatus | null>(null);
   const [isClaimed, setIsClaimed] = useState(false);
+  const { settings: systemSettings } = useSystemSettings();
 
   // Fetch completion status - Simplified for VIP system only
   const fetchCompletionStatus = useCallback(async () => {
@@ -97,6 +99,15 @@ export function ProfileOverview({ recentOrders, stats, user }: ProfileOverviewPr
   const copyToClipboard = (text: string) => {
     navigator.clipboard.writeText(text);
     toast.success('Đã sao chép mã giảm giá!');
+  };
+
+  // Get reward settings from system settings
+  const getRewardSettings = () => {
+    return {
+      enabled: systemSettings.profileCompletionRewardEnabled ?? true,
+      couponCode: systemSettings.profileCompletionCouponCode ?? 'COMPLETE_PROFILE_10',
+      message: systemSettings.profileCompletionRewardMessage ?? 'Chúc mừng! Bạn đã hoàn thành hồ sơ và nhận được mã GitHub ngẫu nhiên.'
+    };
   };
 
   useEffect(() => {
@@ -227,9 +238,6 @@ export function ProfileOverview({ recentOrders, stats, user }: ProfileOverviewPr
   };
 
   const accountProgress = calculateAccountProgress();
-  
-  // Profile completion for VIP reward system only
-  const isProfileCompleted = accountProgress.percentage === 100;
 
   return (
     <div className="grid lg:grid-cols-2 gap-6">
@@ -399,7 +407,7 @@ export function ProfileOverview({ recentOrders, stats, user }: ProfileOverviewPr
             )}
 
             {/* Profile Completion Reward - Only show when 100% completed */}
-            {accountProgress.percentage === 100 && (
+            {accountProgress.percentage === 100 && getRewardSettings().enabled && (
               <div className="mt-4 p-4 border border-gold-200 rounded-lg bg-gold-50/50">
                 <div className="flex items-center gap-2 mb-2">
                   <Gift className="h-5 w-5 text-gold-600" />
@@ -407,7 +415,7 @@ export function ProfileOverview({ recentOrders, stats, user }: ProfileOverviewPr
                 </div>
                 
                 <p className="text-sm text-gold-700 mb-3">
-                  Chúc mừng! Bạn đã hoàn thành tất cả nhiệm vụ và trở thành Thành viên VIP!
+                  {getRewardSettings().message}
                 </p>
 
                 {!isClaimed ? (
@@ -417,23 +425,23 @@ export function ProfileOverview({ recentOrders, stats, user }: ProfileOverviewPr
                     size="sm"
                   >
                     <Gift className="h-4 w-4 mr-2" />
-                    Nhận ngay mã giảm giá VIP!
+                    Nhận ngay mã giảm giá!
                   </Button>
                 ) : (
                   <div className="space-y-3">
                     <div className="flex items-center justify-between p-3 bg-white border border-gold-200 rounded-md">
                       <div className="flex items-center gap-2">
                         <code className="text-sm font-mono font-bold text-gold-800">
-                          VIP20
+                          {getRewardSettings().couponCode}
                         </code>
-                        <Badge variant="secondary" className="bg-gold-100 text-gold-700 text-xs">
-                          20% OFF
-                        </Badge>
+                        {/* <Badge variant="secondary" className="bg-gold-100 text-gold-700 text-xs">
+                          {getRewardSettings().couponCode.includes('10') ? '10% OFF' : '20% OFF'}
+                        </Badge> */}
                       </div>
                       <Button
                         variant="outline"
                         size="sm"
-                        onClick={() => copyToClipboard("VIP20")}
+                        onClick={() => copyToClipboard(getRewardSettings().couponCode)}
                         className="border-gold-200 text-gold-700 hover:bg-gold-50"
                       >
                         <Copy className="h-3 w-3" />

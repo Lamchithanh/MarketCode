@@ -11,6 +11,7 @@ interface SystemTabProps {
 }
 
 const systemSettings = [
+  { key: 'version', label: 'Phiên bản hệ thống', type: 'string' as const, placeholder: '1.0.0' },
   { key: 'maintenance_mode', label: 'Chế độ bảo trì', type: 'boolean' as const },
   { key: 'max_file_upload_size', label: 'Kích thước file tối đa (MB)', type: 'number' as const, min: 1, max: 100 },
   { key: 'items_per_page', label: 'Số item mỗi trang', type: 'number' as const, min: 5, max: 100, placeholder: '10' },
@@ -42,7 +43,7 @@ export function SystemTab({ settingsData, editedSettings, onSettingChange }: Sys
           Cài đặt hệ thống và bảo mật
         </CardTitle>
         <p className="text-muted-foreground">
-          Cấu hình các tham số hệ thống, giới hạn và bảo mật
+          Cấu hình phiên bản, tham số hệ thống, giới hạn và bảo mật
         </p>
       </CardHeader>
       

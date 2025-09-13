@@ -33,10 +33,19 @@ export async function GET() {
       price: `${parseFloat(product.price).toLocaleString('vi-VN')}đ`,
       rating: parseFloat(product.averageRating) || 0,
       reviews: product.totalReviews || 0,
+      averageRating: parseFloat(product.averageRating) || 0, // Add this field
+      totalReviews: product.totalReviews || 0, // Add this field
       downloadCount: product.downloadCount || 0,
       viewCount: product.viewCount || 0,
       createdAt: product.createdAt,
-      updatedAt: product.updatedAt
+      updatedAt: product.updatedAt,
+      thumbnailUrl: product.thumbnailUrl || '/products/default.jpg',
+      demoUrl: product.demoUrl,
+      githubUrl: product.githubUrl,
+      fileUrl: product.fileUrl,
+      fileSize: product.fileSize,
+      images: product.images,
+      features: product.features
     })) || [];
 
     return NextResponse.json({

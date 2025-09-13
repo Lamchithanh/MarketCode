@@ -10,6 +10,9 @@ interface SystemSettings {
   logoUrl: string;
   faviconUrl: string;
   
+  // Version
+  version: string;
+  
   // Contact Information
   contactEmail: string;
   supportEmail: string;
@@ -28,6 +31,11 @@ interface SystemSettings {
     youtube: { url: string; enabled: boolean };
     tiktok: { url: string; enabled: boolean };
   };
+  
+  // Reward System
+  profileCompletionRewardEnabled: boolean;
+  profileCompletionCouponCode: string;
+  profileCompletionRewardMessage: string;
 }
 
 export function useSystemSettings() {
@@ -37,6 +45,7 @@ export function useSystemSettings() {
     siteDescription: 'Nền tảng mua bán mã nguồn chất lượng cao',
     logoUrl: '/placeholder-image.svg',
     faviconUrl: '/favicon.ico',
+    version: '1.0.0',
     contactEmail: 'contact@marketcode.com',
     supportEmail: 'support@marketcode.com',
     supportPhone: '',
@@ -49,7 +58,10 @@ export function useSystemSettings() {
       github: { url: '', enabled: false },
       youtube: { url: '', enabled: false },
       tiktok: { url: '', enabled: false }
-    }
+    },
+    profileCompletionRewardEnabled: true,
+    profileCompletionCouponCode: 'VIP20',
+    profileCompletionRewardMessage: 'Chúc mừng! Bạn đã hoàn thành tất cả nhiệm vụ và trở thành Thành viên VIP!'
   });
 
   const [loading, setLoading] = useState(true);

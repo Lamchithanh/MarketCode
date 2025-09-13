@@ -26,7 +26,7 @@ export function useProductsList(): UseProductsListReturn {
   const [selectedCategory, setSelectedCategory] = useState('Tất cả');
   const [sortBy, setSortBy] = useState('newest');
 
-  const itemsPerPage = 12;
+  const itemsPerPage = 9;
 
   useEffect(() => {
     const fetchProducts = async () => {

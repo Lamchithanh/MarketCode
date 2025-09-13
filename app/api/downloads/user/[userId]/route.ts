@@ -41,9 +41,28 @@ export async function GET(
     // Function returns JSONB array directly
     const downloads = data || [];
 
+    // Transform the data to match interface expectations
+    const transformedDownloads = downloads.map((download: {
+      id: string;
+      product_id: string;
+      product_name: string;
+      product_thumbnail: string;
+      github_url?: string;
+      download_date: string;
+      ip_address: string;
+    }) => ({
+      id: download.id,
+      productId: download.product_id,
+      productName: download.product_name,
+      productThumbnail: download.product_thumbnail,
+      githubUrl: download.github_url || '',
+      downloadDate: download.download_date,
+      ipAddress: download.ip_address
+    }));
+
     return NextResponse.json({ 
       success: true,
-      data: downloads
+      data: transformedDownloads
     });
 
   } catch (error) {

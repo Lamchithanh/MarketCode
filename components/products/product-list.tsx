@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import React, { useState, useEffect, Fragment } from "react";
 import Link from "next/link";
 import Image from "next/image";
 import { Card, CardContent, CardHeader } from "@/components/ui/card";
@@ -14,6 +14,15 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
+import {
+  Pagination,
+  PaginationContent,
+  PaginationEllipsis,
+  PaginationItem,
+  PaginationLink,
+  PaginationNext,
+  PaginationPrevious,
+} from "@/components/ui/pagination";
 import { 
   Star, 
   Search, 
@@ -22,22 +31,15 @@ import {
   ShoppingCart,
   Grid3X3,
   List,
-  ChevronLeft,
-  ChevronRight,
   Loader2
 } from "lucide-react";
-import { Project } from "@/types";
 import { cn } from "@/lib/utils";
 import { useProductsList } from "@/hooks/use-products-list";
 
-const categories = [
-  "Tất cả",
-  "Next.js Templates",
-  "UI Components", 
-  "E-commerce",
-  "Admin Dashboards",
-  "React Projects"
-];
+interface Category {
+  id: string;
+  name: string;
+}
 
 const sortOptions = [
   { value: "newest", label: "Mới nhất" },
@@ -63,6 +65,8 @@ const renderStars = (rating: number) => {
 
 export function ProductList() {
   const [viewMode, setViewMode] = useState<"grid" | "list">("grid");
+  const [categories, setCategories] = useState<Category[]>([]);
+  
   const {
     products,
     loading,
@@ -78,6 +82,35 @@ export function ProductList() {
     setSortBy,
     totalProducts
   } = useProductsList();
+
+  // Fetch categories from API
+  const fetchCategories = async () => {
+    try {
+      const response = await fetch('/api/categories');
+      
+      if (response.ok) {
+        const result = await response.json();
+        if (result.success && result.categories) {
+          setCategories(result.categories);
+        }
+      }
+    } catch (error) {
+      console.error('Error fetching categories:', error);
+      // Fallback to default categories
+      setCategories([
+        { id: 'all', name: 'Tất cả' },
+        { id: 'nextjs-templates', name: 'Next.js Templates' },
+        { id: 'ui-components', name: 'UI Components' },
+        { id: 'ecommerce', name: 'E-commerce' },
+        { id: 'admin-dashboards', name: 'Admin Dashboards' },
+        { id: 'react-projects', name: 'React Projects' }
+      ]);
+    }
+  };
+
+  useEffect(() => {
+    fetchCategories();
+  }, []);
 
   if (error) {
     return (
@@ -125,8 +158,8 @@ export function ProductList() {
           </SelectTrigger>
           <SelectContent>
             {categories.map((category) => (
-              <SelectItem key={category} value={category}>
-                {category}
+              <SelectItem key={category.id} value={category.name}>
+                {category.name}
               </SelectItem>
             ))}
           </SelectContent>
@@ -183,16 +216,26 @@ export function ProductList() {
         <>
           {/* Products Grid */}
           <div className={cn(
-            "grid gap-6 mb-8",
+            "gap-6 mb-8",
             viewMode === "grid" 
-              ? "grid-cols-1 md:grid-cols-2 lg:grid-cols-3"
-              : "grid-cols-1"
+              ? "grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3"
+              : "flex flex-col space-y-4"
           )}>
             {products.map((product) => (
               <Link key={product.id} href={`/products/${product.id}`}>
-                <Card className="group hover:shadow-lg transition-all duration-300 overflow-hidden cursor-pointer h-full flex flex-col">
-                  <div className="relative">
-                    <div className="aspect-[3/2] bg-gradient-to-br from-primary/10 to-accent/10 relative overflow-hidden">
+                <Card className={cn(
+                  "group hover:shadow-lg transition-all duration-300 overflow-hidden cursor-pointer",
+                  viewMode === "grid" ? "h-full flex flex-col" : "flex flex-row h-auto"
+                )}>
+                  {/* Image Section */}
+                  <div className={cn(
+                    "relative",
+                    viewMode === "grid" ? "w-full" : "w-80 flex-shrink-0"
+                  )}>
+                    <div className={cn(
+                      "bg-gradient-to-br from-primary/10 to-accent/10 relative overflow-hidden",
+                      viewMode === "grid" ? "aspect-[3/2]" : "aspect-[4/3]"
+                    )}>
                       <Image
                         src={product.thumbnailUrl || "/Images/do.jpg"}
                         alt={product.title}
@@ -236,74 +279,103 @@ export function ProductList() {
                     </div>
                   </div>
 
-                  <CardHeader className="pb-1 flex-shrink-0">
-                    <div className="flex items-start justify-between">
-                      <h3 className="font-semibold text-lg leading-tight line-clamp-2 min-h-[2.5rem]">
-                        {product.title}
-                      </h3>
-                    </div>
-                    <p className="text-sm text-muted-foreground line-clamp-2 mt-0 min-h-[2rem]">
-                      {product.description}
-                    </p>
-                  </CardHeader>
+                  {/* Content Section */}
+                  <div className={cn(
+                    "flex flex-col",
+                    viewMode === "grid" ? "flex-1" : "flex-1 justify-between"
+                  )}>
+                    <CardHeader className={cn(
+                      viewMode === "grid" ? "pb-1 flex-shrink-0" : "pb-2"
+                    )}>
+                      <div className="flex items-start justify-between">
+                        <h3 className={cn(
+                          "font-semibold leading-tight line-clamp-2",
+                          viewMode === "grid" ? "text-lg min-h-[2.5rem]" : "text-xl min-h-0"
+                        )}>
+                          {product.title}
+                        </h3>
+                      </div>
+                      <p className={cn(
+                        "text-muted-foreground mt-0",
+                        viewMode === "grid" ? "text-sm line-clamp-2 min-h-[2rem]" : "text-base line-clamp-3"
+                      )}>
+                        {product.description}
+                      </p>
+                    </CardHeader>
 
-                  <CardContent className="pt-0 pb-2 flex-grow flex flex-col justify-between">
-                    <div className="flex flex-wrap gap-1 mb-1 min-h-[1.5rem]">
-                      {product.technologies.slice(0, 3).map((tech) => (
-                        <Badge key={tech} variant="outline" className="text-xs py-0 px-2">
-                          {tech}
-                        </Badge>
-                      ))}
-                      {product.technologies.length > 3 && (
-                        <Badge variant="outline" className="text-xs py-0 px-2">
-                          +{product.technologies.length - 3}
-                        </Badge>
-                      )}
-                    </div>
-
-                    <div className="space-y-2">
-                      <div className="flex items-center space-x-2">
-                        <div className="flex items-center space-x-1">
-                          {renderStars(product.averageRating || 0)}
-                        </div>
-                        <span className="text-sm font-medium">
-                          {product.averageRating ? Number(product.averageRating).toFixed(1) : "0.0"}
-                        </span>
-                        <span className="text-xs text-muted-foreground">
-                          ({product.totalReviews || 0} đánh giá)
-                        </span>
+                    <CardContent className={cn(
+                      "flex-grow flex flex-col justify-between",
+                      viewMode === "grid" ? "pt-0 pb-2" : "pt-0 pb-4"
+                    )}>
+                      {/* Technologies */}
+                      <div className={cn(
+                        "flex flex-wrap gap-1 mb-3",
+                        viewMode === "grid" ? "min-h-[1.5rem]" : "min-h-0"
+                      )}>
+                        {product.technologies.slice(0, 3).map((tech) => (
+                          <Badge key={tech} variant="outline" className="text-xs py-0 px-2">
+                            {tech}
+                          </Badge>
+                        ))}
+                        {product.technologies.length > 3 && (
+                          <Badge variant="outline" className="text-xs py-0 px-2">
+                            +{product.technologies.length - 3}
+                          </Badge>
+                        )}
                       </div>
 
-                      <div className="flex items-center justify-between">
-                        <div className="text-2xl font-bold text-primary">
-                          {product.price}
+                      {/* Rating and Actions */}
+                      <div className={cn(
+                        "space-y-3",
+                        viewMode === "list" && "flex flex-row items-center justify-between space-y-0"
+                      )}>
+                        {/* Rating */}
+                        <div className="flex items-center space-x-2">
+                          <div className="flex items-center space-x-1">
+                            {renderStars(product.averageRating || 0)}
+                          </div>
+                          <span className="text-sm font-medium">
+                            {product.averageRating ? Number(product.averageRating).toFixed(1) : "0.0"}
+                          </span>
+                          <span className="text-xs text-muted-foreground">
+                            ({product.totalReviews || 0} đánh giá)
+                          </span>
                         </div>
-                        <div className="flex space-x-2">
-                          <Button 
-                            variant="outline" 
-                            size="sm"
-                            onClick={(e) => {
-                              e.preventDefault();
-                              window.location.href = `/products/${product.id}`;
-                            }}
-                          >
-                            <Eye className="h-4 w-4" />
-                          </Button>
-                          <Button 
-                            size="sm" 
-                            onClick={(e) => {
-                              e.preventDefault();
-                              // Handle direct purchase or navigate to product page
-                            window.location.href = `/products/${product.id}`;
-                          }}
-                        >
-                          <ShoppingCart className="h-4 w-4 mr-2" />
-                          Mua ngay
-                        </Button>
+
+                        {/* Price and Actions */}
+                        <div className={cn(
+                          "flex items-center justify-between",
+                          viewMode === "list" && "flex-col items-end space-y-2"
+                        )}>
+                          <div className="text-2xl font-bold text-primary">
+                            {product.price}
+                          </div>
+                          <div className="flex space-x-2">
+                            <Button 
+                              variant="outline" 
+                              size="sm"
+                              onClick={(e) => {
+                                e.preventDefault();
+                                window.location.href = `/products/${product.id}`;
+                              }}
+                            >
+                              <Eye className="h-4 w-4" />
+                            </Button>
+                            <Button 
+                              size="sm" 
+                              onClick={(e) => {
+                                e.preventDefault();
+                                window.location.href = `/products/${product.id}`;
+                              }}
+                            >
+                              <ShoppingCart className="h-4 w-4 mr-2" />
+                              Mua ngay
+                            </Button>
+                          </div>
+                        </div>
                       </div>
-                    </div>
-                    </div>
-                  </CardContent>
+                    </CardContent>
+                  </div>
                 </Card>
               </Link>
             ))}
@@ -311,47 +383,70 @@ export function ProductList() {
 
           {/* Pagination */}
           {totalPages > 1 && (
-            <div className="flex justify-center items-center space-x-2">
-              <Button
-                variant="outline"
-                onClick={() => setCurrentPage(Math.max(1, currentPage - 1))}
-                disabled={currentPage === 1}
-              >
-                <ChevronLeft className="h-4 w-4 mr-1" />
-                Trước
-              </Button>
+            <Pagination className="mt-8">
+              <PaginationContent>
+                {/* Previous Button */}
+                <PaginationItem>
+                  <PaginationPrevious 
+                    href="#"
+                    onClick={(e) => {
+                      e.preventDefault();
+                      if (currentPage > 1) {
+                        setCurrentPage(currentPage - 1);
+                      }
+                    }}
+                    className={currentPage === 1 ? 'pointer-events-none opacity-50' : ''}
+                  />
+                </PaginationItem>
 
-              {/* Page Numbers */}
-              {Array.from({ length: totalPages }, (_, i) => i + 1)
-                .filter(pageNum => {
-                  return pageNum === 1 || 
-                         pageNum === totalPages || 
-                         Math.abs(pageNum - currentPage) <= 1;
-                })
-                .map((pageNum, index, array) => (
-                  <div key={pageNum} className="flex items-center">
-                    {index > 0 && array[index - 1] !== pageNum - 1 && (
-                      <span className="px-2 text-muted-foreground">...</span>
-                    )}
-                    <Button
-                      variant={pageNum === currentPage ? "default" : "outline"}
-                      onClick={() => setCurrentPage(pageNum)}
-                    >
-                      {pageNum}
-                    </Button>
-                  </div>
-                ))
-              }
+                {/* Page Numbers */}
+                {Array.from({ length: totalPages }, (_, i) => i + 1)
+                  .filter(pageNum => {
+                    // Show first page, last page, current page and adjacent pages
+                    return pageNum === 1 || 
+                           pageNum === totalPages || 
+                           Math.abs(pageNum - currentPage) <= 1;
+                  })
+                  .map((pageNum, index, array) => (
+                    <Fragment key={pageNum}>
+                      {/* Add ellipsis if there's a gap */}
+                      {index > 0 && array[index - 1] !== pageNum - 1 && (
+                        <PaginationItem>
+                          <PaginationEllipsis />
+                        </PaginationItem>
+                      )}
+                      
+                      <PaginationItem>
+                        <PaginationLink
+                          href="#"
+                          isActive={pageNum === currentPage}
+                          onClick={(e) => {
+                            e.preventDefault();
+                            setCurrentPage(pageNum);
+                          }}
+                        >
+                          {pageNum}
+                        </PaginationLink>
+                      </PaginationItem>
+                    </Fragment>
+                  ))
+                }
 
-              <Button
-                variant="outline"
-                onClick={() => setCurrentPage(Math.min(totalPages, currentPage + 1))}
-                disabled={currentPage === totalPages}
-              >
-                Sau
-                <ChevronRight className="h-4 w-4 ml-1" />
-              </Button>
-            </div>
+                {/* Next Button */}
+                <PaginationItem>
+                  <PaginationNext 
+                    href="#"
+                    onClick={(e) => {
+                      e.preventDefault();
+                      if (currentPage < totalPages) {
+                        setCurrentPage(currentPage + 1);
+                      }
+                    }}
+                    className={currentPage === totalPages ? 'pointer-events-none opacity-50' : ''}
+                  />
+                </PaginationItem>
+              </PaginationContent>
+            </Pagination>
           )}
         </>
       )}

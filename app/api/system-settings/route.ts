@@ -12,6 +12,7 @@ export async function GET() {
         'site_description',
         'logo_url',
         'favicon_url',
+        'version',
         'contact_email',
         'support_email',
         'support_phone',
@@ -26,7 +27,10 @@ export async function GET() {
         'social_facebook_enabled',
         'social_github_enabled',
         'social_youtube_enabled',
-        'social_tiktok_enabled'
+        'social_tiktok_enabled',
+        'profile_completion_reward_enabled',
+        'profile_completion_coupon_code',
+        'profile_completion_reward_message'
       ]);
 
     if (error) {
@@ -64,6 +68,9 @@ export async function GET() {
       logoUrl: settingsObj.logo_url || '/placeholder-image.svg',
       faviconUrl: settingsObj.logo_url || '/favicon.ico', // Sử dụng chung logo_url cho favicon
       
+      // Version
+      version: settingsObj.version || '1.0.0',
+      
       // Contact Information
       contactEmail: settingsObj.contact_email || 'contact@marketcode.com',
       supportEmail: settingsObj.support_email || 'support@marketcode.com',
@@ -93,7 +100,12 @@ export async function GET() {
           url: settingsObj.social_tiktok || '',
           enabled: settingsObj.social_tiktok_enabled || false
         }
-      }
+      },
+      
+      // Reward System
+      profileCompletionRewardEnabled: settingsObj.profile_completion_reward_enabled === 'true' || true,
+      profileCompletionCouponCode: settingsObj.profile_completion_coupon_code || 'COMPLETE_PROFILE_10',
+      profileCompletionRewardMessage: settingsObj.profile_completion_reward_message || 'Chúc mừng! Bạn đã hoàn thành hồ sơ và nhận được mã GitHub ngẫu nhiên.'
     };
 
     return NextResponse.json(response, {
@@ -113,6 +125,7 @@ export async function GET() {
       siteDescription: 'Nền tảng mua bán mã nguồn chất lượng cao',
       logoUrl: '/placeholder-image.svg',
       faviconUrl: '/favicon.ico',
+      version: '1.0.0',
       contactEmail: 'contact@marketcode.com',
       supportEmail: 'support@marketcode.com',
       supportPhone: '',
@@ -125,7 +138,10 @@ export async function GET() {
         github: { url: '', enabled: false },
         youtube: { url: '', enabled: false },
         tiktok: { url: '', enabled: false }
-      }
+      },
+      profileCompletionRewardEnabled: true,
+      profileCompletionCouponCode: 'COMPLETE_PROFILE_10',
+      profileCompletionRewardMessage: 'Chúc mừng! Bạn đã hoàn thành hồ sơ và nhận được mã GitHub ngẫu nhiên.'
     }, { status: 200 });
   }
 }
