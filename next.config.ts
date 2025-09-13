@@ -16,7 +16,6 @@ const nextConfig: NextConfig = {
         port: '',
         pathname: '/storage/v1/object/public/**',
       },
-
       {
         protocol: 'https',
         hostname: 'picsum.photos',
@@ -24,6 +23,10 @@ const nextConfig: NextConfig = {
         pathname: '/**',
       },
     ],
+  },
+  // CSS optimization configuration for deployment
+  experimental: {
+    optimizeCss: true,
   },
 };
 
