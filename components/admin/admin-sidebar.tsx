@@ -337,8 +337,8 @@ export function AdminSidebar() {
 
             {/* Version Info */}
             <div className="text-xs text-muted-foreground text-center pt-2">
-              <p className="font-medium">{systemSettings.siteName} Admin</p>
-              <p className="text-xs">v{systemSettings.version}</p>
+              <p className="font-medium">{systemSettings?.siteName || 'MarketCode'} Admin</p>
+              <p className="text-xs">v{systemSettings?.version || '1.0.1'}</p>
             </div>
           </div>
         </SidebarFooter>

@@ -31,11 +31,6 @@ interface SystemSettings {
     youtube: { url: string; enabled: boolean };
     tiktok: { url: string; enabled: boolean };
   };
-  
-  // Reward System
-  profileCompletionRewardEnabled: boolean;
-  profileCompletionCouponCode: string;
-  profileCompletionRewardMessage: string;
 }
 
 export function useSystemSettings() {
@@ -58,10 +53,7 @@ export function useSystemSettings() {
       github: { url: '', enabled: false },
       youtube: { url: '', enabled: false },
       tiktok: { url: '', enabled: false }
-    },
-    profileCompletionRewardEnabled: true,
-    profileCompletionCouponCode: 'VIP20',
-    profileCompletionRewardMessage: 'Chúc mừng! Bạn đã hoàn thành tất cả nhiệm vụ và trở thành Thành viên VIP!'
+    }
   });
 
   const [loading, setLoading] = useState(true);
