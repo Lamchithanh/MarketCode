@@ -102,26 +102,65 @@ export async function PUT(
       fileSize: number;
       images: unknown;
       features: unknown;
-      updatedAt: string;
     }> = {
-      updatedAt: new Date().toISOString()
+      // Don't manually update updatedAt - let database handle it
     };
 
-    // Only add fields if they are provided
+    // Only add fields if they are provided and properly formatted
     if (title !== undefined) updateData.title = title;
     if (slug !== undefined) updateData.slug = slug;
     if (description !== undefined) updateData.description = description;
-    if (price !== undefined) updateData.price = price;
+    if (price !== undefined) {
+      // Ensure price is a valid number for PostgreSQL numeric type
+      const numPrice = parseFloat(price.toString());
+      if (!isNaN(numPrice) && numPrice > 0) {
+        updateData.price = numPrice;
+      }
+    }
     if (categoryId !== undefined) updateData.categoryId = categoryId;
     if (isActive !== undefined) updateData.isActive = isActive;
     if (thumbnailUrl !== undefined) updateData.thumbnailUrl = thumbnailUrl;
     if (fileUrl !== undefined) updateData.fileUrl = fileUrl;
     if (demoUrl !== undefined) updateData.demoUrl = demoUrl;
     if (githubUrl !== undefined) updateData.githubUrl = githubUrl;
-    if (technologies !== undefined) updateData.technologies = technologies;
-    if (fileSize !== undefined) updateData.fileSize = fileSize;
-    if (images !== undefined) updateData.images = images;
-    if (features !== undefined) updateData.features = features;
+    if (technologies !== undefined) {
+      // Ensure technologies is properly formatted as string array
+      if (Array.isArray(technologies)) {
+        updateData.technologies = technologies.map(tech => String(tech).trim()).filter(tech => tech);
+      }
+    }
+    if (fileSize !== undefined) {
+      const numFileSize = parseInt(fileSize.toString());
+      if (!isNaN(numFileSize)) {
+        updateData.fileSize = numFileSize;
+      }
+    }
+    if (images !== undefined) {
+      // Ensure images is valid JSON
+      try {
+        if (Array.isArray(images)) {
+          updateData.images = images;
+        } else {
+          updateData.images = [];
+        }
+      } catch (e) {
+        console.warn('Invalid images format:', e);
+        updateData.images = [];
+      }
+    }
+    if (features !== undefined) {
+      // Ensure features is valid JSON
+      try {
+        if (Array.isArray(features)) {
+          updateData.features = features;
+        } else {
+          updateData.features = [];
+        }
+      } catch (e) {
+        console.warn('Invalid features format:', e);
+        updateData.features = [];
+      }
+    }
 
     console.log('Updating product with data:', updateData);
 
@@ -134,8 +173,10 @@ export async function PUT(
 
     if (updateError) {
       console.error('Error updating product:', updateError);
+      console.error('Update data that caused error:', JSON.stringify(updateData, null, 2));
+      console.error('Product ID:', id);
       return NextResponse.json(
-        { error: 'Failed to update product' },
+        { error: 'Failed to update product', details: updateError.message },
         { status: 500 }
       );
     }

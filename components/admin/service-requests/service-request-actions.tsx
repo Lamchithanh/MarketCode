@@ -5,38 +5,34 @@ import {
   DropdownMenu,
   DropdownMenuContent,
   DropdownMenuItem,
-  DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
 import { 
   MoreHorizontal, 
   Eye, 
-  Edit, 
-  DollarSign, 
-  RotateCcw, 
-  Trash2 
+  DollarSign 
 } from 'lucide-react';
 import { ServiceRequest } from '@/hooks/use-service-requests';
 
 interface ServiceRequestActionsProps {
   request: ServiceRequest;
   onView: (request: ServiceRequest) => void;
-  onEdit: (request: ServiceRequest) => void;
   onAddQuote: (request: ServiceRequest) => void;
-  onChangeStatus: (request: ServiceRequest) => void;
-  onDelete: (request: ServiceRequest) => void;
   disabled?: boolean;
 }
 
 export function ServiceRequestActions({
   request,
   onView,
-  onEdit,
   onAddQuote,
-  onChangeStatus,
-  onDelete,
   disabled = false
 }: ServiceRequestActionsProps) {
+  // Chỉ cho phép báo giá khi chưa có báo giá và trạng thái không phải cancelled/completed/quoted
+  const canQuote = !request.quoted_price && 
+    request.status !== 'cancelled' && 
+    request.status !== 'completed' &&
+    request.status !== 'quoted';
+
   return (
     <DropdownMenu>
       <DropdownMenuTrigger asChild>
@@ -55,34 +51,12 @@ export function ServiceRequestActions({
           Xem chi tiết
         </DropdownMenuItem>
         
-        <DropdownMenuItem onClick={() => onEdit(request)}>
-          <Edit className="mr-2 h-4 w-4" />
-          Chỉnh sửa
-        </DropdownMenuItem>
-        
-        <DropdownMenuSeparator />
-        
-        {!request.quoted_price && request.status !== 'cancelled' && (
+        {canQuote && (
           <DropdownMenuItem onClick={() => onAddQuote(request)}>
             <DollarSign className="mr-2 h-4 w-4" />
-            Thêm báo giá
+            Gửi báo giá
           </DropdownMenuItem>
         )}
-        
-        <DropdownMenuItem onClick={() => onChangeStatus(request)}>
-          <RotateCcw className="mr-2 h-4 w-4" />
-          Đổi trạng thái
-        </DropdownMenuItem>
-        
-        <DropdownMenuSeparator />
-        
-        <DropdownMenuItem 
-          onClick={() => onDelete(request)}
-          className="text-red-600 focus:text-red-600"
-        >
-          <Trash2 className="mr-2 h-4 w-4" />
-          Xóa yêu cầu
-        </DropdownMenuItem>
       </DropdownMenuContent>
     </DropdownMenu>
   );

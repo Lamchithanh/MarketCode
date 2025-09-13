@@ -20,7 +20,6 @@ interface UseAuthServiceReturn {
   updateProfile: (userId: string, updates: Partial<Pick<UserData, "name" | "avatar">>) => Promise<void>;
   changePassword: (userId: string, currentPassword: string, newPassword: string) => Promise<void>;
   requestPasswordReset: (email: string) => Promise<void>;
-  resetPassword: (email: string, resetToken: string, newPassword: string) => Promise<void>;
   clearMessages: () => void;
   setError: (error: string) => void;
   setSuccess: (success: string) => void;
@@ -225,30 +224,6 @@ export function useAuthService(): UseAuthServiceReturn {
     }
   }, [setError, setSuccess]);
 
-  const resetPassword = useCallback(async (
-    email: string, 
-    resetToken: string, 
-    newPassword: string
-  ) => {
-    try {
-      setAuthState(prev => ({ ...prev, isLoading: true, error: "" }));
-      
-      const result: AuthResult = await AuthService.resetPassword(email, resetToken, newPassword);
-
-      if (!result.success) {
-        setError(result.error || "Không thể đặt lại mật khẩu");
-        return;
-      }
-
-      setSuccess("Mật khẩu đã được đặt lại thành công!");
-      setAuthState(prev => ({ ...prev, isLoading: false }));
-    } catch (error) {
-      console.error("Password reset error:", error);
-      setError("Đã xảy ra lỗi khi đặt lại mật khẩu");
-      setAuthState(prev => ({ ...prev, isLoading: false }));
-    }
-  }, [setError, setSuccess]);
-
   return {
     authState,
     login,
@@ -258,7 +233,6 @@ export function useAuthService(): UseAuthServiceReturn {
     updateProfile,
     changePassword,
     requestPasswordReset,
-    resetPassword,
     clearMessages,
     setError,
     setSuccess,

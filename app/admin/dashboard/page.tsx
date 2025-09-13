@@ -121,10 +121,10 @@ const AdminDashboard = () => {
             disabled={loading}
             className="px-3 py-1 text-xs bg-stone-100 hover:bg-stone-200 text-stone-700 rounded-md transition-colors disabled:opacity-50"
           >
-            {loading ? '⏳ Đang tải...' : '🔄 Làm mới'}
+            {loading ? '⏳ Đang tải...' : 'Làm mới'}
           </button>
           <p className="text-sm text-muted-foreground">
-            🔴 Realtime • Cập nhật cuối: {new Date().toLocaleTimeString('vi-VN')}
+          Cập nhật cuối: {new Date().toLocaleTimeString('vi-VN')}
           </p>
           <Activity className="h-4 w-4 text-muted-foreground" />
         </div>

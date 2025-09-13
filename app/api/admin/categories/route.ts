@@ -106,20 +106,28 @@ export async function POST(request: NextRequest) {
     }
 
     // Create new category
+    const slug = name
+      .toLowerCase()
+      .replace(/[^a-z0-9\s-]/g, '')
+      .replace(/\s+/g, '-')
+      .replace(/-+/g, '-')
+      .trim();
+
     const { data: category, error } = await supabaseServiceRole
       .from('Category')
       .insert({
         name,
-        description: description || '',
-        isActive: true
+        slug,
+        description: description || ''
       })
       .select()
       .single();
 
     if (error) {
       console.error('Error creating category:', error);
+      console.error('Insert data:', { name, slug, description: description || '' });
       return NextResponse.json(
-        { error: 'Failed to create category' },
+        { error: 'Failed to create category', details: error.message },
         { status: 500 }
       );
     }

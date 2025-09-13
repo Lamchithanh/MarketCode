@@ -21,14 +21,37 @@ export interface EmailTemplate {
 export class EmailService {
   private static transporter: nodemailer.Transporter | null = null;
   private static config: EmailConfig | null = null;
+  private static configTimestamp: number = 0;
+  private static readonly CONFIG_CACHE_DURATION = 5 * 60 * 1000; // 5 phút cache
 
   /**
-   * Lấy cấu hình email từ database
+   * Clear cache và force reload cấu hình
+   */
+  static clearCache() {
+    console.log('📧 Clearing email service cache');
+    this.config = null;
+    this.transporter = null;
+    this.configTimestamp = 0;
+  }
+
+  /**
+   * Kiểm tra xem cache có expired không
+   */
+  private static isCacheExpired(): boolean {
+    return Date.now() - this.configTimestamp > this.CONFIG_CACHE_DURATION;
+  }
+
+  /**
+   * Lấy cấu hình email từ database với caching
    */
   private static async getEmailConfig(): Promise<EmailConfig> {
-    if (this.config) {
+    if (this.config && !this.isCacheExpired()) {
+      console.log('📧 Using cached email config');
       return this.config;
     }
+
+    console.log('📧 Fetching email config from database...');
+    const configStartTime = Date.now();
 
     try {
       const { data, error } = await supabaseServiceRole
@@ -45,6 +68,8 @@ export class EmailService {
           'email_service_enabled'
         ]);
 
+      console.log(`📧 Database config query took: ${Date.now() - configStartTime}ms`);
+
       if (error) {
         console.error('Error fetching email config:', error);
         throw new Error('Failed to fetch email configuration');
@@ -60,12 +85,16 @@ export class EmailService {
         smtp_host: configObj['email_smtp_host'] || 'smtp.gmail.com',
         smtp_port: parseInt(configObj['email_smtp_port'] || '587'),
         smtp_user: configObj['email_smtp_user'] || 'thanhlc.dev@gmail.com',
-        smtp_password: configObj['email_smtp_password'] || 'ncgq pvim bcve smal',
+        smtp_password: configObj['email_smtp_password'] || 'hmsb wmkr kjxj wsbx',
         smtp_secure: configObj['email_smtp_secure'] === 'true',
         from_name: configObj['email_from_name'] || 'MarketCode Team',
         from_address: configObj['email_from_address'] || 'thanhlc.dev@gmail.com',
         service_enabled: configObj['email_service_enabled'] !== 'false'
       };
+
+      // Cập nhật cache timestamp  
+      this.configTimestamp = Date.now();
+      console.log('📧 Email config cached successfully');
 
       return this.config;
     } catch (error) {
@@ -89,9 +118,12 @@ export class EmailService {
    */
   private static async createTransporter(): Promise<nodemailer.Transporter> {
     if (this.transporter) {
+      console.log('📧 Using cached transporter');
       return this.transporter;
     }
 
+    console.log('📧 Creating new transporter...');
+    const transporterStartTime = Date.now();
     const config = await this.getEmailConfig();
 
     this.transporter = nodemailer.createTransport({
@@ -105,8 +137,18 @@ export class EmailService {
       tls: {
         rejectUnauthorized: false, // Cho phép self-signed certificates
       },
+      // Tối ưu performance
+      pool: true, // Sử dụng connection pooling
+      maxConnections: 5, // Tối đa 5 connections đồng thời
+      maxMessages: 100, // Tối đa 100 emails per connection
+      rateDelta: 20000, // 20 giây
+      rateLimit: 5, // Tối đa 5 emails per rateDelta
+      connectionTimeout: 10000, // 10 giây timeout cho connection
+      greetingTimeout: 5000, // 5 giây timeout cho greeting
+      socketTimeout: 30000, // 30 giây timeout cho socket
     });
 
+    console.log(`📧 Transporter created in: ${Date.now() - transporterStartTime}ms`);
     return this.transporter;
   }
 
@@ -127,6 +169,9 @@ export class EmailService {
       }>;
     }
   ): Promise<{ success: boolean; messageId?: string; error?: string }> {
+    const sendStartTime = Date.now();
+    console.log('📧 Starting email send process...');
+    
     try {
       const config = await this.getEmailConfig();
 
@@ -148,8 +193,12 @@ export class EmailService {
         ...options
       };
 
+      console.log('📧 Sending email via SMTP...');
+      const smtpStartTime = Date.now();
       const info = await transporter.sendMail(mailOptions);
+      console.log(`📧 SMTP send took: ${Date.now() - smtpStartTime}ms`);
 
+      console.log(`📧 Total email send process took: ${Date.now() - sendStartTime}ms`);
       console.log('Email sent successfully:', {
         messageId: info.messageId,
         to: mailOptions.to,
@@ -176,42 +225,42 @@ export class EmailService {
     return {
       subject: 'MarketCode - Mã xác thực 2FA',
       html: `
-        <div style="max-width: 600px; margin: 0 auto; padding: 20px; font-family: Arial, sans-serif; background: #ffffff;">
+        <div style="max-width: 600px; margin: 0 auto; padding: 20px; font-family: ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;">
           <!-- Header -->
-          <div style="text-align: center; margin-bottom: 30px; padding-bottom: 20px; border-bottom: 1px solid #e5e5e5;">
-            <h1 style="color: #333333; margin: 0; font-size: 24px; font-weight: 600;">MarketCode</h1>
-            <p style="color: #666666; margin: 5px 0 0 0; font-size: 14px;">Mã xác thực hai yếu tố</p>
+          <div style="text-align: center; margin-bottom: 30px; padding-bottom: 20px; border-bottom: 1px solid #e5e7eb;">
+            <h1 style="color: #1f2937; margin: 0; font-size: 24px; font-weight: 600;">MarketCode</h1>
+            <p style="color: #6b7280; margin: 5px 0 0 0; font-size: 14px;">Mã xác thực hai yếu tố</p>
           </div>
           
           <!-- Main Content -->
-          <div style="background: #ffffff; padding: 30px; border-radius: 8px; text-align: center; border: 1px solid #e5e5e5; border-left: 4px solid #8b4513;">
+          <div style="background: #ffffff; padding: 30px; border-radius: 8px; text-align: center; border: 1px solid #e5e7eb; border-left: 4px solid #2563eb;">
             <div style="margin-bottom: 20px;">
-              <div style="width: 48px; height: 48px; background: #8b4513; border-radius: 50%; margin: 0 auto 16px; display: flex; align-items: center; justify-content: center;">
+              <div style="width: 48px; height: 48px; background: #2563eb; border-radius: 50%; margin: 0 auto 16px; display: flex; align-items: center; justify-content: center;">
                 <span style="color: #ffffff; font-size: 24px;">🔐</span>
               </div>
-              <h2 style="color: #333333; margin: 0 0 8px 0; font-size: 18px; font-weight: 600;">Chào ${userName}</h2>
-              <p style="color: #666666; margin: 0; font-size: 14px;">
+              <h2 style="color: #1f2937; margin: 0 0 8px 0; font-size: 18px; font-weight: 600;">Chào ${userName}</h2>
+              <p style="color: #6b7280; margin: 0; font-size: 14px;">
                 Mã xác thực 2FA của bạn là:
               </p>
             </div>
             
-            <div style="background: #f5f5f5; padding: 20px; border-radius: 6px; margin: 20px 0; border: 1px solid #e5e5e5;">
-              <span style="font-size: 32px; font-weight: bold; letter-spacing: 8px; color: #8b4513; font-family: monospace;">
+            <div style="background: #f9fafb; padding: 20px; border-radius: 6px; margin: 20px 0; border: 1px solid #e5e7eb;">
+              <span style="font-size: 32px; font-weight: bold; letter-spacing: 8px; color: #2563eb; font-family: monospace;">
                 ${code}
               </span>
             </div>
             
-            <div style="background: #f5f5f5; padding: 16px; border-radius: 6px; margin-top: 20px;">
-              <p style="color: #666666; font-size: 12px; margin: 0; line-height: 1.5;">
-                Mã này có hiệu lực trong <strong style="color: #333333;">5 phút</strong><br>
+            <div style="background: #f9fafb; padding: 16px; border-radius: 6px; margin-top: 20px;">
+              <p style="color: #6b7280; font-size: 12px; margin: 0; line-height: 1.5;">
+                Mã này có hiệu lực trong <strong style="color: #1f2937;">5 phút</strong><br>
                 Nếu bạn không yêu cầu mã này, vui lòng bỏ qua email này
               </p>
             </div>
           </div>
           
           <!-- Footer -->
-          <div style="text-align: center; margin-top: 30px; padding-top: 20px; border-top: 1px solid #e5e5e5;">
-            <p style="color: #666666; font-size: 12px; margin: 0;">
+          <div style="text-align: center; margin-top: 30px; padding-top: 20px; border-top: 1px solid #e5e7eb;">
+            <p style="color: #9ca3af; font-size: 12px; margin: 0;">
               MarketCode - Nền tảng chia sẻ source code<br>
               Email này được gửi tự động, vui lòng không phản hồi
             </p>
@@ -228,24 +277,24 @@ export class EmailService {
     return {
       subject: 'Chào mừng bạn đến với MarketCode!',
       html: `
-        <div style="max-width: 600px; margin: 0 auto; padding: 20px; font-family: Arial, sans-serif; background: #ffffff;">
+        <div style="max-width: 600px; margin: 0 auto; padding: 20px; font-family: ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;">
           <!-- Header -->
-          <div style="text-align: center; margin-bottom: 30px; padding-bottom: 20px; border-bottom: 1px solid #e5e5e5;">
-            <h1 style="color: #333333; margin: 0; font-size: 24px; font-weight: 600;">MarketCode</h1>
-            <p style="color: #666666; margin: 5px 0 0 0; font-size: 14px;">Nền tảng chia sẻ source code</p>
+          <div style="text-align: center; margin-bottom: 30px; padding-bottom: 20px; border-bottom: 1px solid #e5e7eb;">
+            <h1 style="color: #1f2937; margin: 0; font-size: 24px; font-weight: 600;">MarketCode</h1>
+            <p style="color: #6b7280; margin: 5px 0 0 0; font-size: 14px;">Nền tảng chia sẻ source code</p>
           </div>
           
           <!-- Welcome Message -->
-          <div style="background: #ffffff; padding: 30px; border-radius: 8px; border: 1px solid #e5e5e5; border-left: 4px solid #8b4513;">
+          <div style="background: #ffffff; padding: 30px; border-radius: 8px; border: 1px solid #e5e7eb; border-left: 4px solid #2563eb;">
             <div style="text-align: center; margin-bottom: 20px;">
-              <div style="width: 56px; height: 56px; background: #8b4513; border-radius: 50%; margin: 0 auto 16px; display: flex; align-items: center; justify-content: center;">
+              <div style="width: 56px; height: 56px; background: #2563eb; border-radius: 50%; margin: 0 auto 16px; display: flex; align-items: center; justify-content: center;">
                 <span style="color: white; font-size: 28px;">✓</span>
               </div>
-              <h2 style="color: #333333; margin: 0 0 8px 0; font-size: 20px; font-weight: 600;">Chào mừng ${userName}!</h2>
+              <h2 style="color: #1f2937; margin: 0 0 8px 0; font-size: 20px; font-weight: 600;">Chào mừng ${userName}!</h2>
             </div>
             
-            <div style="background: #f5f5f5; padding: 20px; border-radius: 6px; margin-bottom: 20px;">
-              <p style="color: #333333; margin: 0; line-height: 1.6; text-align: center;">
+            <div style="background: #f9fafb; padding: 20px; border-radius: 6px; margin-bottom: 20px;">
+              <p style="color: #1f2937; margin: 0; line-height: 1.6; text-align: center;">
                 Cảm ơn bạn đã đăng ký tài khoản MarketCode<br>
                 Chúng tôi rất vui mừng có bạn trong cộng đồng!
               </p>
@@ -254,21 +303,21 @@ export class EmailService {
             <!-- Action Button -->
             <div style="text-align: center; margin: 30px 0;">
               <a href="${process.env.NEXTAUTH_URL || 'http://localhost:3000'}" 
-                 style="background: #8b4513; color: #ffffff; padding: 12px 30px; text-decoration: none; border-radius: 6px; display: inline-block; font-weight: 500; box-shadow: 0 2px 4px rgba(0,0,0,0.1);">
+                 style="background: #2563eb; color: #ffffff; padding: 12px 30px; text-decoration: none; border-radius: 6px; display: inline-block; font-weight: 500; box-shadow: 0 2px 4px rgba(0,0,0,0.1);">
                 Bắt đầu khám phá
               </a>
             </div>
             
             <div style="text-align: center;">
-              <p style="color: #666666; font-size: 14px; margin: 0;">
+              <p style="color: #6b7280; font-size: 14px; margin: 0;">
                 Nếu bạn có bất kỳ câu hỏi nào, đừng ngần ngại liên hệ với chúng tôi
               </p>
             </div>
           </div>
           
           <!-- Footer -->
-          <div style="text-align: center; margin-top: 30px; padding-top: 20px; border-top: 1px solid #e5e5e5;">
-            <p style="color: #666666; font-size: 12px; margin: 0;">
+          <div style="text-align: center; margin-top: 30px; padding-top: 20px; border-top: 1px solid #e5e7eb;">
+            <p style="color: #9ca3af; font-size: 12px; margin: 0;">
               MarketCode Team<br>
               Email: thanhlc.dev@gmail.com
             </p>

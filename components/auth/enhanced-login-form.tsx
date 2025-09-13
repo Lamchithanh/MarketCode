@@ -42,7 +42,7 @@ export function EnhancedLoginForm({ callbackUrl = "/" }: EnhancedLoginFormProps)
   const [error, setError] = useState<string>("");
   const [success, setSuccess] = useState<string>("");
   const [requires2FA, setRequires2FA] = useState(false);
-  const [userEmail, setUserEmail] = useState("");
+  const [savedCredentials, setSavedCredentials] = useState<{email: string; password: string} | null>(null);
 
   const form = useForm<EnhancedLoginFormData>({
     resolver: zodResolver(enhancedLoginSchema),
@@ -59,23 +59,32 @@ export function EnhancedLoginForm({ callbackUrl = "/" }: EnhancedLoginFormProps)
       setError("");
       setSuccess("");
 
-      const result = await signIn("credentials", {
+      // If 2FA is required, use saved credentials + 2FA code
+      const loginData = requires2FA && savedCredentials ? {
+        email: savedCredentials.email,
+        password: savedCredentials.password,
+        twoFactorCode: data.twoFactorCode || "",
+      } : {
         email: data.email,
         password: data.password,
         twoFactorCode: data.twoFactorCode || "",
+      };
+
+      const result = await signIn("credentials", {
+        ...loginData,
         redirect: false,
       });
 
       if (result?.error) {
         // Check if 2FA is required
-        if (result.error.includes("Two-factor authentication is required")) {
+        if (result.error === "Two-factor authentication is required") {
           setRequires2FA(true);
-          setUserEmail(data.email);
+          setSavedCredentials({ email: data.email, password: data.password });
           setError("Vui lòng nhập mã xác thực 2FA từ ứng dụng authenticator của bạn");
           return;
         }
         
-        if (result.error.includes("Invalid two-factor authentication code")) {
+        if (result.error === "Invalid two-factor authentication code") {
           setError("Mã 2FA không chính xác. Vui lòng thử lại.");
           return;
         }
@@ -99,7 +108,7 @@ export function EnhancedLoginForm({ callbackUrl = "/" }: EnhancedLoginFormProps)
 
   const resetForm = () => {
     setRequires2FA(false);
-    setUserEmail("");
+    setSavedCredentials(null);
     setError("");
     form.reset();
   };
@@ -122,7 +131,7 @@ export function EnhancedLoginForm({ callbackUrl = "/" }: EnhancedLoginFormProps)
             <div className="space-y-2">
               <div>Nhập mã 6 chữ số từ ứng dụng authenticator</div>
               <div className="text-sm text-muted-foreground">
-                Đăng nhập với: <span className="font-medium">{userEmail}</span>
+                Đăng nhập với: <span className="font-medium">{savedCredentials?.email}</span>
               </div>
             </div>
           ) : (

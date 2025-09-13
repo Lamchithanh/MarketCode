@@ -5,13 +5,11 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Input } from '@/components/ui/input';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
-import { Search, RefreshCw, Settings, Plus } from 'lucide-react';
+import { Search, RefreshCw, Settings } from 'lucide-react';
 import { useServiceRequests, ServiceRequest } from '@/hooks/use-service-requests';
 import { ServiceRequestStatsCards } from './service-request-stats-cards';
 import { ServiceRequestActions } from './service-request-actions';
 import { ServiceRequestDialogs } from './service-request-dialogs';
-import { NewServiceRequestForm } from './new-service-request-form';
-import { Button } from '@/components/ui/button';
 
 export function ServiceRequestTable() {
   const {
@@ -19,9 +17,7 @@ export function ServiceRequestTable() {
     loading,
     updating,
     statistics,
-    updateRequestStatus,
     addQuote,
-    deleteRequest,
     refresh
   } = useServiceRequests();
 
@@ -29,9 +25,6 @@ export function ServiceRequestTable() {
   const [selectedRequest, setSelectedRequest] = useState<ServiceRequest | null>(null);
   const [isViewDialogOpen, setIsViewDialogOpen] = useState(false);
   const [isQuoteDialogOpen, setIsQuoteDialogOpen] = useState(false);
-  const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
-  const [isStatusDialogOpen, setIsStatusDialogOpen] = useState(false);
-  const [isNewRequestDialogOpen, setIsNewRequestDialogOpen] = useState(false);
 
   const filteredRequests = searchTerm 
     ? requests.filter(request => 
@@ -52,81 +45,12 @@ export function ServiceRequestTable() {
     setIsViewDialogOpen(true);
   };
 
-  const handleEditRequest = (request: ServiceRequest) => {
-    // TODO: Implement edit functionality
-    console.log('Edit request:', request);
-  };
-
   const handleAddQuote = (request: ServiceRequest) => {
     setSelectedRequest(request);
     setIsQuoteDialogOpen(true);
   };
 
-  const handleChangeStatus = (request: ServiceRequest) => {
-    setSelectedRequest(request);
-    setIsStatusDialogOpen(true);
-  };
-
-  const handleDeleteRequest = (request: ServiceRequest) => {
-    setSelectedRequest(request);
-    setIsDeleteDialogOpen(true);
-  };
-
-  const handleConfirmDelete = async () => {
-    if (selectedRequest) {
-      await deleteRequest(selectedRequest.id);
-      setIsDeleteDialogOpen(false);
-      setSelectedRequest(null);
-    }
-  };
-
-  const handleCreateRequest = async (data: {
-    name: string;
-    email: string;
-    phone: string;
-    company: string;
-    service_id: string;
-    title: string;
-    description: string;
-    budget_range: string;
-    timeline: string;
-    priority: string;
-    requirements: string[];
-    technical_specs: Record<string, string>;
-  }) => {
-    try {
-      const response = await fetch('/api/service-requests', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-          name: data.name,
-          email: data.email,
-          phone: data.phone || null,
-          company: data.company || null,
-          service_type: data.service_id,
-          service_name: data.title,
-          title: data.title,
-          description: data.description,
-          budget_range: data.budget_range || null,
-          timeline: data.timeline || null,
-          priority: data.priority,
-          requirements: data.requirements,
-          technical_specs: data.technical_specs
-        }),
-      });
-
-      if (!response.ok) {
-        throw new Error('Failed to create service request');
-      }
-
-      await refresh();
-    } catch (error) {
-      console.error('Error creating service request:', error);
-      throw error;
-    }
-  };
+  // Helper functions
 
   const formatDate = (dateString: string) => {
     return new Date(dateString).toLocaleDateString('vi-VN', {
@@ -215,10 +139,7 @@ export function ServiceRequestTable() {
                 className="pl-10" 
               />
             </div>
-            <Button variant="outline" className="flex items-center gap-2" onClick={() => setIsNewRequestDialogOpen(true)}>
-              <Plus className="h-4 w-4" />
-              Thêm yêu cầu mới
-            </Button>
+            {/* Removed "Add New Request" button - service requests come from customers only */}
           </div>
         </CardContent>
       </Card>
@@ -315,10 +236,7 @@ export function ServiceRequestTable() {
                         <ServiceRequestActions
                           request={request}
                           onView={handleViewRequest}
-                          onEdit={handleEditRequest}
                           onAddQuote={handleAddQuote}
-                          onChangeStatus={handleChangeStatus}
-                          onDelete={handleDeleteRequest}
                           disabled={updating}
                         />
                       </TableCell>
@@ -337,31 +255,15 @@ export function ServiceRequestTable() {
         </CardContent>
       </Card>
 
-      {/* Dialogs */}
+      {/* Dialogs - Only View and Quote dialogs needed */}
       <ServiceRequestDialogs
         selectedRequest={selectedRequest}
         isViewDialogOpen={isViewDialogOpen}
-        isEditDialogOpen={false}
         isQuoteDialogOpen={isQuoteDialogOpen}
-        isDeleteDialogOpen={isDeleteDialogOpen}
-        isStatusDialogOpen={isStatusDialogOpen}
         updating={updating}
         setIsViewDialogOpen={setIsViewDialogOpen}
-        setIsEditDialogOpen={() => {}}
         setIsQuoteDialogOpen={setIsQuoteDialogOpen}
-        setIsDeleteDialogOpen={setIsDeleteDialogOpen}
-        setIsStatusDialogOpen={setIsStatusDialogOpen}
-        onUpdateStatus={updateRequestStatus}
         onAddQuote={addQuote}
-        onConfirmDelete={handleConfirmDelete}
-      />
-
-      {/* New Service Request Form */}
-      <NewServiceRequestForm
-        isOpen={isNewRequestDialogOpen}
-        onOpenChange={setIsNewRequestDialogOpen}
-        onSubmit={handleCreateRequest}
-        loading={updating}
       />
     </div>
   );

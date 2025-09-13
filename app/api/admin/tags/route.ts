@@ -80,7 +80,7 @@ export async function GET(request: NextRequest) {
 export async function POST(request: NextRequest) {
   try {
     const body = await request.json();
-    const { name, description } = body;
+    const { name } = body;
 
     if (!name) {
       return NextResponse.json(
@@ -104,20 +104,28 @@ export async function POST(request: NextRequest) {
     }
 
     // Create new tag
+    const slug = name
+      .toLowerCase()
+      .replace(/[^a-z0-9\s-]/g, '')
+      .replace(/\s+/g, '-')
+      .replace(/-+/g, '-')
+      .trim();
+
     const { data: tag, error } = await supabaseServiceRole
       .from('Tag')
       .insert({
         name,
-        description: description || '',
-        isActive: true
+        slug,
+        color: '#6B7280' // Default color
       })
       .select()
       .single();
 
     if (error) {
       console.error('Error creating tag:', error);
+      console.error('Insert data:', { name, slug, color: '#6B7280' });
       return NextResponse.json(
-        { error: 'Failed to create tag' },
+        { error: 'Failed to create tag', details: error.message },
         { status: 500 }
       );
     }

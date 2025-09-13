@@ -43,7 +43,9 @@ export function UserNav() {
 
   const handleSignOut = async () => {
     try {
-      await signOut({ callbackUrl: "/" });
+      // Get current origin to ensure correct redirect
+      const callbackUrl = window.location.origin + "/";
+      await signOut({ callbackUrl });
       toast.success(toastMessages.auth.logoutSuccess);
     } catch (error) {
       console.error("Logout error:", error);

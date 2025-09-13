@@ -46,7 +46,7 @@ export const authOptions: NextAuthOptions = {
           }
 
           // Check if user has 2FA enabled
-          const has2FA = user.settings?.twoFactorEnabled === true && user.settings?.twoFactorSecret;
+          const has2FA = user.twoFactorEnabled === true && user.twoFactorSecret;
           
           if (has2FA) {
             // 2FA is required but no code provided

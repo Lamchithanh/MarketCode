@@ -193,8 +193,8 @@ export function useServiceRequests() {
   ) => {
     setUpdating(true);
     try {
-      const response = await fetch(`/api/service-requests/${requestId}`, {
-        method: 'PATCH',
+      const response = await fetch(`/api/service-requests/${requestId}/quote`, {
+        method: 'POST',
         headers: {
           'Content-Type': 'application/json',
         },
@@ -202,21 +202,24 @@ export function useServiceRequests() {
           quoted_price: quotedPrice,
           quoted_duration: quotedDuration,
           quote_notes: quoteNotes,
-          status: 'quoted'
         }),
       });
 
       if (!response.ok) {
-        throw new Error('Failed to add quote');
+        throw new Error('Failed to send quote');
       }
 
-      const { request: updatedRequest } = await response.json();
+      const result = await response.json();
       
-      toast.success('Đã thêm báo giá');
-      return updatedRequest;
+      toast.success('Đã gửi báo giá thành công!');
+      
+      // Refresh the data to get updated status
+      await fetchRequests();
+      
+      return result;
     } catch (error) {
-      console.error('Error adding quote:', error);
-      toast.error('Không thể thêm báo giá');
+      console.error('Error sending quote:', error);
+      toast.error('Không thể gửi báo giá');
       throw error;
     } finally {
       setUpdating(false);
